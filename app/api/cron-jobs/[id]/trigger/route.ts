@@ -47,24 +47,26 @@ export async function POST(
       [now, cronJobId]
     );
 
-    // Also trigger worker manually if possible
+    // Fire-and-forget: trigger worker without waiting for response
+    // This prevents Vercel function timeout (worker can take 10-20s)
     const workerUrl = process.env.WORKER_URL || 'https://uptime-scheduler.digitexa.workers.dev';
-    try {
-      const response = await fetch(`${workerUrl}/trigger`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cron: '*/1 * * * *' }),
-      });
-      if (!response.ok) {
-        console.warn('Worker trigger returned non-OK status:', response.status);
-      }
-    } catch (error) {
-      console.warn('Failed to trigger worker manually:', error);
-      // Continue anyway, worker will pick it up on next scheduled run
-    }
-
+    
+    // Use AbortController with 2 second timeout - we don't need to wait for full response
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    
+    fetch(`${workerUrl}/trigger`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cron: '*/1 * * * *' }),
+      signal: controller.signal,
+    })
+      .then(() => clearTimeout(timeoutId))
+      .catch(() => clearTimeout(timeoutId));
+    
+    // Return immediately - job will run within 1 minute even if trigger fails
     return successResponse({
-      message: 'Cron job triggered. It will run on the next worker execution.',
+      message: 'Cron job triggered. It will run shortly.',
       next_run_at: now,
     });
   } catch (error: any) {
