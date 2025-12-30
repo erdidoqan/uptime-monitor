@@ -1,0 +1,14 @@
+name = "uptime-monitor"
+compatibility_date = "2024-01-01"
+account_id = "0f6cb9b6c5fb3a6db6781f0dc9f36844" # Erdi.doqan@gmail.com's Account
+
+# D1 Database configuration
+# Database name: uptime-monitor-db
+# To create: npm run d1:create
+# To migrate: npm run d1:migrate (local) or npm run d1:migrate:remote (production)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "uptime-monitor-db"
+database_id = "6f91b823-5010-4501-ac5d-cf03b220bf4d"
+

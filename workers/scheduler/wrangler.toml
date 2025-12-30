@@ -1,0 +1,41 @@
+name = "uptime-scheduler"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "0f6cb9b6c5fb3a6db6781f0dc9f36844" # Erdi.doqan@gmail.com's Account
+
+[triggers]
+crons = ["*/1 * * * *", "*/10 * * * *", "0 3 * * *"]
+
+# Environment variables for D1 database access
+# These should be set as secrets in Cloudflare:
+# wrangler secret put CLOUDFLARE_ACCOUNT_ID
+# wrangler secret put CLOUDFLARE_D1_DATABASE_ID
+# wrangler secret put CLOUDFLARE_D1_API_TOKEN
+#
+# Or set them in wrangler.toml for local development:
+# [vars]
+# CLOUDFLARE_ACCOUNT_ID = "your-account-id"
+# CLOUDFLARE_D1_DATABASE_ID = "your-database-id"
+# CLOUDFLARE_D1_API_TOKEN = "your-api-token"
+
+# R2 Bucket binding for monitor checks storage
+[[r2_buckets]]
+binding = "CHECKS_BUCKET"
+bucket_name = "uptime"
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# Observability settings for logs
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+

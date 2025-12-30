@@ -1,0 +1,98 @@
+# Next.js Progressive Loading Rules
+
+## Core Principle
+Sayfalar hemen yüklenmeli, API'den gelen datalar progressive olarak gösterilmelidir. Tüm sayfa loading state'i kullanılmamalıdır.
+
+## Rules
+
+### 1. Server Components for Initial Data
+- Ana sayfalar Server Component olarak oluşturulmalı
+- Initial/essential data server-side'da fetch edilmeli
+- Sayfa hemen render edilmeli, loading state'i olmamalı
+
+### 2. Client Components for Progressive Loading
+- API'den gelen datalar için ayrı Client Component'ler oluşturulmalı
+- Her data section kendi loading state'ini yönetmeli
+- React Suspense boundaries kullanılmalı
+
+### 3. Loading States
+- ❌ Tüm sayfa için `if (loading) return <Loading />` kullanılmamalı
+- ✅ Sadece ilgili bölümlerde skeleton gösterilmeli
+- ✅ Her section kendi skeleton'ını yönetmeli
+
+### 4. Server-side API Client
+- Server Component'ler için `lib/server-api-client.ts` kullanılmalı
+- Cookie'den auth token alınmalı
+- Absolute URL kullanılmalı (headers() ile host bilgisi alınmalı)
+
+### 5. Caching
+- Checks/List data gibi sık değişmeyen veriler cache'lenmeli
+- Memory cache + localStorage fallback kullanılmalı
+- Cache key: `{resource}-{id}-{params}` formatında olmalı
+
+### 6. Real-time Updates
+- "Last checked at", "Next check" gibi zaman bazlı bilgiler için `useState` + `useEffect` ile interval kullanılmalı
+- Her saniye güncellenmeli (`setInterval(1000)`)
+- Component unmount'ta cleanup yapılmalı
+
+### 7. File Structure
+```
+app/(dashboard)/[resource]/[id]/
+  page.tsx (Server Component - initial data)
+  [resource]-[data-type].tsx (Client Component - progressive loading)
+  [resource]-[actions].tsx (Client Component - actions)
+```
+
+### 8. Example Pattern
+```tsx
+// page.tsx (Server Component)
+export default async function Page() {
+  const initialData = await serverApi.get('/resource');
+  return (
+    <>
+      <Header data={initialData} />
+      <Suspense fallback={<DataSkeleton />}>
+        <DataComponent />
+      </Suspense>
+    </>
+  );
+}
+
+// data-component.tsx (Client Component)
+'use client';
+export function DataComponent() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load data progressively
+  }, []);
+  
+  if (loading) return <Skeleton />;
+  return <DataList data={data} />;
+}
+```
+
+### 9. Button Actions
+- Butonlara `type="button"` eklenmeli
+- `onClick` handler'larında `event.preventDefault()` çağrılmalı
+- Sayfa yenilemesi olmamalı, sadece ilgili data güncellenmeli
+
+### 10. Error Handling
+- Her section kendi error state'ini yönetmeli
+- Global error boundary kullanılabilir ama section-level error handling tercih edilmeli
+
+## Anti-patterns (Yapılmaması Gerekenler)
+- ❌ `if (loading) return <FullPageLoading />`
+- ❌ Client Component'te tüm data yüklenene kadar beklemek
+- ❌ `router.refresh()` veya `window.location.reload()` kullanmak (mümkünse)
+- ❌ JavaScript `alert()` kullanmak (toast/alert component kullanılmalı)
+
+## Best Practices
+- ✅ Sayfa hemen render edilmeli
+- ✅ Header/navigation hemen görünmeli
+- ✅ Data sections progressive olarak yüklenmeli
+- ✅ Her section kendi skeleton'ını göstermeli
+- ✅ Real-time updates için interval kullanılmalı
+- ✅ Cache kullanılmalı (tekrar istek atılmamalı)
+

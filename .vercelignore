@@ -1,0 +1,7 @@
+# Ignore workers directory (deployed separately to Cloudflare)
+workers/
+
+# Ignore development files
+.dev.vars
+*.log
+
