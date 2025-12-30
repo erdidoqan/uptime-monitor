@@ -141,6 +141,22 @@ export async function PUT(
     if (is_active !== undefined) {
       updates.push('is_active = ?');
       values.push(is_active ? 1 : 0);
+      
+      // Always clear lock when changing active state (pause or resume)
+      updates.push('locked_at = ?');
+      values.push(null);
+      
+      // When reactivating a paused monitor, recalculate next_run_at
+      if (is_active) {
+        const current = await db.queryFirst<{
+          interval_sec: number;
+        }>('SELECT interval_sec FROM monitors WHERE id = ?', [monitorId]);
+        
+        if (current) {
+          updates.push('next_run_at = ?');
+          values.push(Date.now() + current.interval_sec * 1000);
+        }
+      }
     }
     if (recovery_period_sec !== undefined) {
       updates.push('recovery_period_sec = ?');

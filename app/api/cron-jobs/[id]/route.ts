@@ -157,6 +157,10 @@ export async function PUT(
       updates.push('is_active = ?');
       values.push(is_active ? 1 : 0);
       
+      // Always clear lock when changing active state (pause or resume)
+      updates.push('locked_at = ?');
+      values.push(null);
+      
       // When reactivating a paused job, recalculate next_run_at
       if (is_active) {
         const current = await db.queryFirst<{
@@ -167,9 +171,6 @@ export async function PUT(
         if (current) {
           updates.push('next_run_at = ?');
           values.push(calculateNextRun(current.cron_expr, current.interval_sec));
-          // Clear any stale lock
-          updates.push('locked_at = ?');
-          values.push(null);
         }
       }
     }
