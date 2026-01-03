@@ -189,9 +189,17 @@ export function calculateNextRun(
     }
   }
 
-  // Priority 2: Interval-based scheduling
+  // Priority 2: Interval-based scheduling with randomization
+  // Add ±30% randomization for more natural distribution throughout the day
   if (intervalSec && intervalSec > 0) {
-    const nextTime = now + intervalSec * 1000;
+    // Only randomize for intervals >= 30 minutes (1800 sec) to avoid too frequent changes
+    let actualInterval = intervalSec;
+    if (intervalSec >= 1800) {
+      // Random factor between 0.7 and 1.3 (±30%)
+      const randomFactor = 0.7 + Math.random() * 0.6;
+      actualInterval = Math.round(intervalSec * randomFactor);
+    }
+    const nextTime = now + actualInterval * 1000;
     // Ensure minimum 1 second in the future
     return Math.max(nextTime, now + 1000);
   }
