@@ -214,7 +214,7 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
      WHERE is_active = 1
        AND next_run_at <= ?
        AND (locked_at IS NULL OR locked_at < ?)
-     LIMIT 25`,
+     LIMIT 10`,
     [now, lockTimeout]
   );
 
@@ -618,7 +618,7 @@ async function processCronJobs(db: D1Client, env: Env, ctx?: ExecutionContext) {
      FROM cron_jobs
      WHERE is_active = 1
        AND (locked_at IS NULL OR locked_at < ?)
-     LIMIT 50`,
+     LIMIT 10`,
     [lockTimeout]
   );
 

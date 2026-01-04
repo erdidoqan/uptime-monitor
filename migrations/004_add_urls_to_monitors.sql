@@ -24,3 +24,5 @@ ALTER TABLE monitors ADD COLUMN urls TEXT;
 
 
 
+
+

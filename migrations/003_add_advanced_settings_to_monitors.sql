@@ -25,3 +25,5 @@ ALTER TABLE monitors ADD COLUMN confirmation_period_sec INTEGER;
 
 
 
+
+
