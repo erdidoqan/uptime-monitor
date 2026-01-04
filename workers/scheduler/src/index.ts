@@ -942,6 +942,37 @@ async function pruneLogs(db: D1Client) {
   }
 }
 
+/**
+ * Clean up stale locks that are older than the timeout
+ * This prevents jobs from being stuck forever if a worker crashes
+ */
+async function cleanupStaleLocks(db: D1Client) {
+  const now = Date.now();
+  const lockTimeout = now - 300000; // 5 minutes ago
+
+  try {
+    // Clean stale locks for monitors
+    const staleMonitors = await db.execute(
+      `UPDATE monitors SET locked_at = NULL WHERE locked_at IS NOT NULL AND locked_at < ?`,
+      [lockTimeout]
+    );
+
+    // Clean stale locks for cron jobs
+    const staleCronJobs = await db.execute(
+      `UPDATE cron_jobs SET locked_at = NULL WHERE locked_at IS NOT NULL AND locked_at < ?`,
+      [lockTimeout]
+    );
+
+    // Log if any locks were cleaned (for debugging)
+    if (staleMonitors.meta?.changes > 0 || staleCronJobs.meta?.changes > 0) {
+      console.log(`Cleaned up stale locks: ${staleMonitors.meta?.changes || 0} monitors, ${staleCronJobs.meta?.changes || 0} cron jobs`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up stale locks:', error);
+    // Don't throw - continue with normal processing
+  }
+}
+
 async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext) {
   const db = getD1Client(env);
 
@@ -952,7 +983,8 @@ async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext)
     // Every 10 minutes: flush all buffers (safety flush)
     await flushAllBuffers(env.CHECKS_BUCKET);
   } else {
-    // Every minute: process monitors and cron jobs
+    // Every minute: first clean up stale locks, then process jobs
+    await cleanupStaleLocks(db);
     await Promise.all([processMonitors(db, env.CHECKS_BUCKET, env, ctx), processCronJobs(db, env, ctx)]);
   }
 }
