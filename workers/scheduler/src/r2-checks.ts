@@ -181,4 +181,3 @@ export async function batchAppendChecksToR2(
 
   await Promise.all(flushPromises);
 }
-

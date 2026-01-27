@@ -678,6 +678,113 @@ services:
       },
     ],
   },
+  {
+    slug: "n8n-cron-schedule",
+    title: "n8n Cron Schedule",
+    metaTitle: "n8n Cron Schedule - Automate Workflows with Cron Triggers",
+    metaDescription: "Learn how to use cron expressions in n8n to schedule automated workflows. Master n8n's Schedule Trigger node for precise timing control.",
+    keywords: [
+      "n8n cron schedule",
+      "n8n cron",
+      "n8n schedule trigger",
+      "n8n cron expression",
+      "n8n scheduled workflow",
+      "n8n automation schedule",
+      "n8n cron job",
+      "n8n timing",
+      "n8n scheduler",
+      "n8n workflow automation",
+    ],
+    platform: "n8n",
+    description: "n8n is a powerful workflow automation tool that supports cron expressions through its Schedule Trigger node. You can create complex automated workflows that run on precise schedules.",
+    setupSteps: [
+      {
+        title: "Add Schedule Trigger Node",
+        description: "Start your workflow with the Schedule Trigger node",
+        code: `// In n8n workflow editor:
+// 1. Click '+' to add a new node
+// 2. Search for "Schedule Trigger"
+// 3. Add it as the first node in your workflow`,
+      },
+      {
+        title: "Configure Cron Expression",
+        description: "Set your schedule using cron syntax",
+        code: `// Schedule Trigger Settings:
+// Trigger Mode: "Cron"
+// Cron Expression: "*/5 * * * *"  // Every 5 minutes
+
+// Common n8n cron patterns:
+// */5 * * * *     - Every 5 minutes
+// 0 * * * *       - Every hour
+// 0 9 * * *       - Every day at 9 AM
+// 0 9 * * 1-5     - Weekdays at 9 AM
+// 0 0 1 * *       - First day of month`,
+      },
+      {
+        title: "Add Workflow Actions",
+        description: "Connect nodes to perform your automated tasks",
+        code: `// Example: Daily report workflow
+// 
+// [Schedule Trigger] → [HTTP Request] → [IF] → [Send Email]
+//     (9 AM daily)      (Fetch data)   (Check)  (Send report)
+//
+// n8n supports 400+ integrations:
+// - HTTP Request for API calls
+// - Database queries (MySQL, PostgreSQL, MongoDB)
+// - Email, Slack, Discord notifications
+// - Google Sheets, Airtable, Notion
+// - And many more...`,
+      },
+      {
+        title: "Activate Your Workflow",
+        description: "Enable the workflow to start running on schedule",
+        code: `// Workflow Activation:
+// 1. Click "Save" to save your workflow
+// 2. Toggle the "Active" switch in the top right
+// 3. Your workflow will now run on the defined schedule
+//
+// Note: Workflow must be Active for Schedule Trigger to work`,
+      },
+    ],
+    limitations: [
+      "Requires self-hosted n8n instance or paid cloud plan",
+      "Self-hosted n8n needs server maintenance",
+      "No built-in uptime monitoring for the n8n instance",
+      "Cloud plan has execution limits",
+      "Complex workflows can be hard to debug",
+      "Timezone handling requires manual configuration",
+    ],
+    cronUptimeAdvantages: [
+      "No n8n instance required for simple HTTP triggers",
+      "Built-in monitoring and failure alerts",
+      "Lighter alternative for simple scheduled HTTP calls",
+      "Can trigger n8n webhook workflows reliably",
+      "Free tier for basic scheduling needs",
+      "Guaranteed execution with retry logic",
+    ],
+    faq: [
+      {
+        question: "How do I schedule a workflow in n8n?",
+        answer: "Use the Schedule Trigger node as the first node in your workflow. Set the Trigger Mode to 'Cron' and enter your cron expression. Save and activate the workflow to start the schedule.",
+      },
+      {
+        question: "What cron format does n8n use?",
+        answer: "n8n uses standard 5-field cron format: minute (0-59), hour (0-23), day of month (1-31), month (1-12), day of week (0-7). You can also use special characters like */5 for intervals.",
+      },
+      {
+        question: "Can I run n8n workflows every minute?",
+        answer: "Yes, use the cron expression '* * * * *' to run every minute. However, consider your n8n plan limits and server resources. For high-frequency tasks, ensure your previous execution completes before the next one starts.",
+      },
+      {
+        question: "How do I trigger n8n from an external service?",
+        answer: "Use the Webhook node instead of Schedule Trigger. This creates a URL that external services like CronUptime can call. This is useful for reliable triggering with monitoring and retry logic.",
+      },
+      {
+        question: "What's the difference between Schedule Trigger and Interval?",
+        answer: "Schedule Trigger uses cron expressions for precise timing (e.g., 'every day at 9 AM'). Interval mode runs workflows at fixed intervals (e.g., 'every 5 minutes') but doesn't guarantee specific times.",
+      },
+    ],
+  },
 ];
 
 // Helper function to get platform by slug

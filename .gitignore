@@ -41,3 +41,9 @@ workers/scheduler/.dev.vars
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wrangler local state
+.wrangler/
+
+# cursor plans
+.cursor/plans/
