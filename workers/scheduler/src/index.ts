@@ -17,6 +17,9 @@ interface Env {
   CHECKS_BUCKET: R2Bucket;
   NEXT_PUBLIC_APP_URL?: string;
   INTERNAL_API_TOKEN?: string;
+  // Turkey proxy for geo-restricted sites
+  TR_PROXY_URL?: string;
+  TR_PROXY_SECRET?: string;
 }
 
 function getD1Client(env: Env): D1Client {
@@ -102,7 +105,7 @@ async function sendEmailViaAPI(
   params: any
 ): Promise<void> {
   try {
-    const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.cronuptime.com';
+    const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.uptimetr.com';
     const internalToken = env.INTERNAL_API_TOKEN;
 
     if (!internalToken) {
@@ -153,7 +156,7 @@ async function requestScreenshotViaAPI(
   incidentId: string
 ): Promise<void> {
   try {
-    const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.cronuptime.com';
+    const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.uptimetr.com';
     const internalToken = env.INTERNAL_API_TOKEN;
 
     if (!internalToken) {
@@ -208,8 +211,9 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
     interval_sec: number;
     last_status: string | null;
     created_at: number;
+    use_tr_proxy: number | null;
   }>(
-    `SELECT id, user_id, url, method, headers_json, body, timeout_ms, expected_min, expected_max, keyword, interval_sec, last_status, created_at
+    `SELECT id, user_id, url, method, headers_json, body, timeout_ms, expected_min, expected_max, keyword, interval_sec, last_status, created_at, use_tr_proxy
      FROM monitors
      WHERE is_active = 1
        AND next_run_at <= ?
@@ -241,8 +245,13 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
       // Helper function to perform a single check with retry logic
       async function performCheck(retryCount = 0): Promise<{ success: boolean; httpStatus: number | null; latency: number; error: string | null; bodyText: string }> {
         try {
-          // Prepare headers
-          const headers: HeadersInit = {};
+          // Prepare headers with default User-Agent
+          const headers: Record<string, string> = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+          };
+          // Override with custom headers if provided
           if (monitor.headers_json) {
             try {
               Object.assign(headers, JSON.parse(monitor.headers_json));
@@ -252,34 +261,89 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
           }
 
           const checkStartTime = Date.now();
-          const controller = new AbortController();
-          const timeoutId = setTimeout(
-            () => controller.abort(),
-            monitor.timeout_ms
-          );
-
-          const response = await fetch(monitor.url, {
-            method: monitor.method || 'GET',
-            headers,
-            body: monitor.body || undefined,
-            signal: controller.signal,
-            redirect: 'follow', // Explicitly follow redirects
-          });
-
-          clearTimeout(timeoutId);
-          const latency = Date.now() - checkStartTime;
           
-          // Read body if keyword check is needed
+          // Check if we should use TR proxy
+          const useTrProxy = monitor.use_tr_proxy && env.TR_PROXY_URL && env.TR_PROXY_SECRET;
+          
+          let responseStatus: number;
           let bodyText = '';
-          if (monitor.keyword) {
-            try {
-              bodyText = await response.text();
-            } catch {
-              // If reading body fails, continue without keyword check
+          
+          if (useTrProxy) {
+            // Make request through Turkey proxy
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+              () => controller.abort(),
+              monitor.timeout_ms + 5000 // Extra 5s for proxy overhead
+            );
+
+            const proxyResponse = await fetch(env.TR_PROXY_URL!, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${env.TR_PROXY_SECRET}`,
+              },
+              body: JSON.stringify({
+                url: monitor.url,
+                method: monitor.method || 'GET',
+                headers,
+                body: monitor.body || null,
+                timeout_ms: monitor.timeout_ms,
+              }),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!proxyResponse.ok) {
+              const errorText = await proxyResponse.text();
+              throw new Error(`Proxy error: ${proxyResponse.status} - ${errorText}`);
+            }
+
+            const proxyResult = await proxyResponse.json() as {
+              success: boolean;
+              status?: number;
+              body?: string;
+              error?: string;
+              latency_ms?: number;
+            };
+
+            if (!proxyResult.success) {
+              throw new Error(proxyResult.error || 'Proxy request failed');
+            }
+
+            responseStatus = proxyResult.status || 0;
+            bodyText = proxyResult.body || '';
+          } else {
+            // Direct request (original behavior)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+              () => controller.abort(),
+              monitor.timeout_ms
+            );
+
+            const response = await fetch(monitor.url, {
+              method: monitor.method || 'GET',
+              headers,
+              body: monitor.body || undefined,
+              signal: controller.signal,
+              redirect: 'follow', // Explicitly follow redirects
+            });
+
+            clearTimeout(timeoutId);
+            responseStatus = response.status;
+            
+            // Read body if keyword check is needed
+            if (monitor.keyword) {
+              try {
+                bodyText = await response.text();
+              } catch {
+                // If reading body fails, continue without keyword check
+              }
             }
           }
-          
-          return { success: true, httpStatus: response.status, latency, error: null, bodyText };
+
+          const latency = Date.now() - checkStartTime;
+          return { success: true, httpStatus: responseStatus, latency, error: null, bodyText };
         } catch (err: any) {
           const errorMsg = err.message || 'Request failed';
           const isTimeoutError = errorMsg.includes('abort') || errorMsg.includes('timeout');
@@ -667,7 +731,13 @@ async function processCronJobs(db: D1Client, env: Env, ctx?: ExecutionContext) {
       // Helper function to perform a single check with retry logic
       async function performCronCheck(retryCount = 0): Promise<{ success: boolean; httpStatus: number | null; duration: number; error: string | null; bodyText: string }> {
         try {
-          const headers: HeadersInit = {};
+          // Prepare headers with default User-Agent
+          const headers: HeadersInit = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+          };
+          // Override with custom headers if provided
           if (job.headers_json) {
             Object.assign(headers, JSON.parse(job.headers_json));
           }

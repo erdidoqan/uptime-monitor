@@ -30,6 +30,7 @@ export interface Monitor {
   created_at: number;
   recovery_period_sec: number | null;
   confirmation_period_sec: number | null;
+  use_tr_proxy?: number; // 1 = use Turkey proxy for requests
 }
 
 export interface MonitorCheck {

@@ -8,6 +8,7 @@ import {
   successResponse,
 } from '@/lib/api-helpers';
 import { v4 as uuidv4 } from 'uuid';
+import { canCreateResource } from '@/lib/subscription';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +48,12 @@ export async function POST(request: NextRequest) {
       return errorResponse('Insufficient permissions. Required scope: monitors:write', 403);
     }
 
+    // Check subscription limits
+    const resourceCheck = await canCreateResource(auth.userId);
+    if (!resourceCheck.allowed) {
+      return errorResponse(resourceCheck.reason || 'Kaynak limiti aşıldı', 402);
+    }
+
     const body = await request.json();
     const {
       name,
@@ -62,6 +69,7 @@ export async function POST(request: NextRequest) {
       body: requestBody,
       recovery_period_sec,
       confirmation_period_sec,
+      use_tr_proxy,
     } = body;
 
     if (!url || !interval_sec || !timeout_ms) {
@@ -80,8 +88,8 @@ export async function POST(request: NextRequest) {
       `INSERT INTO monitors (
         id, user_id, name, url, urls, method, interval_sec, timeout_ms,
         expected_min, expected_max, keyword, headers_json, body, is_active, next_run_at, created_at,
-        recovery_period_sec, confirmation_period_sec
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+        recovery_period_sec, confirmation_period_sec, use_tr_proxy
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
       [
         monitorId,
         auth.userId,
@@ -100,6 +108,7 @@ export async function POST(request: NextRequest) {
         now,
         recovery_period_sec || null,
         confirmation_period_sec || null,
+        use_tr_proxy || 0,
       ]
     );
 

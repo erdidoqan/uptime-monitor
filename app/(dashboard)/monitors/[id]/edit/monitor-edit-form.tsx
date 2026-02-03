@@ -62,6 +62,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
     expected_max: monitor.expected_max?.toString() || '',
     headers_json: getHeadersJson(),
     body: monitor.body || '',
+    use_tr_proxy: monitor.use_tr_proxy === 1, // Use Turkey proxy for geo-restricted sites
   });
 
   // On-call escalation (not stored in monitor, use defaults)
@@ -110,7 +111,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
         setCurlParseError(null);
         setTimeout(() => setIsCurlParsed(false), 3000); // Hide badge after 3 seconds
       } else {
-        setCurlParseError('Failed to parse curl command. Please check the format.');
+        setCurlParseError('Curl komutu ayrıştırılamadı. Lütfen formatı kontrol edin.');
         setTimeout(() => setCurlParseError(null), 3000);
       }
     }
@@ -125,7 +126,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
 
     if (multipleUrlMode) {
       if (!form.urls.trim()) {
-        alert('Please enter at least one URL');
+        alert('Lütfen en az bir URL girin');
         return;
       }
 
@@ -136,7 +137,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
         .filter((url: string) => url && url !== 'https://' && url.length > 0);
       
       if (urlsArray.length === 0) {
-        alert('Please enter at least one valid URL');
+        alert('Lütfen en az bir geçerli URL girin');
         return;
       }
 
@@ -144,7 +145,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
       urlsToSubmit = JSON.stringify(urlsArray);
     } else {
       if (!form.url || form.url === 'https://') {
-        alert('Please enter a valid URL');
+        alert('Lütfen geçerli bir URL girin');
         return;
       }
       urlToSubmit = form.url;
@@ -157,7 +158,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
         const parsed = JSON.parse(form.headers_json);
         headersJsonValue = parsed;
       } catch (error) {
-        alert('Invalid JSON format in headers field');
+        alert('Header alanında geçersiz JSON formatı');
         return;
       }
     }
@@ -178,11 +179,12 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
         confirmation_period_sec: advancedSettings.confirmationPeriod ? parseInt(advancedSettings.confirmationPeriod) : null,
         headers_json: headersJsonValue,
         body: form.body || null,
+        use_tr_proxy: form.use_tr_proxy ? 1 : 0,
       });
       router.push(`/monitors/${monitor.id}`);
     } catch (error) {
       console.error('Failed to update monitor:', error);
-      alert('Failed to update monitor');
+      alert('Monitör güncellenemedi');
     } finally {
       setSubmitting(false);
     }
@@ -196,9 +198,9 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left side - Description */}
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">What to monitor</h2>
+            <h2 className="text-lg font-semibold mb-2">Ne izlenecek</h2>
             <p className="text-sm text-muted-foreground">
-              Configure the target website you want to monitor. You'll find the advanced configuration below, in the advanced settings section.
+              İzlemek istediğiniz hedef web sitesini yapılandırın. Gelişmiş yapılandırmayı aşağıda, gelişmiş ayarlar bölümünde bulabilirsiniz.
             </p>
           </div>
 
@@ -212,7 +214,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
                   {/* Left side - Alert type */}
                   <div className="space-y-2 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <Label className="text-sm font-semibold">Alert us when</Label>
+                      <Label className="text-sm font-semibold">Bizi uyar</Label>
                       <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     </div>
                     <Select
@@ -223,15 +225,15 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="url_unavailable">URL becomes unavailable</SelectItem>
-                        <SelectItem value="url_doesnt_contain_keyword">URL doesn't contain keyword</SelectItem>
-                        <SelectItem value="keyword">Keyword matching</SelectItem>
+                        <SelectItem value="url_unavailable">URL erişilemez olduğunda</SelectItem>
+                        <SelectItem value="url_doesnt_contain_keyword">URL anahtar kelime içermediğinde</SelectItem>
+                        <SelectItem value="keyword">Anahtar kelime eşleşmesi</SelectItem>
                       </SelectContent>
                     </Select>
                     <div className="text-xs text-muted-foreground space-y-0.5">
-                      <p>We recommend the keyword matching method.</p>
+                      <p>Anahtar kelime eşleştirme yöntemini öneriyoruz.</p>
                       <p>
-                        <a href="#" className="text-primary hover:underline cursor-pointer">Upgrade your account</a> to enable more options.
+                        Daha fazla seçenek için <a href="#" className="text-primary hover:underline cursor-pointer">hesabınızı yükseltin</a>.
                       </p>
                     </div>
                   </div>
@@ -240,12 +242,12 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
                   <div className="space-y-2 min-w-0">
                     {(form.alertType === 'keyword' || form.alertType === 'url_doesnt_contain_keyword') ? (
                       <>
-                        <Label className="text-sm font-semibold">Keyword to find on the page</Label>
+                        <Label className="text-sm font-semibold">Sayfada aranacak anahtar kelime</Label>
                         <div className="relative">
                           <Input
                             value={form.keyword}
                             onChange={(e) => setForm(prev => ({ ...prev, keyword: e.target.value }))}
-                            placeholder="Enter keyword"
+                            placeholder="Anahtar kelime girin"
                             className="pr-8 w-full"
                           />
                           {form.keyword && (
@@ -259,7 +261,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          We use case insensitive matching.
+                          Büyük/küçük harf duyarsız eşleştirme kullanıyoruz.
                         </p>
                       </>
                     ) : (
@@ -274,7 +276,7 @@ export function MonitorEditForm({ monitor }: MonitorEditFormProps) {
                 {/* Bottom section: URL to monitor */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5">
-                    <Label className="text-sm font-semibold">URL to monitor</Label>
+                    <Label className="text-sm font-semibold">İzlenecek URL</Label>
                     <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   </div>
                   {multipleUrlMode ? (
@@ -311,7 +313,7 @@ https://example.com/b"
                         value={form.url}
                         onChange={(e) => setForm(prev => ({ ...prev, url: e.target.value }))}
                         onPaste={handleUrlPaste}
-                        placeholder="https:// or paste curl command"
+                        placeholder="https:// veya curl komutu yapıştırın"
                         className="flex-1 rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         required
                       />
@@ -322,6 +324,7 @@ https://example.com/b"
                   )}
                   {multipleUrlMode ? (
                     <p className="text-xs text-muted-foreground">
+                      Sadece bir monitör düzenlemek için{' '}
                       <a 
                         href="#" 
                         className="text-primary hover:underline cursor-pointer"
@@ -338,12 +341,12 @@ https://example.com/b"
                           }
                         }}
                       >
-                        Go back
-                      </a> to editing just one monitor.
+                        geri dönün
+                      </a>.
                     </p>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      You can import multiple monitors{' '}
+                      Birden fazla monitör{' '}
                       <a 
                         href="#" 
                         className="text-primary hover:underline cursor-pointer"
@@ -355,14 +358,15 @@ https://example.com/b"
                           }
                         }}
                       >
-                        here
-                        </a>.
+                        buradan
+                        </a>{' '}
+                      içe aktarabilirsiniz.
                       </p>
                     )}
 
                     {/* Headers */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Headers (JSON, optional)</Label>
+                      <Label className="text-sm font-semibold">Header&apos;lar (JSON, isteğe bağlı)</Label>
                       <Textarea
                         value={form.headers_json}
                         onChange={(e) => setForm(prev => ({ ...prev, headers_json: e.target.value }))}
@@ -370,21 +374,21 @@ https://example.com/b"
                         rows={3}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Enter headers as a JSON object. Leave empty if not needed.
+                        Header&apos;ları JSON nesnesi olarak girin. Gerekmiyorsa boş bırakın.
                       </p>
                     </div>
 
                     {/* Body */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Body (optional)</Label>
+                      <Label className="text-sm font-semibold">Gövde (isteğe bağlı)</Label>
                       <Textarea
                         value={form.body}
                         onChange={(e) => setForm(prev => ({ ...prev, body: e.target.value }))}
-                        placeholder="Request body"
+                        placeholder="İstek gövdesi"
                         rows={4}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Request body for POST, PUT, PATCH requests.
+                        POST, PUT, PATCH istekleri için istek gövdesi.
                       </p>
                     </div>
                 </div>
@@ -397,15 +401,15 @@ https://example.com/b"
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left side - Description */}
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">On-call escalation</h2>
+            <h2 className="text-lg font-semibold mb-2">Nöbet eskalasyonu</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Set up rules for who's going to be notified and how when an incident occurs.
+              Bir olay meydana geldiğinde kimin nasıl bilgilendirileceğine dair kurallar belirleyin.
             </p>
             <p className="text-sm text-muted-foreground">
-              Notify <a href="#" className="text-primary hover:underline cursor-pointer">the entire team</a> as a last resort option.
+              Son çare olarak <a href="#" className="text-primary hover:underline cursor-pointer">tüm ekibi</a> bilgilendir.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Alternatively, set up an <a href="#" className="text-primary hover:underline cursor-pointer">advanced escalation policy</a>.
+              Alternatif olarak, <a href="#" className="text-primary hover:underline cursor-pointer">gelişmiş eskalasyon politikası</a> ayarlayın.
             </p>
           </div>
 
@@ -414,7 +418,7 @@ https://example.com/b"
             {/* When there's a new incident */}
             <Card className="border gap-0">
               <CardHeader className="px-6 pt-6 pb-4">
-                <CardTitle className="text-sm font-semibold">When there's a new incident</CardTitle>
+                <CardTitle className="text-sm font-semibold">Yeni bir olay olduğunda</CardTitle>
               </CardHeader>
               <CardContent className="px-6 pb-6 pt-0 space-y-3">
                 <div className="flex items-center gap-6 flex-wrap">
@@ -424,7 +428,7 @@ https://example.com/b"
                       checked={notifications.call}
                       onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, call: checked === true }))}
                     />
-                    <Label htmlFor="call" className="font-normal cursor-pointer">Call</Label>
+                    <Label htmlFor="call" className="font-normal cursor-pointer">Arama</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -440,7 +444,7 @@ https://example.com/b"
                       checked={notifications.email}
                       onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked === true }))}
                     />
-                    <Label htmlFor="email" className="font-normal cursor-pointer">E-mail</Label>
+                    <Label htmlFor="email" className="font-normal cursor-pointer">E-posta</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -448,7 +452,7 @@ https://example.com/b"
                       checked={notifications.push}
                       onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, push: checked === true }))}
                     />
-                    <Label htmlFor="push" className="font-normal cursor-pointer">Push notification</Label>
+                    <Label htmlFor="push" className="font-normal cursor-pointer">Anlık bildirim</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -456,11 +460,11 @@ https://example.com/b"
                       checked={notifications.critical}
                       onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, critical: checked === true }))}
                     />
-                    <Label htmlFor="critical" className="font-normal cursor-pointer">Critical alert</Label>
+                    <Label htmlFor="critical" className="font-normal cursor-pointer">Kritik uyarı</Label>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  <a href="#" className="text-primary hover:underline cursor-pointer">the current on-call person</a>
+                  <a href="#" className="text-primary hover:underline cursor-pointer">mevcut nöbetçi kişi</a>
                 </p>
               </CardContent>
             </Card>
@@ -468,7 +472,7 @@ https://example.com/b"
             {/* If the on-call person doesn't acknowledge */}
             <Card className="border gap-0">
               <CardHeader className="px-6 pt-6 pb-4">
-                <CardTitle className="text-sm font-semibold">If the on-call person doesn't acknowledge the incident</CardTitle>
+                <CardTitle className="text-sm font-semibold">Nöbetçi kişi olayı onaylamazsa</CardTitle>
               </CardHeader>
               <CardContent className="px-6 pb-6 pt-0">
                 <Select
@@ -479,13 +483,13 @@ https://example.com/b"
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="do_nothing">Do nothing</SelectItem>
-                    <SelectItem value="notify_team">Notify the entire team</SelectItem>
-                    <SelectItem value="escalate">Escalate to manager</SelectItem>
+                    <SelectItem value="do_nothing">Hiçbir şey yapma</SelectItem>
+                    <SelectItem value="notify_team">Tüm ekibi bilgilendir</SelectItem>
+                    <SelectItem value="escalate">Yöneticiye eskale et</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Set up an <a href="#" className="text-primary hover:underline cursor-pointer">advanced escalation policy</a> and let <a href="#" className="text-primary hover:underline cursor-pointer">responders choose</a> how they want to be notified.
+                  <a href="#" className="text-primary hover:underline cursor-pointer">Gelişmiş eskalasyon politikası</a> ayarlayın ve <a href="#" className="text-primary hover:underline cursor-pointer">yanıt verenlerin</a> nasıl bilgilendirilmek istediklerini seçmelerine izin verin.
                 </p>
               </CardContent>
             </Card>
@@ -500,7 +504,7 @@ https://example.com/b"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronRight className={`h-4 w-4 transition-transform ${advancedSettingsOpen ? 'rotate-90' : ''}`} />
-            Advanced settings
+            Gelişmiş ayarlar
           </button>
         </div>
 
@@ -509,13 +513,13 @@ https://example.com/b"
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             {/* Left side - Description */}
             <div className="lg:col-span-1">
-              <h2 className="text-lg font-semibold mb-2">Advanced settings</h2>
+              <h2 className="text-lg font-semibold mb-2">Gelişmiş ayarlar</h2>
               <p className="text-sm text-muted-foreground">
-                If you need something extra you can't configure here, please let us know at{' '}
-                <a href="mailto:hello@betterstack.com" className="text-primary hover:underline cursor-pointer">hello@betterstack.com</a> and we'll make it happen!
+                Burada yapılandıramadığınız ekstra bir şeye ihtiyacınız varsa, lütfen{' '}
+                <a href="mailto:destek@uptimetr.com" className="text-primary hover:underline cursor-pointer">destek@uptimetr.com</a> adresinden bize bildirin, gerçekleştirelim!
               </p>
               <p className="text-sm text-muted-foreground mt-4">
-                Have questions? <a href="#" className="text-primary hover:underline cursor-pointer">Let us know</a> or check out the <a href="#" className="text-primary hover:underline cursor-pointer">frequently asked questions</a>.
+                Sorularınız mı var? <a href="#" className="text-primary hover:underline cursor-pointer">Bize bildirin</a> veya <a href="#" className="text-primary hover:underline cursor-pointer">sık sorulan sorulara</a> göz atın.
               </p>
             </div>
 
@@ -525,21 +529,21 @@ https://example.com/b"
                 <CardContent className="px-6 py-6 space-y-6">
                   {/* Pronounceable monitor name */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Pronounceable monitor name</Label>
+                    <Label className="text-sm font-semibold">Okunabilir monitör adı</Label>
                     <Input
                       value={form.name}
                       onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g. API Health Check"
+                      placeholder="örn. API Sağlık Kontrolü"
                     />
                     <p className="text-xs text-muted-foreground">
-                      We'll use this name when we call you.
+                      Sizi aradığımızda bu adı kullanacağız.
                     </p>
                   </div>
 
                   {/* Recovery period and Confirmation period - side by side */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Recovery period</Label>
+                      <Label className="text-sm font-semibold">Kurtarma süresi</Label>
                       <Select
                         value={advancedSettings.recoveryPeriod}
                         onValueChange={(value) => setAdvancedSettings(prev => ({ ...prev, recoveryPeriod: value }))}
@@ -548,20 +552,20 @@ https://example.com/b"
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="60">1 minute</SelectItem>
-                          <SelectItem value="300">5 minutes</SelectItem>
-                          <SelectItem value="600">10 minutes</SelectItem>
-                          <SelectItem value="900">15 minutes</SelectItem>
-                          <SelectItem value="1800">30 minutes</SelectItem>
+                          <SelectItem value="60">1 dakika</SelectItem>
+                          <SelectItem value="300">5 dakika</SelectItem>
+                          <SelectItem value="600">10 dakika</SelectItem>
+                          <SelectItem value="900">15 dakika</SelectItem>
+                          <SelectItem value="1800">30 dakika</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        How long the monitor must be up to automatically mark an incident as resolved.
+                        Olayın otomatik olarak çözüldü olarak işaretlenmesi için monitörün ne kadar süre çalışır durumda olması gerektiği.
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Confirmation period</Label>
+                      <Label className="text-sm font-semibold">Onay süresi</Label>
                       <Select
                         value={advancedSettings.confirmationPeriod}
                         onValueChange={(value) => setAdvancedSettings(prev => ({ ...prev, confirmationPeriod: value }))}
@@ -570,21 +574,21 @@ https://example.com/b"
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="30">30 seconds</SelectItem>
-                          <SelectItem value="60">1 minute</SelectItem>
-                          <SelectItem value="120">2 minutes</SelectItem>
-                          <SelectItem value="300">5 minutes</SelectItem>
+                          <SelectItem value="30">30 saniye</SelectItem>
+                          <SelectItem value="60">1 dakika</SelectItem>
+                          <SelectItem value="120">2 dakika</SelectItem>
+                          <SelectItem value="300">5 dakika</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        How long to wait after observing a failure before we start a new incident.
+                        Bir hata gözlemlendikten sonra yeni bir olay başlatmadan önce ne kadar beklenecek.
                       </p>
                     </div>
                   </div>
 
                   {/* Check frequency */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Check frequency</Label>
+                    <Label className="text-sm font-semibold">Kontrol sıklığı</Label>
                     <Select
                       value={advancedSettings.checkFrequency}
                       onValueChange={(value) => {
@@ -596,17 +600,34 @@ https://example.com/b"
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="60">1 minute</SelectItem>
-                        <SelectItem value="120">2 minutes</SelectItem>
-                        <SelectItem value="180">3 minutes</SelectItem>
-                        <SelectItem value="300">5 minutes</SelectItem>
-                        <SelectItem value="600">10 minutes</SelectItem>
-                        <SelectItem value="900">15 minutes</SelectItem>
-                        <SelectItem value="1800">30 minutes</SelectItem>
+                        <SelectItem value="60">1 dakika</SelectItem>
+                        <SelectItem value="120">2 dakika</SelectItem>
+                        <SelectItem value="180">3 dakika</SelectItem>
+                        <SelectItem value="300">5 dakika</SelectItem>
+                        <SelectItem value="600">10 dakika</SelectItem>
+                        <SelectItem value="900">15 dakika</SelectItem>
+                        <SelectItem value="1800">30 dakika</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      How often should we check your monitor?
+                      Monitörünüzü ne sıklıkla kontrol etmeliyiz?
+                    </p>
+                  </div>
+
+                  {/* Turkey proxy */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="use_tr_proxy"
+                        checked={form.use_tr_proxy}
+                        onCheckedChange={(checked) => setForm(prev => ({ ...prev, use_tr_proxy: checked === true }))}
+                      />
+                      <Label htmlFor="use_tr_proxy" className="text-sm font-semibold cursor-pointer">
+                        Türkiye&apos;den istek at
+                      </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Bazı siteler yurtdışı IP&apos;leri engelleyebilir. Bu seçenek aktifken istekler Türkiye sunucumuzdan atılır.
                     </p>
                   </div>
 
@@ -624,10 +645,10 @@ https://example.com/b"
           variant="outline"
           onClick={() => router.push(`/monitors/${monitor.id}`)}
         >
-          Cancel
+          İptal
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting ? 'Updating...' : 'Update Monitor'}
+          {submitting ? 'Güncelleniyor...' : 'Monitörü Güncelle'}
         </Button>
       </div>
       </form>
@@ -635,4 +656,3 @@ https://example.com/b"
     </>
   );
 }
-

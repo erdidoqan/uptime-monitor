@@ -89,6 +89,7 @@ export async function PUT(
       is_active,
       recovery_period_sec,
       confirmation_period_sec,
+      use_tr_proxy,
     } = body;
 
     const updates: string[] = [];
@@ -165,6 +166,10 @@ export async function PUT(
     if (confirmation_period_sec !== undefined) {
       updates.push('confirmation_period_sec = ?');
       values.push(confirmation_period_sec || null);
+    }
+    if (use_tr_proxy !== undefined) {
+      updates.push('use_tr_proxy = ?');
+      values.push(use_tr_proxy ? 1 : 0);
     }
 
     if (updates.length === 0) {

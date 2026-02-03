@@ -12,11 +12,17 @@ crons = ["*/1 * * * *", "*/10 * * * *", "0 3 * * *"]
 # wrangler secret put CLOUDFLARE_D1_DATABASE_ID
 # wrangler secret put CLOUDFLARE_D1_API_TOKEN
 #
+# Turkey proxy for geo-restricted sites (optional):
+# wrangler secret put TR_PROXY_URL
+# wrangler secret put TR_PROXY_SECRET
+#
 # Or set them in wrangler.toml for local development:
 # [vars]
 # CLOUDFLARE_ACCOUNT_ID = "your-account-id"
 # CLOUDFLARE_D1_DATABASE_ID = "your-database-id"
 # CLOUDFLARE_D1_API_TOKEN = "your-api-token"
+# TR_PROXY_URL = "http://your-tr-server:3000/proxy"
+# TR_PROXY_SECRET = "your-secret"
 
 # R2 Bucket binding for monitor checks storage
 [[r2_buckets]]
