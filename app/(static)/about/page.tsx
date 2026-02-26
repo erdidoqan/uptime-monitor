@@ -3,14 +3,15 @@ import Link from "next/link";
 import { PageHeader, ProseContainer } from "@/components/static";
 
 export const metadata: Metadata = {
-  title: "About",
-  description: "Learn about CronUptime - simple and reliable cron job scheduling and uptime monitoring.",
+  title: "Hakkımızda",
+  description: "UptimeTR hakkında bilgi edinin - basit ve güvenilir cron job zamanlama ve uptime izleme.",
   alternates: {
-    canonical: "https://www.cronuptime.com/about",
+    canonical: "https://www.uptimetr.com/about",
   },
   openGraph: {
-    title: "About CronUptime",
-    description: "Learn about CronUptime - simple and reliable cron job scheduling and uptime monitoring.",
+    title: "Hakkımızda - UptimeTR",
+    description: "UptimeTR hakkında bilgi edinin - basit ve güvenilir cron job zamanlama ve uptime izleme.",
+    url: "https://www.uptimetr.com/about",
   },
 };
 
@@ -18,87 +19,88 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader
-        title="About CronUptime"
-        description="Simple, reliable cron job scheduling and uptime monitoring for developers."
+        title="UptimeTR Hakkında"
+        description="Geliştiriciler için basit, güvenilir cron job zamanlama ve uptime izleme."
       />
       <ProseContainer>
-        <h2>Our Mission</h2>
+        <h2>Misyonumuz</h2>
         <p>
-          CronUptime was built to solve a simple problem: developers need a reliable way 
-          to schedule recurring tasks and monitor their services without managing complex 
-          infrastructure.
+          UptimeTR, basit bir sorunu çözmek için oluşturuldu: geliştiricilerin karmaşık 
+          altyapı yönetimi olmadan tekrarlayan görevleri zamanlamak ve servislerini 
+          izlemek için güvenilir bir yola ihtiyacı var.
         </p>
         <p>
-          We believe monitoring should be simple, affordable, and just work. That&apos;s why 
-          we created a platform that lets you set up cron jobs in seconds, without any 
-          server configuration or complicated setup.
+          İzlemenin basit, uygun fiyatlı ve sadece çalışması gerektiğine inanıyoruz. 
+          Bu yüzden saniyeler içinde cron job&apos;lar oluşturmanıza olanak tanıyan, 
+          sunucu yapılandırması veya karmaşık kurulum gerektirmeyen bir platform oluşturduk.
         </p>
 
-        <h2>What We Do</h2>
+        <h2>Ne Yapıyoruz</h2>
         <p>
-          CronUptime provides two core services:
+          UptimeTR iki temel hizmet sunar:
         </p>
         <ul>
           <li>
-            <strong>Cron Job Scheduling:</strong> Schedule HTTP requests to any endpoint 
-            with flexible timing options. Perfect for triggering webhooks, running 
-            background tasks, or keeping services alive.
+            <strong>Cron Job Zamanlama:</strong> Esnek zamanlama seçenekleriyle herhangi 
+            bir endpoint&apos;e HTTP istekleri zamanlayın. Webhook&apos;ları tetiklemek, 
+            arka plan görevleri çalıştırmak veya servisleri canlı tutmak için mükemmel.
           </li>
           <li>
-            <strong>Uptime Monitoring:</strong> Monitor your websites and APIs around 
-            the clock. Get notified instantly when something goes wrong.
+            <strong>Uptime İzleme:</strong> Web sitelerinizi ve API&apos;lerinizi 7/24 
+            izleyin. Bir şeyler ters gittiğinde anında bildirim alın.
           </li>
         </ul>
 
-        <h2>Why CronUptime?</h2>
+        <h2>Neden UptimeTR?</h2>
         
-        <h3>Simple Setup</h3>
+        <h3>Basit Kurulum</h3>
         <p>
-          Create a cron job in under 30 seconds. Just paste your URL (or a curl command), 
-          set your schedule, and you&apos;re done. No complex configuration needed.
+          30 saniyeden kısa sürede bir cron job oluşturun. URL&apos;nizi (veya bir curl 
+          komutu) yapıştırın, zamanlamanızı ayarlayın ve hazırsınız. Karmaşık yapılandırma gerekmez.
         </p>
 
-        <h3>Reliable Execution</h3>
+        <h3>Güvenilir Çalıştırma</h3>
         <p>
-          Our infrastructure runs on Cloudflare&apos;s global network, ensuring your cron jobs 
-          execute on time, every time. We handle retries, timeouts, and error logging 
-          automatically.
+          Altyapımız Cloudflare&apos;in global ağı üzerinde çalışır ve cron job&apos;larınızın 
+          her seferinde zamanında çalışmasını sağlar. Yeniden denemeleri, zaman aşımlarını 
+          ve hata günlüğünü otomatik olarak yönetiyoruz.
         </p>
 
-        <h3>Developer Friendly</h3>
+        <h3>Geliştirici Dostu</h3>
         <p>
-          Built by developers, for developers. We support all HTTP methods, custom headers, 
-          request bodies, and provide detailed execution logs for debugging.
+          Geliştiriciler tarafından, geliştiriciler için oluşturuldu. Tüm HTTP metodlarını, 
+          özel header&apos;ları, istek gövdelerini destekliyoruz ve hata ayıklama için 
+          ayrıntılı çalıştırma günlükleri sağlıyoruz.
         </p>
 
-        <h3>Free to Start</h3>
+        <h3>Ücretsiz Başlangıç</h3>
         <p>
-          Try CronUptime without creating an account. Sign in with Google to unlock 
-          more features and keep your cron jobs running permanently.
+          Hesap oluşturmadan UptimeTR&apos;yi deneyin. Daha fazla özelliğin kilidini açmak 
+          ve cron job&apos;larınızı kalıcı olarak çalıştırmak için Google ile giriş yapın.
         </p>
 
-        <h2>Our Technology</h2>
+        <h2>Teknolojimiz</h2>
         <p>
-          CronUptime is built on modern, reliable infrastructure:
+          UptimeTR modern, güvenilir altyapı üzerine kurulmuştur:
         </p>
         <ul>
-          <li><strong>Cloudflare Workers:</strong> Serverless execution at the edge</li>
-          <li><strong>Cloudflare D1:</strong> Distributed SQLite database</li>
-          <li><strong>Cloudflare R2:</strong> Object storage for logs and history</li>
-          <li><strong>Next.js:</strong> React framework for the dashboard</li>
+          <li><strong>Cloudflare Workers:</strong> Edge&apos;de sunucusuz çalıştırma</li>
+          <li><strong>Cloudflare D1:</strong> Dağıtılmış SQLite veritabanı</li>
+          <li><strong>Cloudflare R2:</strong> Günlükler ve geçmiş için nesne depolama</li>
+          <li><strong>Next.js:</strong> Dashboard için React framework&apos;ü</li>
         </ul>
 
-        <h2>Get Started</h2>
+        <h2>Başlayın</h2>
         <p>
-          Ready to try CronUptime? Head to our <Link href="/">homepage</Link> and create your 
-          first cron job in seconds. No sign-up required for your first job!
+          UptimeTR&apos;yi denemeye hazır mısınız? <Link href="/">Ana sayfamıza</Link> gidin 
+          ve saniyeler içinde ilk cron job&apos;unuzu oluşturun. İlk job&apos;unuz için 
+          kayıt gerekmez!
         </p>
         <p>
-          Have questions? Check out our <Link href="/faq">FAQ</Link> or{" "}
-          <Link href="/contact">contact us</Link>.
+          Sorularınız mı var? <Link href="/faq">SSS</Link> sayfamıza göz atın veya{" "}
+          <Link href="/contact">bizimle iletişime geçin</Link>.
         </p>
       </ProseContainer>
     </>
   );
 }
-

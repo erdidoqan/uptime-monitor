@@ -1,41 +1,37 @@
 const steps = [
   {
     number: "01",
-    title: "Add Your Endpoint",
-    description: "Enter the URL you want to monitor. We support any HTTP/HTTPS endpoint - APIs, webhooks, health checks, and more.",
-    code: `// Your endpoint
-https://api.example.com/health
+    title: "URL'nizi Ekleyin",
+    description: "İzlemek istediğiniz web sitesinin veya API'nin URL'sini girin. HTTP/HTTPS protokollerini destekliyoruz.",
+    code: `// İzlenecek URL
+https://example.com
 
-// We'll send a GET request
-fetch("https://api.example.com/health")`,
+// veya API endpoint'i
+https://api.example.com/health`,
   },
   {
     number: "02",
-    title: "Set Your Schedule",
-    description: "Choose how often to check your endpoint. Use simple intervals like every 5 minutes, or complex cron expressions for custom schedules.",
-    code: `// Simple intervals
-Every 5 minutes
-Every 15 minutes
-Every hour
-
-// Cron expressions
-*/5 * * * *  → Every 5 min
-0 9 * * 1   → Monday 9 AM
-0 0 1 * *   → Monthly`,
+    title: "Kontrol Aralığını Seçin",
+    description: "Web sitenizi ne sıklıkla kontrol edeceğinizi belirleyin. 5, 10, 15 veya 30 dakikalık aralıklar arasından seçim yapın.",
+    code: `// Kontrol aralıkları
+Her 5 dakika   → Kritik servisler
+Her 10 dakika  → Önemli sayfalar
+Her 15 dakika  → Genel izleme
+Her 30 dakika  → Düşük öncelikli`,
   },
   {
     number: "03",
-    title: "Stay Informed",
-    description: "Get notified instantly when your endpoint fails or recovers. Track response times and view detailed run history.",
-    code: `✓ Status: 200 OK
-✓ Duration: 145ms
-✓ Last checked: Just now
-✓ Next check: in 5 minutes
+    title: "Bilgilendirilmiş Olun",
+    description: "Web siteniz çöktüğünde veya düzeldiğinde anında bildirim alın. Yanıt sürelerini takip edin ve detaylı uptime geçmişini görüntüleyin.",
+    code: `✓ Durum: 200 OK
+✓ Süre: 145ms
+✓ Son kontrol: Az önce
+✓ Sonraki kontrol: 5 dk içinde
 
-// Failure alert
-⚠ api.example.com is down
-  Status: 503
-  Duration: 30000ms (timeout)`,
+// Hata uyarısı
+⚠ example.com çalışmıyor
+  Durum: 503
+  Süre: 30000ms (zaman aşımı)`,
   },
 ];
 
@@ -46,10 +42,10 @@ export function HowItWorks() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            How It <span className="gradient-text">Works</span>
+            Nasıl <span className="gradient-text">Çalışır</span>
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Get started in minutes. No complex configuration or infrastructure setup required.
+            Dakikalar içinde başlayın. Karmaşık yapılandırma veya altyapı kurulumu gerekmez.
           </p>
         </div>
 
@@ -65,7 +61,7 @@ export function HowItWorks() {
               {/* Content */}
               <div className={index % 2 === 1 ? "lg:order-2" : ""}>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-sm font-medium mb-4">
-                  Step {step.number}
+                  Adım {step.number}
                 </div>
                 <h3 className="text-2xl lg:text-3xl font-bold text-white mb-4">{step.title}</h3>
                 <p className="text-lg text-gray-400 mb-6">{step.description}</p>
@@ -92,4 +88,3 @@ export function HowItWorks() {
     </section>
   );
 }
-

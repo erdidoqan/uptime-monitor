@@ -14,10 +14,10 @@ import { parseCurlCommand } from '@/lib/curl-parser';
 
 // Interval presets in seconds
 const INTERVAL_PRESETS = [
-  { label: '5 min', value: 300 },
-  { label: '10 min', value: 600 },
-  { label: '15 min', value: 900 },
-  { label: '30 min', value: 1800 },
+  { label: '5 dk', value: 300 },
+  { label: '10 dk', value: 600 },
+  { label: '15 dk', value: 900 },
+  { label: '30 dk', value: 1800 },
 ];
 
 interface ExistingCron {
@@ -130,7 +130,7 @@ export function HeroCronForm() {
       try {
         JSON.parse(form.headers_json);
       } catch {
-        setError('Invalid JSON format in headers');
+        setError('Header\'larda geçersiz JSON formatı');
         return;
       }
     }
@@ -157,7 +157,7 @@ export function HeroCronForm() {
       const result = await response.json();
       
       if (!response.ok) {
-        setError(result.error || 'Test failed');
+        setError(result.error || 'Test başarısız');
         return;
       }
 
@@ -168,7 +168,7 @@ export function HeroCronForm() {
       }
     } catch (err) {
       console.error('Failed to test:', err);
-      setError('Failed to test request. Please try again.');
+      setError('İstek test edilemedi. Lütfen tekrar deneyin.');
     } finally {
       setTestLoading(false);
     }
@@ -199,7 +199,7 @@ export function HeroCronForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to create cron job');
+        setError(data.error || 'Cron job oluşturulamadı');
         return;
       }
 
@@ -212,7 +212,7 @@ export function HeroCronForm() {
       });
     } catch (err) {
       console.error('Failed to create cron:', err);
-      setError('Failed to create cron job. Please try again.');
+      setError('Cron job oluşturulamadı. Lütfen tekrar deneyin.');
     } finally {
       setSubmitting(false);
     }
@@ -228,10 +228,10 @@ export function HeroCronForm() {
           </div>
           <div>
             <h3 className="font-semibold text-white">
-              {success ? 'Cron Job Created!' : 'You have an active cron job'}
+              {success ? 'Cron Job Oluşturuldu!' : 'Aktif cron job\'unuz var'}
             </h3>
             <p className="text-sm text-gray-400">
-              Running every {existingCron.interval_sec / 60} minutes
+              Her {existingCron.interval_sec / 60} dakikada çalışıyor
             </p>
           </div>
         </div>
@@ -239,13 +239,13 @@ export function HeroCronForm() {
         <div className="p-3 rounded-lg bg-white/5 border border-white/10 mb-4">
           <p className="text-sm text-gray-300 font-mono truncate">{existingCron.url}</p>
           <p className="text-xs text-gray-500 mt-1">
-            Expires: {new Date(existingCron.expires_at).toLocaleDateString()}
+            Bitiş: {new Date(existingCron.expires_at).toLocaleDateString('tr-TR')}
           </p>
         </div>
 
         <div className="space-y-3">
           <p className="text-sm text-gray-400">
-            Want to create more cron jobs or keep this one permanently?
+            Daha fazla cron job oluşturmak veya bu job&apos;u kalıcı yapmak ister misiniz?
           </p>
           <GoogleSignInButton className="w-full" />
         </div>
@@ -258,10 +258,10 @@ export function HeroCronForm() {
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-white mb-1">
-          Try it now - Free
+          Şimdi Deneyin - Ücretsiz
         </h3>
         <p className="text-sm text-gray-400">
-          Create a cron job in seconds. No sign-up required.
+          Saniyeler içinde cron job oluşturun. Kayıt gerekmez.
         </p>
       </div>
 
@@ -269,12 +269,12 @@ export function HeroCronForm() {
         {/* Method + URL */}
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
-            <Label className="text-sm font-medium text-gray-300">Request</Label>
+            <Label className="text-sm font-medium text-gray-300">İstek</Label>
             <Info className="h-3.5 w-3.5 text-gray-500 shrink-0" />
             {curlParsed && (
               <Badge variant="default" className="text-xs bg-green-500/20 text-green-400 border-green-500/30">
                 <Check className="h-3 w-3 mr-1" />
-                Curl imported
+                Curl içe aktarıldı
               </Badge>
             )}
           </div>
@@ -299,19 +299,19 @@ export function HeroCronForm() {
               value={form.url}
               onChange={(e) => setForm(prev => ({ ...prev, url: e.target.value }))}
               onPaste={handleUrlPaste}
-              placeholder="https:// or paste curl command"
+              placeholder="https:// veya curl komutu yapıştırın"
               className="flex-1 rounded-none border-0 bg-white/5 text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
               required
             />
           </div>
           <p className="text-xs text-gray-500">
-            The URL that will be called. You can also paste a curl command here.
+            Çağrılacak URL. Ayrıca curl komutu da yapıştırabilirsiniz.
           </p>
         </div>
 
         {/* Headers */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-300">Headers (JSON, optional)</Label>
+          <Label className="text-sm font-medium text-gray-300">Header&apos;lar (JSON, isteğe bağlı)</Label>
           <Textarea
             value={form.headers_json}
             onChange={(e) => setForm(prev => ({ ...prev, headers_json: e.target.value }))}
@@ -320,28 +320,28 @@ export function HeroCronForm() {
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50 font-mono text-sm"
           />
           <p className="text-xs text-gray-500">
-            Enter headers as a JSON object. Leave empty if not needed.
+            Header&apos;ları JSON nesnesi olarak girin. Gerekmiyorsa boş bırakın.
           </p>
         </div>
 
         {/* Body */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-300">Body (optional)</Label>
+          <Label className="text-sm font-medium text-gray-300">Gövde (isteğe bağlı)</Label>
           <Textarea
             value={form.body}
             onChange={(e) => setForm(prev => ({ ...prev, body: e.target.value }))}
-            placeholder="Request body"
+            placeholder="İstek gövdesi"
             rows={2}
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500/50 font-mono text-sm"
           />
           <p className="text-xs text-gray-500">
-            Request body for POST, PUT, PATCH requests.
+            POST, PUT, PATCH istekleri için istek gövdesi.
           </p>
         </div>
 
         {/* Interval Selection */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-300">Check interval</Label>
+          <Label className="text-sm font-medium text-gray-300">Kontrol aralığı</Label>
           <div className="grid grid-cols-4 gap-2">
             {INTERVAL_PRESETS.map((preset) => (
               <button
@@ -380,12 +380,12 @@ export function HeroCronForm() {
               {testLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing...
+                  Test Ediliyor...
                 </>
               ) : (
                 <>
                   <Zap className="mr-2 h-4 w-4" />
-                  Test Request
+                  İsteği Test Et
                 </>
               )}
             </Button>
@@ -398,12 +398,12 @@ export function HeroCronForm() {
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Oluşturuluyor...
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Create Cron Job
+                  Cron Job Oluştur
                 </>
               )}
             </Button>
@@ -414,10 +414,10 @@ export function HeroCronForm() {
         <div className="flex items-center justify-center gap-2">
           <Badge variant="outline" className="text-xs text-gray-400 border-white/10">
             <Clock className="mr-1 h-3 w-3" />
-            Runs for 7 days
+            7 gün çalışır
           </Badge>
           <span className="text-xs text-gray-500">•</span>
-          <span className="text-xs text-gray-500">Sign in for permanent</span>
+          <span className="text-xs text-gray-500">Kalıcı için giriş yapın</span>
         </div>
       </form>
 
@@ -431,4 +431,3 @@ export function HeroCronForm() {
     </div>
   );
 }
-

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+    .section {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+    .dark-bg {
+      background: #18181b;
+    }
+    .dark-bg h2 {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Status Badge Test</h1>
+    
+    <div class="section">
+      <h2>Light Theme</h2>
+      <iframe src="https://harem-altin.uptimetr.com/badge?theme=light" width="250" height="36" frameborder="0" scrolling="no" style="border: none; color-scheme: normal;"></iframe>
+    </div>
+
+    <div class="section dark-bg">
+      <h2>Dark Theme</h2>
+      <iframe src="https://harem-altin.uptimetr.com/badge?theme=dark" width="250" height="36" frameborder="0" scrolling="no" style="border: none; color-scheme: normal;"></iframe>
+    </div>
+  </div>
+</body>
+</html>

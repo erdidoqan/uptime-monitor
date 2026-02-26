@@ -50,7 +50,7 @@ interface ApiTokenListProps {
 
 // Format relative time
 function formatRelativeTime(timestamp: number | null): string {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return 'Hiç';
   
   const now = Date.now();
   const diff = now - timestamp;
@@ -59,16 +59,16 @@ function formatRelativeTime(timestamp: number | null): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 30) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
+  if (seconds < 60) return 'Az önce';
+  if (minutes < 60) return `${minutes}dk önce`;
+  if (hours < 24) return `${hours}s önce`;
+  if (days < 30) return `${days}g önce`;
+  return new Date(timestamp).toLocaleDateString('tr-TR');
 }
 
 // Format date
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
+  return new Date(timestamp).toLocaleDateString('tr-TR', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -77,9 +77,9 @@ function formatDate(timestamp: number): string {
 
 // Format scopes for display
 function formatScopes(scopes: string[]): string {
-  if (scopes.length === 0) return 'No scopes';
+  if (scopes.length === 0) return 'Yetki yok';
   if (scopes.length <= 2) return scopes.join(', ');
-  return `${scopes.slice(0, 2).join(', ')} +${scopes.length - 2} more`;
+  return `${scopes.slice(0, 2).join(', ')} +${scopes.length - 2} daha`;
 }
 
 export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
@@ -104,7 +104,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
       setTokens(tokens);
     } catch (error) {
       if (error instanceof ApiError) {
-        toast.error(error.message || 'Failed to load tokens');
+        toast.error(error.message || 'Token\'lar yüklenemedi');
       }
     } finally {
       setLoading(false);
@@ -124,13 +124,13 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
     setIsDeleting(true);
     try {
       await api.delete(`/api-tokens/${tokenToDelete}`);
-      toast.success('Token revoked successfully');
+      toast.success('Token başarıyla iptal edildi');
       setDeleteDialogOpen(false);
       setTokenToDelete(null);
       await refreshTokens();
     } catch (error) {
       if (error instanceof ApiError) {
-        toast.error(error.message || 'Failed to revoke token');
+        toast.error(error.message || 'Token iptal edilemedi');
       }
     } finally {
       setIsDeleting(false);
@@ -142,10 +142,10 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
     try {
       await navigator.clipboard.writeText(token);
       setCopied(true);
-      toast.success('Token copied to clipboard');
+      toast.success('Token panoya kopyalandı');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('Failed to copy token');
+      toast.error('Token kopyalanamadı');
     }
   };
 
@@ -171,7 +171,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
         {activeTokens.length > 0 && (
           <div>
             <h2 className="text-sm font-medium text-muted-foreground mb-2">
-              Active Tokens
+              Aktif Token&apos;lar
             </h2>
             <Card className="border">
               <CardContent className="p-0">
@@ -185,7 +185,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium">
-                            {token.name || 'Unnamed Token'}
+                            {token.name || 'İsimsiz Token'}
                           </p>
                           <code className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                             {token.token_prefix}...
@@ -194,18 +194,18 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>{formatScopes(token.scopes)}</span>
                           <span>•</span>
-                          <span>Created {formatDate(token.created_at)}</span>
+                          <span>Oluşturulma {formatDate(token.created_at)}</span>
                           {token.last_used_at && (
                             <>
                               <span>•</span>
-                              <span>Last used {formatRelativeTime(token.last_used_at)}</span>
+                              <span>Son kullanım {formatRelativeTime(token.last_used_at)}</span>
                             </>
                           )}
                           {token.expires_at && (
                             <>
                               <span>•</span>
                               <span>
-                                Expires {formatDate(token.expires_at)}
+                                Bitiş {formatDate(token.expires_at)}
                               </span>
                             </>
                           )}
@@ -223,7 +223,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Revoke
+                            İptal Et
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -239,7 +239,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
         {revokedTokens.length > 0 && (
           <div>
             <h2 className="text-sm font-medium text-muted-foreground mb-2">
-              Revoked Tokens
+              İptal Edilmiş Token&apos;lar
             </h2>
             <Card className="border opacity-60">
               <CardContent className="p-0">
@@ -253,17 +253,17 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium text-muted-foreground">
-                            {token.name || 'Unnamed Token'}
+                            {token.name || 'İsimsiz Token'}
                           </p>
                           <code className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                             {token.token_prefix}...
                           </code>
                           <span className="text-xs text-muted-foreground">
-                            (Revoked)
+                            (İptal Edildi)
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Revoked {formatDate(token.revoked_at!)}
+                          İptal tarihi {formatDate(token.revoked_at!)}
                         </div>
                       </div>
                     </div>
@@ -279,9 +279,9 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
           <Card className="border">
             <CardContent className="py-12 text-center">
               <Key className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No API tokens</h3>
+              <h3 className="text-lg font-semibold mb-2">API token yok</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Create an API token to access the API programmatically
+                API&apos;ye programatik erişim için bir API token oluşturun
               </p>
               <CreateApiTokenDialog onTokenCreated={handleTokenCreated} />
             </CardContent>
@@ -293,10 +293,9 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
       <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>API Token Created</DialogTitle>
+            <DialogTitle>API Token Oluşturuldu</DialogTitle>
             <DialogDescription>
-              Your API token has been created. Make sure to copy it now - you
-              won't be able to see it again!
+              API token&apos;ınız oluşturuldu. Şimdi kopyaladığınızdan emin olun - tekrar göremezsiniz!
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -320,8 +319,7 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
             </div>
             <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Important:</strong> This token will only be shown once.
-                Store it securely.
+                <strong>Önemli:</strong> Bu token sadece bir kez gösterilecek. Güvenli bir şekilde saklayın.
               </p>
             </div>
           </div>
@@ -332,20 +330,20 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Revoke API Token</AlertDialogTitle>
+            <AlertDialogTitle>API Token İptal Et</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this token? This action cannot be undone.
-              The token will immediately stop working and cannot be recovered.
+              Bu token&apos;ı iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+              Token hemen çalışmayı durduracak ve kurtarılamaz.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? 'Revoking...' : 'Revoke Token'}
+              {isDeleting ? 'İptal Ediliyor...' : 'Token\'ı İptal Et'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -353,4 +351,3 @@ export function ApiTokenList({ initialTokens }: ApiTokenListProps) {
     </>
   );
 }
-

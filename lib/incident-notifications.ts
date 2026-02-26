@@ -29,7 +29,7 @@ async function getUserEmail(userId: string): Promise<string | null> {
   try {
     const db = getD1Client();
     const user = await db.queryFirst<{ email: string }>(
-      'SELECT email FROM users WHERE id = ?',
+      'SELECT email FROM users WHERE id = ? AND (is_banned IS NULL OR is_banned = 0)',
       [userId]
     );
     return user?.email || null;
@@ -94,7 +94,7 @@ function formatCause(cause: string | null, httpStatus: number | null): string {
  * Get dashboard URL
  */
 function getDashboardUrl(incidentId: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://uptime.digitexa.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.uptimetr.com';
   return `${baseUrl}/incidents/${incidentId}`;
 }
 
@@ -160,7 +160,7 @@ function generateEmailHTML(params: IncidentEmailParams & { sourceName: string; u
     </div>
     
     <p style="margin-top: 30px; font-size: 14px; color: #6b7280; text-align: center;">
-      This is an automated notification from Uptime Monitor.
+      Bu otomatik bir UptimeTR bildirimidir.
     </p>
   </div>
 </body>
@@ -224,7 +224,7 @@ function generateResolvedEmailHTML(params: IncidentResolvedEmailParams & { sourc
     </div>
     
     <p style="margin-top: 30px; font-size: 14px; color: #6b7280; text-align: center;">
-      This is an automated notification from Uptime Monitor.
+      Bu otomatik bir UptimeTR bildirimidir.
     </p>
   </div>
 </body>
@@ -234,22 +234,23 @@ function generateResolvedEmailHTML(params: IncidentResolvedEmailParams & { sourc
 
 /**
  * Send incident resolved notification email
- * This function is fire-and-forget (doesn't await email sending)
  */
 export async function sendIncidentResolvedEmail(params: IncidentResolvedEmailParams): Promise<void> {
-  try {
-    const unosend = getUnosendClient();
-    if (!unosend) {
-      console.warn('Unosend client not available, skipping email notification');
-      return;
-    }
+  const unosend = getUnosendClient();
+  if (!unosend) {
+    const msg = 'Unosend client not available (UNOSEND_API_KEY missing?), cannot send email';
+    console.error(msg);
+    throw new Error(msg);
+  }
 
-    // Get user email
-    const userEmail = await getUserEmail(params.userId);
-    if (!userEmail) {
-      console.warn(`User email not found for user ${params.userId}, skipping email notification`);
-      return;
-    }
+  // Get user email (also checks is_banned)
+  const userEmail = await getUserEmail(params.userId);
+  if (!userEmail) {
+    console.warn(`User email not found or user is banned (userId: ${params.userId}), skipping resolved email`);
+    return;
+  }
+
+  try {
 
     // Get source name
     const sourceName = params.sourceName || await getSourceName(params.incidentType, params.sourceId);
@@ -292,19 +293,21 @@ export async function sendIncidentResolvedEmail(params: IncidentResolvedEmailPar
  * Send incident notification email
  */
 export async function sendIncidentEmail(params: IncidentEmailParams): Promise<void> {
-  try {
-    const unosend = getUnosendClient();
-    if (!unosend) {
-      console.warn('Unosend client not available, skipping email notification');
-      return;
-    }
+  const unosend = getUnosendClient();
+  if (!unosend) {
+    const msg = 'Unosend client not available (UNOSEND_API_KEY missing?), cannot send email';
+    console.error(msg);
+    throw new Error(msg);
+  }
 
-    // Get user email
-    const userEmail = await getUserEmail(params.userId);
-    if (!userEmail) {
-      console.warn(`User email not found for user ${params.userId}, skipping email notification`);
-      return;
-    }
+  // Get user email (also checks is_banned)
+  const userEmail = await getUserEmail(params.userId);
+  if (!userEmail) {
+    console.warn(`User email not found or user is banned (userId: ${params.userId}), skipping incident email`);
+    return;
+  }
+
+  try {
 
     // Get source name
     const sourceName = params.sourceName || await getSourceName(params.incidentType, params.sourceId);

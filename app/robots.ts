@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://www.cronuptime.com";
+  const baseUrl = "https://www.uptimetr.com";
 
   return {
     rules: [
@@ -12,8 +12,7 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/monitors/",
           "/cron-jobs/",
-          "/incidents/",
-          "/_next/",
+          "/incidents/"
         ],
       },
     ],

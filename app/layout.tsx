@@ -4,7 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const GTM_ID = "GTM-TJTT59DW";
+const GTM_ID = "GTM-52RZ45VJ";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,23 +18,23 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CronUptime - Cron Job Scheduling & Uptime Monitoring",
-    template: "%s | CronUptime",
+    default: "UptimeTR - Zamanlanmış Görevler ve Uptime İzleme",
+    template: "%s | UptimeTR",
   },
-  description: "Schedule cron jobs and monitor your API endpoints with ease. Real-time HTTP monitoring, flexible scheduling, and instant failure notifications. Free to get started.",
+  description: "Cron job'larınızı planlayın ve API endpoint'lerinizi kolayca izleyin. Gerçek zamanlı HTTP izleme, esnek zamanlama ve anlık hata bildirimleri. Ücretsiz başlayın.",
   keywords: [
     "cron job",
-    "uptime monitoring",
-    "api monitoring",
-    "http monitoring",
-    "scheduled tasks",
-    "health check",
-    "endpoint monitoring",
-    "server monitoring",
+    "uptime izleme",
+    "api izleme",
+    "http izleme",
+    "zamanlanmış görevler",
+    "sağlık kontrolü",
+    "endpoint izleme",
+    "sunucu izleme",
   ],
-  authors: [{ name: "CronUptime" }],
-  creator: "CronUptime",
-  publisher: "CronUptime",
+  authors: [{ name: "UptimeTR" }],
+  creator: "UptimeTR",
+  publisher: "UptimeTR",
   robots: {
     index: true,
     follow: true,
@@ -48,26 +48,26 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://www.cronuptime.com",
-    siteName: "CronUptime",
-    title: "CronUptime - Cron Job Scheduling & Uptime Monitoring",
-    description: "Schedule cron jobs and monitor your API endpoints with ease. Real-time HTTP monitoring, flexible scheduling, and instant failure notifications.",
+    locale: "tr_TR",
+    url: "https://www.uptimetr.com",
+    siteName: "UptimeTR",
+    title: "UptimeTR - Zamanlanmış Görevler ve Uptime İzleme",
+    description: "Cron job'larınızı planlayın ve API endpoint'lerinizi kolayca izleyin. Gerçek zamanlı HTTP izleme, esnek zamanlama ve anlık hata bildirimleri.",
     images: [
       {
-        url: "https://www.cronuptime.com/og-image.jpg",
+        url: "https://www.uptimetr.com/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "CronUptime - Cron Job Scheduling & Uptime Monitoring",
+        alt: "UptimeTR - Zamanlanmış Görevler ve Uptime İzleme",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CronUptime - Cron Job Scheduling & Uptime Monitoring",
-    description: "Schedule cron jobs and monitor your API endpoints with ease. Real-time HTTP monitoring, flexible scheduling, and instant failure notifications.",
-    images: ["https://www.cronuptime.com/og-image.jpg"],
-    creator: "@cronuptime",
+    title: "UptimeTR - Zamanlanmış Görevler ve Uptime İzleme",
+    description: "Cron job'larınızı planlayın ve API endpoint'lerinizi kolayca izleyin. Gerçek zamanlı HTTP izleme, esnek zamanlama ve anlık hata bildirimleri.",
+    images: ["https://www.uptimetr.com/og-image.jpg"],
+    creator: "@uptimetr",
   },
   icons: {
     icon: "/favicon.ico",
@@ -75,25 +75,30 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
+  alternates: {
+    types: {
+      'application/rss+xml': 'https://www.uptimetr.com/status-pages.xml',
+    },
+  },
 };
 
 // Structured data for SEO
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "CronUptime",
-  description: "Schedule cron jobs and monitor your API endpoints with ease.",
-  url: "https://www.cronuptime.com",
+  name: "UptimeTR",
+  description: "Cron job'larınızı planlayın ve API endpoint'lerinizi kolayca izleyin.",
+  url: "https://www.uptimetr.com",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web",
   offers: {
     "@type": "Offer",
     price: "0",
-    priceCurrency: "USD",
+    priceCurrency: "TRY",
   },
   creator: {
     "@type": "Organization",
-    name: "CronUptime",
+    name: "UptimeTR",
   },
 };
 
@@ -103,7 +108,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <head>
         {/* Google Tag Manager */}
         <Script
@@ -136,6 +141,8 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
+        
+        
         <Providers>{children}</Providers>
       </body>
     </html>

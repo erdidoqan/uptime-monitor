@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       return errorResponse('Method is required', 400);
     }
 
-    const timeout = body.timeout_ms || 5000;
+    const timeout = body.timeout_ms || 15000;
     const expectedMin = body.expected_min ?? 200;
     const expectedMax = body.expected_max ?? 299;
 

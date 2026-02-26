@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import type { StatusPage } from '@/shared/types';
 
 interface SettingsTabProps {
@@ -43,13 +43,13 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
     
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('Invalid file type. Please upload PNG, JPG, SVG, or WebP.');
+      setUploadError('Geçersiz dosya türü. Lütfen PNG, JPG, SVG veya WebP yükleyin.');
       return;
     }
     
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      setUploadError('File too large. Maximum size is 2MB.');
+      setUploadError('Dosya çok büyük. Maksimum boyut 2MB.');
       return;
     }
     
@@ -70,7 +70,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
       
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to upload logo');
+        throw new Error(data.error || 'Logo yüklenemedi');
       }
       
       const data = await response.json();
@@ -80,7 +80,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
       onUpdate({ ...statusPage, logo_url: data.logo_url });
     } catch (err: any) {
       console.error('Logo upload failed:', err);
-      setUploadError(err.message || 'Failed to upload logo');
+      setUploadError(err.message || 'Logo yüklenemedi');
     } finally {
       setUploading(false);
     }
@@ -102,14 +102,14 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
       
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to delete logo');
+        throw new Error(data.error || 'Logo silinemedi');
       }
       
       setLogoUrl(null);
       onUpdate({ ...statusPage, logo_url: null });
     } catch (err: any) {
       console.error('Logo delete failed:', err);
-      setUploadError(err.message || 'Failed to delete logo');
+      setUploadError(err.message || 'Logo silinemedi');
     } finally {
       setUploading(false);
     }
@@ -150,19 +150,19 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
     setSuccess(false);
 
     if (!form.company_name.trim()) {
-      setError('Company name is required');
+      setError('Şirket adı gerekli');
       return;
     }
 
     if (!form.subdomain.trim()) {
-      setError('Subdomain is required');
+      setError('Alt alan adı gerekli');
       return;
     }
 
     // Validate subdomain format
     const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
     if (!subdomainRegex.test(form.subdomain.toLowerCase())) {
-      setError('Subdomain must be alphanumeric and can contain hyphens (not at start or end)');
+      setError('Alt alan adı alfanümerik olmalı ve tire içerebilir (başta veya sonda olamaz)');
       return;
     }
 
@@ -180,7 +180,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error('Failed to update status page:', err);
-      setError(err.message || 'Failed to update status page');
+      setError(err.message || 'Durum sayfası güncellenemedi');
     } finally {
       setSaving(false);
     }
@@ -193,11 +193,11 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-lg font-semibold">Basic information</h2>
-              <span className="text-xs bg-muted px-2 py-0.5 rounded">Billable</span>
+              <h2 className="text-lg font-semibold">Temel bilgiler</h2>
+              <span className="text-xs bg-muted px-2 py-0.5 rounded">Ücretli</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              A public status page informs your users about the uptime of your services.
+              Herkese açık bir durum sayfası, kullanıcılarınızı hizmetlerinizin çalışma durumu hakkında bilgilendirir.
             </p>
           </div>
 
@@ -207,7 +207,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold">
-                      Company name <span className="text-red-500">*</span>
+                      Şirket adı <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       value={form.company_name}
@@ -219,7 +219,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
 
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold">
-                      Subdomain <span className="text-red-500">*</span>
+                      Alt alan adı <span className="text-red-500">*</span>
                     </Label>
                     <div className="flex">
                       <Input
@@ -230,11 +230,11 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                         required
                       />
                       <div className="flex items-center px-3 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                        .cronuptime.com
+                        .uptimetr.com
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      You can configure a custom domain below.
+                      Aşağıdan özel alan adı yapılandırabilirsiniz.
                     </p>
                   </div>
                 </div>
@@ -246,9 +246,9 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
         {/* Links & URLs */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">Links & URLs</h2>
+            <h2 className="text-lg font-semibold mb-2">Bağlantılar & URL&apos;ler</h2>
             <p className="text-sm text-muted-foreground">
-              Where should we point your users when they want to visit your website?
+              Kullanıcılarınız web sitenizi ziyaret etmek istediğinde onları nereye yönlendirelim?
             </p>
           </div>
 
@@ -257,18 +257,18 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
               <CardContent className="px-6 py-6 space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">What URL should your logo point to?</Label>
+                    <Label className="text-sm font-semibold">Logonuz hangi URL&apos;ye yönlendirsin?</Label>
                     <Input
                       type="url"
                       value={form.logo_link_url}
                       onChange={(e) => setForm(prev => ({ ...prev, logo_link_url: e.target.value }))}
                       placeholder="https://stripe.com"
                     />
-                    <p className="text-xs text-muted-foreground">What's your company's homepage?</p>
+                    <p className="text-xs text-muted-foreground">Şirketinizin ana sayfası nedir?</p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Get in touch URL</Label>
+                    <Label className="text-sm font-semibold">İletişim URL&apos;si</Label>
                     <Input
                       type="url"
                       value={form.contact_url}
@@ -276,7 +276,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                       placeholder="https://stripe.com/support"
                     />
                     <p className="text-xs text-muted-foreground">
-                      You can use mailto:support@stripe.com. Leave blank for no 'Get in touch' button.
+                      mailto:support@stripe.com kullanabilirsiniz. &apos;İletişim&apos; butonu olmasın istiyorsanız boş bırakın.
                     </p>
                   </div>
                 </div>
@@ -288,12 +288,12 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
         {/* Personalization - Logo Upload */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">Personalization</h2>
+            <h2 className="text-lg font-semibold mb-2">Kişiselleştirme</h2>
             <p className="text-sm text-muted-foreground">
-              Upload your logo to personalize the look & feel of your status page.
+              Durum sayfanızın görünümünü kişiselleştirmek için logonuzu yükleyin.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Supported formats: PNG, JPG, SVG, WebP. Max size: 2MB.
+              Desteklenen formatlar: PNG, JPG, SVG, WebP. Maks boyut: 2MB.
             </p>
           </div>
 
@@ -309,13 +309,13 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                       <div className="relative w-16 h-16 bg-background rounded-lg border overflow-hidden">
                         <Image
                           src={logoUrl}
-                          alt="Current logo"
+                          alt="Mevcut logo"
                           fill
                           className="object-contain p-2"
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">Current logo</p>
+                        <p className="text-sm font-medium">Mevcut logo</p>
                         <p className="text-xs text-muted-foreground truncate max-w-xs">
                           {logoUrl}
                         </p>
@@ -360,13 +360,13 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                     {uploading ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="h-8 w-8 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          Drag & drop or click to choose
+                          Sürükle & bırak veya tıklayarak seçin
                         </p>
                       </div>
                     )}
@@ -385,13 +385,13 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
         {/* Custom domain */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">Custom domain</h2>
+            <h2 className="text-lg font-semibold mb-2">Özel alan adı</h2>
             <p className="text-sm text-muted-foreground">
-              Deploy your status page to a custom subdomain for a branded experience.
+              Markalı bir deneyim için durum sayfanızı özel bir alt alan adına dağıtın.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Need help with the setup?{' '}
-              <a href="#" className="text-primary hover:underline">Let us know</a>
+              Kurulum konusunda yardıma mı ihtiyacınız var?{' '}
+              <a href="#" className="text-primary hover:underline">Bize bildirin</a>
             </p>
           </div>
 
@@ -399,7 +399,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
             <Card className="border">
               <CardContent className="px-6 py-6 space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Custom domain</Label>
+                  <Label className="text-sm font-semibold">Özel alan adı</Label>
                   <Input
                     value={form.custom_domain}
                     onChange={(e) => setForm(prev => ({ ...prev, custom_domain: e.target.value }))}
@@ -409,7 +409,7 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                 {form.custom_domain && (
                   <div className="bg-muted/50 rounded-lg p-4 text-sm">
                     <p>
-                      Please point <strong>{form.custom_domain}</strong> to CronUptime by configuring the following CNAME records.
+                      Lütfen <strong>{form.custom_domain}</strong> adresini aşağıdaki CNAME kayıtlarını yapılandırarak UptimeTR&apos;ye yönlendirin.
                     </p>
                   </div>
                 )}
@@ -417,6 +417,9 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
             </Card>
           </div>
         </div>
+
+        {/* Embed Options */}
+        <EmbedSection statusPage={statusPage} />
       </div>
 
       {/* Error/Success messages */}
@@ -427,16 +430,186 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
       )}
       {success && (
         <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-          <p className="text-sm text-green-600 dark:text-green-400">Settings saved successfully!</p>
+          <p className="text-sm text-green-600 dark:text-green-400">Ayarlar başarıyla kaydedildi!</p>
         </div>
       )}
 
       {/* Submit button */}
       <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t">
         <Button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : 'Save changes'}
+          {saving ? 'Kaydediliyor...' : 'Değişiklikleri kaydet'}
         </Button>
       </div>
     </form>
+  );
+}
+
+// Badge Preview Component (static, doesn't require iframe)
+function BadgePreview({ theme }: { theme: 'light' | 'dark' }) {
+  const isLight = theme === 'light';
+  
+  return (
+    <a 
+      href="#"
+      onClick={(e) => e.preventDefault()}
+      className={`
+        inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[13px] font-medium
+        transition-all cursor-default select-none
+        ${isLight 
+          ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
+          : 'bg-emerald-950 border border-emerald-800 text-emerald-300'
+        }
+      `}
+    >
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isLight ? 'bg-emerald-500' : 'bg-emerald-400'}`} />
+      <span>Tüm sistemler çalışıyor</span>
+    </a>
+  );
+}
+
+// Embed Section Component
+function EmbedSection({ statusPage }: { statusPage: StatusPage }) {
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [copiedBadge, setCopiedBadge] = useState(false);
+  const [badgeTheme, setBadgeTheme] = useState<'light' | 'dark'>('light');
+
+  // Build status page URL
+  const statusPageUrl = statusPage.custom_domain 
+    ? `https://${statusPage.custom_domain}`
+    : `https://${statusPage.subdomain}.uptimetr.com`;
+
+  // Embed codes
+  const fullPageEmbedCode = `<iframe src="${statusPageUrl}" width="100%" height="800" frameborder="0" style="border: none;"></iframe>`;
+  const badgeEmbedCode = `<iframe src="${statusPageUrl}/badge?theme=${badgeTheme}" width="250" height="36" frameborder="0" scrolling="no" style="border: none; color-scheme: normal;"></iframe>`;
+
+  const copyToClipboard = async (text: string, type: 'embed' | 'badge') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === 'embed') {
+        setCopiedEmbed(true);
+        setTimeout(() => setCopiedEmbed(false), 2000);
+      } else {
+        setCopiedBadge(true);
+        setTimeout(() => setCopiedBadge(false), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
+        <h2 className="text-lg font-semibold mb-2">Embed seçenekleri</h2>
+        <p className="text-sm text-muted-foreground">
+          Durum sayfanızı veya durum badge&apos;ini web sitenize veya uygulamanıza embed edin.
+        </p>
+      </div>
+
+      <div className="lg:col-span-2 space-y-6">
+        {/* Full page embed */}
+        <Card className="border">
+          <CardContent className="px-6 py-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold">Durum sayfasını embed edin</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Durum sayfanızın tamamını bir iframe ile sitenize yerleştirin.
+                </p>
+              </div>
+              <a 
+                href={statusPageUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                Önizle <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            
+            <div className="relative">
+              <div className="bg-muted/50 rounded-lg p-4 pr-12 font-mono text-xs overflow-x-auto">
+                <code className="text-muted-foreground break-all">{fullPageEmbedCode}</code>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8"
+                onClick={() => copyToClipboard(fullPageEmbedCode, 'embed')}
+              >
+                {copiedEmbed ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Badge embed */}
+        <Card className="border">
+          <CardContent className="px-6 py-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold">Durum badge&apos;i embed edin</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Küçük bir durum badge&apos;i ile servislerinizin durumunu gösterin.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBadgeTheme('light')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    badgeTheme === 'light' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  Açık
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBadgeTheme('dark')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    badgeTheme === 'dark' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  Koyu
+                </button>
+              </div>
+            </div>
+
+            {/* Badge preview */}
+            <div className={`rounded-lg p-4 flex items-center justify-center ${badgeTheme === 'dark' ? 'bg-zinc-900' : 'bg-zinc-100'}`}>
+              <BadgePreview theme={badgeTheme} />
+            </div>
+            
+            <div className="relative">
+              <div className="bg-muted/50 rounded-lg p-4 pr-12 font-mono text-xs overflow-x-auto">
+                <code className="text-muted-foreground break-all">{badgeEmbedCode}</code>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8"
+                onClick={() => copyToClipboard(badgeEmbedCode, 'badge')}
+              >
+                {copiedBadge ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

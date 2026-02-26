@@ -9,6 +9,7 @@ import {
 } from '@/lib/api-helpers';
 import { calculateNextRun } from '@/lib/cron-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { canCreateResource } from '@/lib/subscription';
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +47,12 @@ export async function POST(request: NextRequest) {
     // Check scope if using API token
     if (auth.scopes && !checkScope(auth.scopes, 'cron-jobs:write')) {
       return errorResponse('Insufficient permissions. Required scope: cron-jobs:write', 403);
+    }
+
+    // Check subscription limits
+    const resourceCheck = await canCreateResource(auth.userId);
+    if (!resourceCheck.allowed) {
+      return errorResponse(resourceCheck.reason || 'Kaynak limiti aşıldı', 402);
     }
 
     const body = await request.json();

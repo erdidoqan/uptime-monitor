@@ -224,7 +224,7 @@ export async function generateMetadata({
   
   if (!subdomain || typeof subdomain !== 'string') {
     return {
-      title: 'Status Page Not Found',
+      title: 'Durum Sayfası Bulunamadı',
     };
   }
   
@@ -232,13 +232,44 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: 'Status Page Not Found',
+      title: 'Durum Sayfası Bulunamadı',
     };
   }
 
+  const pageUrl = data.statusPage.customDomain 
+    ? `https://${data.statusPage.customDomain}/incidents`
+    : `https://${data.statusPage.subdomain}.uptimetr.com/incidents`;
+
+  const incidentCount = data.incidents.length;
+  const seoTitle = `${data.statusPage.companyName} Kesinti Geçmişi | Son 90 Gün`;
+  const seoDescription = `${data.statusPage.companyName} kesinti geçmişi ve çözüm süreleri. Son 90 günde ${incidentCount} kesinti kaydı. Geçmiş arızalar ve sistem durumu bilgileri.`;
+
   return {
-    title: `Previous Incidents | ${data.statusPage.companyName} Status`,
-    description: `View past incidents and their resolution times for ${data.statusPage.companyName}.`,
+    title: seoTitle,
+    description: seoDescription,
+    keywords: [
+      `${data.statusPage.companyName} kesinti`,
+      `${data.statusPage.companyName} arıza`,
+      `${data.statusPage.companyName} geçmiş kesintiler`,
+      `${data.statusPage.companyName} downtime`,
+      'kesinti geçmişi',
+      'arıza kayıtları',
+    ],
+    openGraph: {
+      title: seoTitle,
+      description: seoDescription,
+      url: pageUrl,
+      siteName: 'UptimeTR',
+      type: 'website',
+      locale: 'tr_TR',
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    alternates: {
+      canonical: pageUrl,
+    },
   };
 }
 

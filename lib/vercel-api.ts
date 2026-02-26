@@ -30,7 +30,7 @@ interface VercelError {
 
 /**
  * Add a domain to a Vercel project
- * @param domain Domain to add (e.g., "digitexa.cronuptime.com")
+ * @param domain Domain to add (e.g., "digitexa.uptimetr.com")
  * @param projectId Vercel project ID (optional, uses VERCEL_PROJECT_ID env var if not provided)
  * @returns Domain response or null if failed
  */

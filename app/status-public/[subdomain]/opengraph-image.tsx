@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { getD1Client } from '@/lib/d1-client';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // Image metadata
 export const runtime = 'nodejs';
@@ -10,52 +12,141 @@ export const size = {
 };
 export const contentType = 'image/png';
 
+// Cache OG image for 1 hour
+export const revalidate = 3600;
+
+// UptimeTR logo - read at module load time
+let uptimeTRLogoBase64: string | null = null;
+try {
+  const logoPath = join(process.cwd(), 'public', 'android-chrome-192x192.png');
+  const logoBuffer = readFileSync(logoPath);
+  uptimeTRLogoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+} catch (e) {
+  console.error('Failed to load UptimeTR logo:', e);
+}
+
+// Fetch external image and convert to base64 with timeout and size limit
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    // Skip if URL is empty or invalid
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+      return null;
+    }
+
+    // Create abort controller for timeout (5 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(url, { 
+      signal: controller.signal,
+      headers: { 'Accept': 'image/*' }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) return null;
+    
+    // Check content length - skip if larger than 500KB
+    const contentLength = response.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 500000) {
+      console.log('Image too large, skipping:', url);
+      return null;
+    }
+    
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const buffer = await response.arrayBuffer();
+    
+    // Double check buffer size
+    if (buffer.byteLength > 500000) {
+      console.log('Image buffer too large, skipping');
+      return null;
+    }
+    
+    const base64 = Buffer.from(buffer).toString('base64');
+    return `data:${contentType};base64,${base64}`;
+  } catch (e) {
+    // Silently fail - don't crash OG image generation
+    console.error('Failed to fetch image:', e);
+    return null;
+  }
+}
+
+// Fallback image generator
+function createFallbackImage(title: string = 'Status Page') {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+          fontFamily: 'system-ui, sans-serif',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            fontSize: '64px',
+            fontWeight: 700,
+            color: 'white',
+            textAlign: 'center',
+          }}
+        >
+          {title}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            position: 'absolute',
+            bottom: '40px',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '20px',
+            color: '#64748b',
+          }}
+        >
+          <span>Powered by</span>
+          <span
+            style={{
+              fontWeight: 700,
+              fontSize: '22px',
+              background: 'linear-gradient(90deg, #a855f7 0%, #06b6d4 100%)',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            UptimeTR
+          </span>
+        </div>
+      </div>
+    ),
+    { ...size }
+  );
+}
+
 // Generate dynamic OG image
 export default async function Image({
   params,
 }: {
   params: Promise<{ subdomain: string }>;
 }) {
-  const { subdomain } = await params;
-  
-  // Validate subdomain
-  if (!subdomain || typeof subdomain !== 'string') {
-    // Return default image if subdomain is invalid
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '64px',
-              fontWeight: 700,
-              color: 'white',
-              textAlign: 'center',
-            }}
-          >
-            Status Page
-          </div>
-        </div>
-      ),
-      {
-        ...size,
-      }
-    );
-  }
+  try {
+    const { subdomain } = await params;
+    
+    // Validate subdomain
+    if (!subdomain || typeof subdomain !== 'string') {
+      return createFallbackImage();
+    }
   
   let companyName = subdomain;
   let overallStatus = 'unknown';
   let resourceCount = 0;
+  let logoUrl: string | null = null;
+  let logoBase64: string | null = null;
   
   try {
     const db = getD1Client();
@@ -63,13 +154,20 @@ export default async function Image({
     const statusPage = await db.queryFirst<{
       id: string;
       company_name: string;
+      logo_url: string | null;
     }>(
-      `SELECT id, company_name FROM status_pages WHERE subdomain = ? AND is_active = 1`,
+      `SELECT id, company_name, logo_url FROM status_pages WHERE subdomain = ? AND is_active = 1`,
       [subdomain.toLowerCase()]
     );
     
     if (statusPage) {
       companyName = statusPage.company_name;
+      logoUrl = statusPage.logo_url;
+      
+      // Fetch company logo if available
+      if (logoUrl) {
+        logoBase64 = await fetchImageAsBase64(logoUrl);
+      }
       
       // Count resources
       const result = await db.queryFirst<{ count: number }>(
@@ -109,10 +207,10 @@ export default async function Image({
   }
   
   const statusColors = {
-    operational: { bg: '#059669', text: 'All Systems Operational' },
-    partial_outage: { bg: '#ea580c', text: 'Partial Outage' },
-    major_outage: { bg: '#dc2626', text: 'Major Outage' },
-    unknown: { bg: '#64748b', text: 'Status Unknown' },
+    operational: { bg: '#059669', text: 'Tüm Servisler Çalışıyor' },
+    partial_outage: { bg: '#ea580c', text: 'Kısmi Kesinti' },
+    major_outage: { bg: '#dc2626', text: 'Büyük Kesinti' },
+    unknown: { bg: '#64748b', text: 'Durum Bilinmiyor' },
   };
   
   const status = statusColors[overallStatus as keyof typeof statusColors] || statusColors.unknown;
@@ -136,6 +234,7 @@ export default async function Image({
           style={{
             position: 'absolute',
             inset: 0,
+            display: 'flex',
             opacity: 0.03,
             backgroundImage:
               'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)',
@@ -149,16 +248,32 @@ export default async function Image({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '32px',
+            gap: '24px',
           }}
         >
+          {/* Company logo */}
+          {logoBase64 && (
+            <img
+              src={logoBase64}
+              alt=""
+              style={{
+                width: '120px',
+                height: '120px',
+                objectFit: 'contain',
+                borderRadius: '16px',
+              }}
+            />
+          )}
+
           {/* Company name */}
           <div
             style={{
-              fontSize: '64px',
+              display: 'flex',
+              fontSize: '56px',
               fontWeight: 700,
               color: 'white',
               textAlign: 'center',
+              maxWidth: '900px',
             }}
           >
             {companyName}
@@ -170,7 +285,7 @@ export default async function Image({
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
-              padding: '20px 40px',
+              padding: '18px 36px',
               borderRadius: '16px',
               background: status.bg,
             }}
@@ -178,15 +293,16 @@ export default async function Image({
             {/* Status dot */}
             <div
               style={{
-                width: '20px',
-                height: '20px',
+                display: 'flex',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
                 background: 'white',
               }}
             />
             <span
               style={{
-                fontSize: '32px',
+                fontSize: '28px',
                 fontWeight: 600,
                 color: 'white',
               }}
@@ -199,37 +315,50 @@ export default async function Image({
           {resourceCount > 0 && (
             <div
               style={{
-                fontSize: '24px',
+                display: 'flex',
+                fontSize: '22px',
                 color: '#94a3b8',
               }}
             >
-              Monitoring {resourceCount} service{resourceCount !== 1 ? 's' : ''}
+              {resourceCount} servis izleniyor
             </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer - Powered by UptimeTR */}
         <div
           style={{
             position: 'absolute',
             bottom: '40px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '12px',
             fontSize: '20px',
             color: '#64748b',
           }}
         >
           <span>Powered by</span>
+          {uptimeTRLogoBase64 && (
+            <img
+              src={uptimeTRLogoBase64}
+              alt=""
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
+              }}
+            />
+          )}
           <span
             style={{
-              fontWeight: 600,
-              background: 'linear-gradient(90deg, #34d399 0%, #2dd4bf 100%)',
+              fontWeight: 700,
+              fontSize: '22px',
+              background: 'linear-gradient(90deg, #a855f7 0%, #06b6d4 100%)',
               backgroundClip: 'text',
               color: 'transparent',
             }}
           >
-            CronUptime
+            UptimeTR
           </span>
         </div>
       </div>
@@ -238,6 +367,10 @@ export default async function Image({
       ...size,
     }
   );
+  } catch (error) {
+    console.error('OG image generation failed:', error);
+    return createFallbackImage();
+  }
 }
 
 

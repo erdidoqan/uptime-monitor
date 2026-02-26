@@ -93,23 +93,23 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
   return (
     <Card className="mb-4 border gap-0">
       <CardHeader className="pb-3 px-6 pt-6">
-        <CardTitle className="text-base">Performance Report</CardTitle>
+        <CardTitle className="text-base">Performans Raporu</CardTitle>
       </CardHeader>
       <CardContent className="px-6 pb-6 pt-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Time period</TableHead>
-              <TableHead className="text-right">Success Rate</TableHead>
-              <TableHead className="text-right">Failure Rate</TableHead>
-              <TableHead className="text-right">Total Runs</TableHead>
-              <TableHead className="text-right">Avg Duration</TableHead>
-              <TableHead className="text-right">Longest Failure Streak</TableHead>
+              <TableHead>Zaman dilimi</TableHead>
+              <TableHead className="text-right">Başarı Oranı</TableHead>
+              <TableHead className="text-right">Başarısızlık Oranı</TableHead>
+              <TableHead className="text-right">Toplam Çalıştırma</TableHead>
+              <TableHead className="text-right">Ort. Süre</TableHead>
+              <TableHead className="text-right">En Uzun Başarısızlık Serisi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium">Today</TableCell>
+              <TableCell className="font-medium">Bugün</TableCell>
               <TableCell className="text-right">{todayStats.successRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{todayStats.failureRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{todayStats.totalRuns}</TableCell>
@@ -117,7 +117,7 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
               <TableCell className="text-right">{todayStats.longestFailureStreak}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Last 7 days</TableCell>
+              <TableCell className="font-medium">Son 7 gün</TableCell>
               <TableCell className="text-right">{weekStats.successRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{weekStats.failureRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{weekStats.totalRuns}</TableCell>
@@ -125,7 +125,7 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
               <TableCell className="text-right">{weekStats.longestFailureStreak}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Last 30 days</TableCell>
+              <TableCell className="font-medium">Son 30 gün</TableCell>
               <TableCell className="text-right">{monthStats.successRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{monthStats.failureRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{monthStats.totalRuns}</TableCell>
@@ -133,7 +133,7 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
               <TableCell className="text-right">{monthStats.longestFailureStreak}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">Last 365 days</TableCell>
+              <TableCell className="font-medium">Son 365 gün</TableCell>
               <TableCell className="text-right">{yearStats.successRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{yearStats.failureRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{yearStats.totalRuns}</TableCell>
@@ -141,7 +141,7 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
               <TableCell className="text-right">{yearStats.longestFailureStreak}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">All time</TableCell>
+              <TableCell className="font-medium">Tüm zamanlar</TableCell>
               <TableCell className="text-right">{allTimeStats.successRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{allTimeStats.failureRate.toFixed(2)}%</TableCell>
               <TableCell className="text-right">{allTimeStats.totalRuns}</TableCell>
@@ -154,4 +154,3 @@ export function CronJobStats({ runs }: CronJobStatsProps) {
     </Card>
   );
 }
-

@@ -79,11 +79,11 @@ export default function StatusPagesPage() {
     <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
       {/* Header - always visible */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Status Pages</h1>
+        <h1 className="text-2xl font-semibold">Durum Sayfaları</h1>
         <Button size="sm" asChild>
           <Link href="/status-pages/create">
             <Plus className="mr-2 h-4 w-4" />
-            Create status page
+            Durum sayfası oluştur
           </Link>
         </Button>
       </div>
@@ -95,24 +95,3 @@ export default function StatusPagesPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

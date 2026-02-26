@@ -8,7 +8,6 @@ import {
   successResponse,
 } from '@/lib/api-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import { addVercelDomain } from '@/lib/vercel-api';
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,13 +104,8 @@ export async function POST(request: NextRequest) {
       [statusPageId]
     );
 
-    // Add domain to Vercel automatically (non-blocking)
-    // Format: {subdomain}.cronuptime.com
-    const domainToAdd = `${subdomain.toLowerCase()}.cronuptime.com`;
-    addVercelDomain(domainToAdd).catch((error) => {
-      // Log error but don't fail the request
-      console.error(`Failed to add domain ${domainToAdd} to Vercel:`, error);
-    });
+    // Note: Subdomain routing handled by wildcard domain *.uptimetr.com
+    // No need to add individual subdomains to Vercel
 
     return successResponse(statusPage, 201);
   } catch (error: any) {

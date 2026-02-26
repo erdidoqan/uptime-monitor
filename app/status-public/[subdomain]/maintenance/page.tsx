@@ -75,7 +75,7 @@ export async function generateMetadata({
   
   if (!subdomain || typeof subdomain !== 'string') {
     return {
-      title: 'Status Page Not Found',
+      title: 'Durum Sayfası Bulunamadı',
     };
   }
   
@@ -83,13 +83,43 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: 'Status Page Not Found',
+      title: 'Durum Sayfası Bulunamadı',
     };
   }
 
+  const pageUrl = data.customDomain 
+    ? `https://${data.customDomain}/maintenance`
+    : `https://${data.subdomain}.uptimetr.com/maintenance`;
+
+  const seoTitle = `${data.companyName} Planlı Bakım | Bakım Takvimi`;
+  const seoDescription = `${data.companyName} planlı bakım çalışmaları ve bakım takvimi. Yaklaşan bakım pencereleri ve sistem güncelleme bilgileri.`;
+
   return {
-    title: `Scheduled Maintenance | ${data.companyName} Status`,
-    description: `View scheduled maintenance windows for ${data.companyName}.`,
+    title: seoTitle,
+    description: seoDescription,
+    keywords: [
+      `${data.companyName} bakım`,
+      `${data.companyName} planlı bakım`,
+      `${data.companyName} maintenance`,
+      `${data.companyName} güncelleme`,
+      'planlı bakım',
+      'bakım takvimi',
+    ],
+    openGraph: {
+      title: seoTitle,
+      description: seoDescription,
+      url: pageUrl,
+      siteName: 'UptimeTR',
+      type: 'website',
+      locale: 'tr_TR',
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    alternates: {
+      canonical: pageUrl,
+    },
   };
 }
 

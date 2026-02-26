@@ -8,7 +8,6 @@ import {
   successResponse,
   notFoundResponse,
 } from '@/lib/api-helpers';
-import { addVercelDomain, removeVercelDomain } from '@/lib/vercel-api';
 
 export async function GET(
   request: NextRequest,
@@ -96,18 +95,7 @@ export async function PUT(
       if (subdomainExists) {
         return errorResponse('This subdomain is already taken', 409);
       }
-
-      // Remove old domain from Vercel and add new one (non-blocking)
-      const oldDomain = `${oldSubdomain}.cronuptime.com`;
-      const newDomain = `${subdomain.toLowerCase()}.cronuptime.com`;
-      
-      removeVercelDomain(oldDomain).catch((error) => {
-        console.error(`Failed to remove old domain ${oldDomain} from Vercel:`, error);
-      });
-      
-      addVercelDomain(newDomain).catch((error) => {
-        console.error(`Failed to add new domain ${newDomain} to Vercel:`, error);
-      });
+      // Note: Subdomain routing handled by wildcard domain *.uptimetr.com
     }
 
     const now = Date.now();
@@ -177,7 +165,7 @@ export async function DELETE(
 
     // Get subdomain before deletion for Vercel cleanup
     const subdomain = (existing as any).subdomain;
-    const domainToRemove = `${subdomain}.cronuptime.com`;
+    const domainToRemove = `${subdomain}.uptimetr.com`;
 
     // Delete related resources and sections first (cascade)
     await db.execute(
@@ -189,10 +177,8 @@ export async function DELETE(
     await db.execute('DELETE FROM status_page_sections WHERE status_page_id = ?', [id]);
     await db.execute('DELETE FROM status_pages WHERE id = ?', [id]);
 
-    // Remove domain from Vercel (non-blocking)
-    removeVercelDomain(domainToRemove).catch((error) => {
-      console.error(`Failed to remove domain ${domainToRemove} from Vercel:`, error);
-    });
+    // Note: Subdomain routing handled by wildcard domain *.uptimetr.com
+    // No need to remove individual subdomains from Vercel
 
     return successResponse({ message: 'Status page deleted successfully' });
   } catch (error: any) {

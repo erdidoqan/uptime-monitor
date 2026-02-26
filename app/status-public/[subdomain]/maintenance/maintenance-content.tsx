@@ -35,7 +35,7 @@ export function MaintenanceContent({ statusPage, subdomain }: MaintenanceContent
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         <h1 className="text-2xl font-bold text-foreground mb-6">
-          Scheduled Maintenance
+          Planlı Bakım
         </h1>
 
         <Card className="border-border/50">
@@ -45,11 +45,11 @@ export function MaintenanceContent({ statusPage, subdomain }: MaintenanceContent
                 <Calendar className="h-8 w-8 text-muted-foreground" />
               </div>
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                No scheduled maintenance
+                Planlı bakım yok
               </h2>
               <p className="text-muted-foreground max-w-md">
-                There are no upcoming maintenance windows scheduled at this time. 
-                Check back later for any planned maintenance activities.
+                Şu anda planlanmış bakım penceresi bulunmuyor. 
+                Planlı bakım aktiviteleri için daha sonra tekrar kontrol edin.
               </p>
             </div>
           </CardContent>

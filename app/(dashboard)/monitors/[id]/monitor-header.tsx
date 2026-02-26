@@ -62,7 +62,7 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
   }, [currentTime, nextRunAt, monitor]);
 
   const formatDuration = (ms: number | null) => {
-    if (!ms) return '0 seconds';
+    if (!ms) return '0 saniye';
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
@@ -71,32 +71,32 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
 
     if (months > 0) {
       const remainingDays = days % 30;
-      return `${months} month${months > 1 ? 's' : ''} ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`;
+      return `${months} ay ${remainingDays} gün`;
     }
     if (days > 0) {
       const remainingHours = hours % 24;
-      return `${days} day${days > 1 ? 's' : ''} ${remainingHours} hour${remainingHours !== 1 ? 's' : ''}`;
+      return `${days} gün ${remainingHours} saat`;
     }
     if (hours > 0) {
       const remainingMinutes = minutes % 60;
-      return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+      return `${hours} saat ${remainingMinutes} dakika`;
     }
     if (minutes > 0) {
-      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+      return `${minutes} dakika`;
     }
-    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+    return `${seconds} saniye`;
   };
 
   const formatTime = (timestamp: number | null) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return 'Hiçbir zaman';
     const diff = currentTime - timestamp;
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (minutes < 1) return 'Az önce';
+    if (minutes < 60) return `${minutes} dakika önce`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} saat önce`;
     const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
+    return `${days} gün önce`;
   };
 
   // Calculate uptime duration
@@ -183,8 +183,8 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
   }, [monitor, currentTime, nextRunAt]);
 
   const formatTimeUntil = (ms: number | null) => {
-    if (ms === null) return 'Paused';
-    if (ms <= 0) return 'Now';
+    if (ms === null) return 'Duraklatıldı';
+    if (ms <= 0) return 'Şimdi';
     
     const totalSeconds = Math.floor(ms / 1000);
     const days = Math.floor(totalSeconds / (24 * 60 * 60));
@@ -194,25 +194,25 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
 
     if (days > 0) {
       if (hours > 0) {
-        return `${days}d ${hours}h ${minutes}m`;
+        return `${days}g ${hours}s ${minutes}dk`;
       }
-      return `${days}d ${minutes}m`;
+      return `${days}g ${minutes}dk`;
     }
     if (hours > 0) {
       if (minutes > 0 && seconds > 0) {
-        return `${hours}h ${minutes}m ${seconds}s`;
+        return `${hours}s ${minutes}dk ${seconds}sn`;
       } else if (minutes > 0) {
-        return `${hours}h ${minutes}m`;
+        return `${hours}s ${minutes}dk`;
       } else if (seconds > 0) {
-        return `${hours}h ${seconds}s`;
+        return `${hours}s ${seconds}sn`;
       }
-      return `${hours}h`;
+      return `${hours}s`;
     }
     if (minutes > 0) {
       // Always show seconds when minutes > 0 for countdown
-      return `${minutes}m ${seconds}s`;
+      return `${minutes}dk ${seconds}sn`;
     }
-    return `${seconds}s`;
+    return `${seconds}sn`;
   };
 
   return (
@@ -221,8 +221,8 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
           <CardHeader className="pb-3 px-5 pt-5">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               {monitor?.last_status === 'down' && openIncident
-                ? 'Currently down for'
-                : 'Currently up for'}
+                ? 'Şu an kapalı'
+                : 'Şu an açık'}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 pt-0">
@@ -231,7 +231,7 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
                 ? formatDuration(Date.now() - openIncident.started_at)
                 : uptimeDuration
                 ? formatDuration(uptimeDuration)
-                : 'Calculating...'}
+                : 'Hesaplanıyor...'}
             </div>
           </CardContent>
         </Card>
@@ -239,14 +239,14 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
         <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-3 px-5 pt-5">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Next check
+              Sonraki kontrol
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 pt-0">
             <div className="text-lg font-semibold text-foreground">
               {timeUntilNextCheck !== null
                 ? formatTimeUntil(timeUntilNextCheck)
-                : 'Paused'}
+                : 'Duraklatıldı'}
             </div>
           </CardContent>
         </Card>
@@ -254,7 +254,7 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
         <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-3 px-5 pt-5">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Last checked at
+              Son kontrol
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 pt-0">
@@ -267,7 +267,7 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
         <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-3 px-5 pt-5">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Incidents
+              Olaylar
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 pt-0">
@@ -277,4 +277,3 @@ export function MonitorHeader({ monitor, initialChecks, openIncident }: MonitorH
       </div>
   );
 }
-

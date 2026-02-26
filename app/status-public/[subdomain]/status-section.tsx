@@ -33,6 +33,7 @@ interface StatusSectionProps {
     resources: Resource[];
   };
   defaultExpanded?: boolean;
+  headingLevel?: 1 | 2;
 }
 
 const statusConfig = {
@@ -58,7 +59,7 @@ const statusConfig = {
   },
 };
 
-export function StatusSection({ section, defaultExpanded = false }: StatusSectionProps) {
+export function StatusSection({ section, defaultExpanded = false, headingLevel = 2 }: StatusSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   
   if (section.resources.length === 0) {
@@ -67,24 +68,28 @@ export function StatusSection({ section, defaultExpanded = false }: StatusSectio
 
   const config = statusConfig[section.status] || statusConfig.operational;
   const StatusIcon = config.icon;
+  
+  // Dynamic heading element for SEO - h1 for first section, h2 for others
+  const HeadingTag = headingLevel === 1 ? 'h1' : 'h2';
 
   return (
     <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-      {/* Section Header - Clickable */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={cn(
-          'w-full flex items-center justify-between px-5 py-4 transition-colors cursor-pointer',
-          isExpanded 
-            ? 'bg-muted/30' 
-            : 'hover:bg-muted/20'
-        )}
-      >
-        {/* Section Name */}
-        <span className="font-semibold text-foreground text-[15px]">
-          {section.name || 'Services'}
-        </span>
+      {/* Section Header - Clickable button with heading inside for SEO */}
+      <HeadingTag className="m-0">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={cn(
+            'w-full flex items-center justify-between px-5 py-4 transition-colors cursor-pointer',
+            isExpanded 
+              ? 'bg-muted/30' 
+              : 'hover:bg-muted/20'
+          )}
+        >
+          {/* Section Name */}
+          <span className="font-semibold text-foreground text-[15px]">
+            {section.name || 'Services'}
+          </span>
         
         {/* Right side: Badge + Chevron */}
         <div className="flex items-center gap-3">
@@ -102,7 +107,8 @@ export function StatusSection({ section, defaultExpanded = false }: StatusSectio
             )}
           />
         </div>
-      </button>
+        </button>
+      </HeadingTag>
 
       {/* Section Content - Resources */}
       <div

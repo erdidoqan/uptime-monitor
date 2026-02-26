@@ -4,49 +4,29 @@ import { GoogleSignInButton } from "./google-sign-in-button";
 
 const footerLinks = {
   product: {
-    title: "Product",
+    title: "Ürün",
     links: [
-      { name: "Features", href: "#features" },
-      { name: "How It Works", href: "#how-it-works" },
-      { name: "Pricing", href: "/pricing" },
-      { name: "FAQ", href: "/faq" },
-    ],
-  },
-  schedules: {
-    title: "Popular Schedules",
-    links: [
-      { name: "Every 5 Minutes", href: "/cron-every-5-minutes" },
-      { name: "Every 15 Minutes", href: "/cron-every-15-minutes" },
-      { name: "Every 30 Minutes", href: "/cron-every-30-minutes" },
-      { name: "Every Hour", href: "/cron-every-hour" },
-      { name: "Every Day", href: "/cron-every-day" },
-    ],
-  },
-  guides: {
-    title: "Guides",
-    links: [
-      { name: "Node.js Cron", href: "/cron-job-nodejs" },
-      { name: "Python Cron", href: "/cron-job-python" },
-      { name: "Vercel Cron", href: "/vercel-cron-jobs" },
-      { name: "Next.js Cron", href: "/nextjs-cron-jobs" },
-      { name: "Docker Cron", href: "/docker-cron-jobs" },
+      { name: "Özellikler", href: "#features" },
+      { name: "Nasıl Çalışır", href: "#how-it-works" },
+      { name: "Fiyatlandırma", href: "/pricing" },
+      { name: "SSS", href: "/faq" },
     ],
   },
   resources: {
-    title: "Resources",
+    title: "Kaynaklar",
     links: [
-      { name: "API Documentation", href: "/api-docs" },
-      { name: "Status", href: "/status" },
-      { name: "Changelog", href: "/changelog" },
-      { name: "Contact", href: "/contact" },
+      { name: "API Dokümantasyonu", href: "/api-docs" },
+      { name: "Durum", href: "/status" },
+      { name: "Değişiklik Günlüğü", href: "/changelog" },
+      { name: "İletişim", href: "/contact" },
     ],
   },
   company: {
-    title: "Company",
+    title: "Şirket",
     links: [
-      { name: "About", href: "/about" },
-      { name: "Terms", href: "/terms" },
-      { name: "Privacy", href: "/privacy" },
+      { name: "Hakkımızda", href: "/about" },
+      { name: "Kullanım Şartları", href: "/terms" },
+      { name: "Gizlilik", href: "/privacy" },
     ],
   },
 };
@@ -58,30 +38,30 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Ready to start <span className="gradient-text">monitoring</span>?
+            <span className="gradient-text">İzlemeye</span> başlamaya hazır mısınız?
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
-            Create your first cron job in seconds. No credit card required.
+            Saniyeler içinde ilk monitörünüzü oluşturun. Kredi kartı gerekmez.
           </p>
           <GoogleSignInButton className="px-8 py-3 text-base" />
         </div>
 
         {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
           {/* Logo & Description */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Image 
                 src="/android-chrome-192x192.png" 
-                alt="CronUptime Logo" 
+                alt="UptimeTR Logo" 
                 width={32} 
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-xl font-bold text-white tracking-tight">CronUptime</span>
+              <span className="text-xl font-bold text-white tracking-tight">UptimeTR</span>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Simple, reliable cron job scheduling and uptime monitoring.
+              Basit, güvenilir uptime izleme ve bildirim servisi.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-4">
@@ -113,34 +93,6 @@ export function Footer() {
                       {link.name}
                     </a>
                   )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Schedules Links */}
-          <div>
-            <h4 className="font-semibold text-white mb-4">{footerLinks.schedules.title}</h4>
-            <ul className="space-y-3">
-              {footerLinks.schedules.links.map((link) => (
-                <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-gray-500 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Guides Links */}
-          <div>
-            <h4 className="font-semibold text-white mb-4">{footerLinks.guides.title}</h4>
-            <ul className="space-y-3">
-              {footerLinks.guides.links.map((link) => (
-                <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-gray-500 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
                 </li>
               ))}
             </ul>
@@ -190,11 +142,11 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} CronUptime. All rights reserved.
+            © {new Date().getFullYear()} UptimeTR. Tüm hakları saklıdır.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/status" className="text-sm text-gray-500 hover:text-white transition-colors">
-              Status
+              Durum
             </Link>
           </div>
         </div>
@@ -202,4 +154,3 @@ export function Footer() {
     </footer>
   );
 }
-

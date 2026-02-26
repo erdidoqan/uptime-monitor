@@ -148,9 +148,9 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
       } catch (err) {
         console.error('Failed to load runs:', err);
         if (err instanceof ApiError && err.status === 401) {
-          setError('Unauthorized');
+          setError('Yetkisiz');
         } else {
-          setError('Failed to load runs');
+          setError('Çalıştırmalar yüklenemedi');
         }
         setRuns([]);
       } finally {
@@ -256,7 +256,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
     return (
       <Card className="border gap-0">
         <CardHeader className="pb-3 px-6 pt-6">
-          <CardTitle className="text-base">Run History</CardTitle>
+          <CardTitle className="text-base">Çalıştırma Geçmişi</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-0">
           <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
@@ -271,16 +271,16 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
     <Card className="border gap-0">
       <CardHeader className="pb-3 px-6 pt-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Run History</CardTitle>
+          <CardTitle className="text-base">Çalıştırma Geçmişi</CardTitle>
           <div className="flex items-center gap-2">
             <Select value={filter} onValueChange={(value) => setFilter(value as 'all' | 'success' | 'fail')}>
               <SelectTrigger className="w-[120px] h-8 text-xs">
-                <SelectValue placeholder="Filter" />
+                <SelectValue placeholder="Filtrele" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="success">Success</SelectItem>
-                <SelectItem value="fail">Fail</SelectItem>
+                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="success">Başarılı</SelectItem>
+                <SelectItem value="fail">Başarısız</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex gap-1">
@@ -294,7 +294,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                   setTimeRange('day');
                 }}
               >
-                Day
+                Gün
               </Button>
               <Button
                 type="button"
@@ -306,7 +306,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                   setTimeRange('week');
                 }}
               >
-                Week
+                Hafta
               </Button>
               <Button
                 type="button"
@@ -318,7 +318,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                   setTimeRange('month');
                 }}
               >
-                Month
+                Ay
               </Button>
             </div>
           </div>
@@ -339,9 +339,9 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                 tickFormatter={(value) => {
                   const date = new Date(value);
                   if (timeRange === 'day') {
-                    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                   }
-                  return `${date.getMonth() + 1}/${date.getDate()}`;
+                  return `${date.getDate()}/${date.getMonth() + 1}`;
                 }}
               />
               <YAxis
@@ -361,7 +361,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                         const seconds = String(date.getSeconds()).padStart(2, '0');
                         return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
                       }}
-                formatter={(value: number) => [`${value.toFixed(0)}ms`, 'Duration']}
+                formatter={(value: number) => [`${value.toFixed(0)}ms`, 'Süre']}
               />
               <Line
                 type="monotone"
@@ -374,13 +374,13 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
           </ResponsiveContainer>
         ) : (
           <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-            No data available
+            Veri yok
           </div>
         )}
 
         {/* Table */}
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Recent Runs</h3>
+          <h3 className="text-sm font-semibold">Son Çalıştırmalar</h3>
           {loading ? (
             <Skeleton className="h-64 w-full" />
           ) : filteredRuns.length > 0 ? (
@@ -389,11 +389,11 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>HTTP Status</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Error</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead>HTTP Durumu</TableHead>
+                    <TableHead>Süre</TableHead>
+                    <TableHead>Zaman</TableHead>
+                    <TableHead>Hata</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -429,12 +429,12 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                             {run.status === 'success' ? (
                               <Badge variant="default" className="bg-green-500">
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Success
+                                Başarılı
                               </Badge>
                             ) : (
                               <Badge variant="destructive">
                                 <XCircle className="h-3 w-3 mr-1" />
-                                Fail
+                                Başarısız
                               </Badge>
                             )}
                           </TableCell>
@@ -449,7 +449,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
                           <TableRow>
                             <TableCell colSpan={6} className="bg-muted/30 p-4">
                               <div className="space-y-2">
-                                <div className="text-xs font-semibold text-muted-foreground uppercase">Response Body</div>
+                                <div className="text-xs font-semibold text-muted-foreground uppercase">Yanıt Gövdesi</div>
                                 <pre className="text-sm bg-slate-900 border border-slate-700 rounded p-4 overflow-auto max-h-[600px] whitespace-pre-wrap break-words font-mono">
                                   {highlightJSON(run.response_body || '')}
                                 </pre>
@@ -465,7 +465,7 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              No runs found
+              Çalıştırma bulunamadı
             </div>
           )}
         </div>
@@ -473,4 +473,3 @@ export function CronJobRuns({ cronJobId, initialTimeRange = 'month', initialRuns
     </Card>
   );
 }
-

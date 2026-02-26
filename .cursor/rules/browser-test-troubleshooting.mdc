@@ -1,0 +1,33 @@
+---
+description: Browser test ve proxy sorun giderme rehberi. Türk kullanıcılar / proxy hatası olduğunda ilk buraya bak.
+globs: workers/browser-test/**/*,**/browser-test/**/*,**/use-browser-test*
+alwaysApply: false
+---
+
+# Browser Test Troubleshooting
+
+## Proxy Hatası Olduğunda (Türk Kullanıcılar)
+
+"Türk kullanıcılar" özelliği Webshare.io residential proxy kullanır. Hata geldiğinde **ilk adım** proxy'yi manuel test etmek:
+
+```bash
+curl -s -X POST https://uptime-browser-test.digitexa.workers.dev/debug-proxy -d '{}' | python3 -m json.tool
+```
+
+### Sonuç Yorumlama
+
+- `"ok": true` + Türkiye IP → Proxy çalışıyor, sorun başka yerde
+- `"ok": false` + `ERR_TUNNEL_CONNECTION_FAILED` → Webshare sunucuları down, https://status.webshare.io kontrol et
+- `"ok": false` + auth hatası → Proxy credentials yanlış, Cloudflare Worker secrets kontrol et (`PROXY_HOST`, `PROXY_PORT`, `PROXY_USER`, `PROXY_PASS`)
+
+### Proxy Mimarisi
+
+- Worker: `workers/browser-test/src/index.ts`
+- Proxy config: `getProxyConfig(env)` fonksiyonu
+- Slot sistemi: Username'e `-1` ile `-10` arası slot ekleniyor (farklı IP almak için)
+- Format: `http://p.webshare.io:80` + username: `{baseUser}-{slot}`
+- Proxy aktifken timeout: 60s, waitUntil: `networkidle2` (normal: 30s, `networkidle0`)
+
+### Webshare Status Sayfası
+
+https://status.webshare.io → Proxy Server durumunu kontrol et

@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { status } = useSession();
+  const isAuth = status === "authenticated";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0b]/80 backdrop-blur-xl border-b border-white/10">
@@ -16,42 +19,56 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image 
               src="/android-chrome-192x192.png" 
-              alt="CronUptime Logo" 
+              alt="UptimeTR Logo" 
               width={32} 
               height={32}
               className="rounded-lg"
             />
-            <span className="text-lg font-semibold text-white tracking-tight">CronUptime</span>
+            <span className="text-lg font-semibold text-white tracking-tight">UptimeTR</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
+            <Link href="/load-test" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+              Yük Testi
+            </Link>
             <Link href="/pricing" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              Pricing
+              Fiyatlandırma
             </Link>
             <Link href="/about" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              About
+              Hakkımızda
             </Link>
             <Link href="/faq" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              FAQ
+              SSS
             </Link>
             <Link href="/contact" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              Contact
+              İletişim
             </Link>
             <Link href="/status" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-              Status
+              Durum
             </Link>
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
-            >
-              Sign in
-            </Link>
-            <GoogleSignInButton variant="default" />
+            {isAuth ? (
+              <Link
+                href="/"
+                className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                >
+                  Giriş Yap
+                </Link>
+                <GoogleSignInButton variant="default" />
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,32 +91,46 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-white/10">
             <div className="flex flex-col gap-1">
+              <Link href="/load-test" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
+                Yük Testi
+              </Link>
               <Link href="/pricing" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                Pricing
+                Fiyatlandırma
               </Link>
               <Link href="/about" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                About
+                Hakkımızda
               </Link>
               <Link href="/faq" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                FAQ
+                SSS
               </Link>
               <Link href="/contact" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                Contact
+                İletişim
               </Link>
               <Link href="/status" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                Status
+                Durum
               </Link>
               <Link href="/changelog" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
-                Changelog
+                Değişiklik Günlüğü
               </Link>
               <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-white/10">
-                <Link
-                  href="/login"
-                  className="px-3 py-2 text-sm text-gray-300 hover:text-white text-left"
-                >
-                  Sign in
-                </Link>
-                <GoogleSignInButton className="w-full" />
+                {isAuth ? (
+                  <Link
+                    href="/"
+                    className="px-3 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg text-center"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="px-3 py-2 text-sm text-gray-300 hover:text-white text-left"
+                    >
+                      Giriş Yap
+                    </Link>
+                    <GoogleSignInButton className="w-full" />
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -108,4 +139,3 @@ export function Header() {
     </header>
   );
 }
-

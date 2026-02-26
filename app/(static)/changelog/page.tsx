@@ -4,13 +4,13 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Changelog",
-  description: "See what's new in CronUptime. Latest updates, features, and improvements.",
+  description: "See what's new in UptimeTR. Latest updates, features, and improvements.",
   alternates: {
-    canonical: "https://www.cronuptime.com/changelog",
+    canonical: "https://www.uptimetr.com/changelog",
   },
   openGraph: {
-    title: "Changelog - CronUptime",
-    description: "See what's new in CronUptime. Latest updates, features, and improvements.",
+    title: "Changelog - UptimeTR",
+    description: "See what's new in UptimeTR. Latest updates, features, and improvements.",
   },
 };
 

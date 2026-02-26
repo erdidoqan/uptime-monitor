@@ -55,7 +55,7 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
       }, 10000);
     } catch (error) {
       console.error('Failed to perform test check:', error);
-      alert('Failed to perform test check');
+      alert('Test kontrolü yapılamadı');
     } finally {
       setTesting(false);
     }
@@ -74,7 +74,7 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Failed to toggle pause:', error);
-      alert('Failed to toggle pause');
+      alert('Duraklatma/devam ettirme başarısız');
     } finally {
       setPausing(false);
     }
@@ -91,11 +91,11 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
           disabled={testing || monitor.is_active === 0}
         >
           <Send className="mr-2 h-4 w-4" />
-          {testing ? 'Testing...' : 'Send test alert'}
+          {testing ? 'Test ediliyor...' : 'Test uyarısı gönder'}
         </Button>
         <Button variant="outline" size="sm">
           <Shield className="mr-2 h-4 w-4" />
-          Incidents
+          Olaylar
         </Button>
         <Button 
           type="button"
@@ -107,19 +107,19 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
           {monitor.is_active === 0 ? (
             <>
               <Play className="mr-2 h-4 w-4" />
-              {pausing ? 'Resuming...' : 'Resume'}
+              {pausing ? 'Devam ettiriliyor...' : 'Devam Et'}
             </>
           ) : (
             <>
               <Pause className="mr-2 h-4 w-4" />
-              {pausing ? 'Pausing...' : 'Pause'}
+              {pausing ? 'Duraklatılıyor...' : 'Duraklat'}
             </>
           )}
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/monitors/${monitor.id}/edit`}>
             <Settings className="mr-2 h-4 w-4" />
-            Configure
+            Yapılandır
           </Link>
         </Button>
       </div>
@@ -128,19 +128,19 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
             <div className="font-medium">
-              Test check result: {testResult.status === 'up' ? 'UP' : 'DOWN'}
+              Test sonucu: {testResult.status === 'up' ? 'AÇIK' : 'KAPALI'}
             </div>
             {testResult.debug && (
               <div className="text-sm mt-2 space-y-1">
-                <div>HTTP Status: {testResult.http_status || 'N/A'}</div>
-                <div>Latency: {testResult.latency_ms}ms</div>
-                <div>Expected Range: {testResult.debug.expected_min}-{testResult.debug.expected_max}</div>
-                <div>Status in Range: {testResult.debug.status_in_range ? '✅' : '❌'}</div>
+                <div>HTTP Durumu: {testResult.http_status || 'N/A'}</div>
+                <div>Gecikme: {testResult.latency_ms}ms</div>
+                <div>Beklenen Aralık: {testResult.debug.expected_min}-{testResult.debug.expected_max}</div>
+                <div>Aralıkta Durum: {testResult.debug.status_in_range ? '✅' : '❌'}</div>
                 {testResult.debug.keyword && (
-                  <div>Keyword Match: {testResult.debug.keyword_match ? '✅' : '❌'} (keyword: "{testResult.debug.keyword}")</div>
+                  <div>Anahtar Kelime Eşleşmesi: {testResult.debug.keyword_match ? '✅' : '❌'} (anahtar kelime: &quot;{testResult.debug.keyword}&quot;)</div>
                 )}
                 {testResult.error && (
-                  <div className="text-red-600">Error: {testResult.error}</div>
+                  <div className="text-red-600">Hata: {testResult.error}</div>
                 )}
               </div>
             )}
@@ -150,4 +150,3 @@ export function MonitorActions({ monitor, onUpdate }: MonitorActionsProps) {
     </>
   );
 }
-

@@ -33,12 +33,12 @@ interface Source {
 }
 
 const CAUSE_OPTIONS = [
-  { value: 'http_error', label: 'HTTP Error' },
-  { value: 'timeout', label: 'Connection Timeout' },
-  { value: 'keyword_missing', label: 'Keyword Not Found' },
-  { value: 'ssl_error', label: 'SSL Certificate Error' },
-  { value: 'dns_error', label: 'DNS Resolution Failed' },
-  { value: 'manual', label: 'Manual Incident' },
+  { value: 'http_error', label: 'HTTP Hatası' },
+  { value: 'timeout', label: 'Bağlantı Zaman Aşımı' },
+  { value: 'keyword_missing', label: 'Anahtar Kelime Bulunamadı' },
+  { value: 'ssl_error', label: 'SSL Sertifika Hatası' },
+  { value: 'dns_error', label: 'DNS Çözümlemesi Başarısız' },
+  { value: 'manual', label: 'Manuel Olay' },
 ];
 
 export function CreateIncidentDialog() {
@@ -125,7 +125,7 @@ export function CreateIncidentDialog() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create incident');
+        throw new Error(data.error || 'Olay oluşturulamadı');
       }
 
       const incident: Incident = await response.json();
@@ -153,33 +153,33 @@ export function CreateIncidentDialog() {
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Create Incident
+          Olay Oluştur
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create Manual Incident</DialogTitle>
+            <DialogTitle>Manuel Olay Oluştur</DialogTitle>
             <DialogDescription>
-              Create a new incident for a monitor or cron job. This will start tracking downtime.
+              Bir monitör veya cron job için yeni bir olay oluşturun. Bu, kesinti süresini izlemeye başlayacaktır.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             {/* Source selection */}
             <div className="grid gap-2">
-              <Label htmlFor="source">Monitor / Cron Job</Label>
+              <Label htmlFor="source">Monitör / Cron Job</Label>
               <Select 
                 value={selectedSource} 
                 onValueChange={setSelectedSource}
                 disabled={loading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={loading ? "Loading..." : "Select a source"} />
+                  <SelectValue placeholder={loading ? "Yükleniyor..." : "Bir kaynak seçin"} />
                 </SelectTrigger>
                 <SelectContent>
                   {sources.length === 0 && !loading && (
-                    <SelectItem value="none" disabled>No monitors or cron jobs found</SelectItem>
+                    <SelectItem value="none" disabled>Monitör veya cron job bulunamadı</SelectItem>
                   )}
                   {sources.map((source) => (
                     <SelectItem key={source.id} value={source.id}>
@@ -199,10 +199,10 @@ export function CreateIncidentDialog() {
 
             {/* Cause selection */}
             <div className="grid gap-2">
-              <Label htmlFor="cause">Cause</Label>
+              <Label htmlFor="cause">Neden</Label>
               <Select value={cause} onValueChange={setCause}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select cause" />
+                  <SelectValue placeholder="Neden seçin" />
                 </SelectTrigger>
                 <SelectContent>
                   {CAUSE_OPTIONS.map((option) => (
@@ -216,11 +216,11 @@ export function CreateIncidentDialog() {
 
             {/* HTTP Status (optional) */}
             <div className="grid gap-2">
-              <Label htmlFor="httpStatus">HTTP Status (optional)</Label>
+              <Label htmlFor="httpStatus">HTTP Durumu (isteğe bağlı)</Label>
               <Input
                 id="httpStatus"
                 type="number"
-                placeholder="e.g. 503"
+                placeholder="örn. 503"
                 value={httpStatus}
                 onChange={(e) => setHttpStatus(e.target.value)}
                 min="100"
@@ -236,7 +236,7 @@ export function CreateIncidentDialog() {
               onClick={() => setOpen(false)}
               disabled={submitting}
             >
-              Cancel
+              İptal
             </Button>
             <Button 
               type="submit" 
@@ -245,10 +245,10 @@ export function CreateIncidentDialog() {
               {submitting ? (
                 <>
                   <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                  Creating...
+                  Oluşturuluyor...
                 </>
               ) : (
-                'Create Incident'
+                'Olay Oluştur'
               )}
             </Button>
           </DialogFooter>
@@ -257,4 +257,3 @@ export function CreateIncidentDialog() {
     </Dialog>
   );
 }
-

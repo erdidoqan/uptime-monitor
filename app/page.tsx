@@ -4,7 +4,7 @@ import { DashboardWrapper } from './(dashboard)/dashboard-wrapper';
 import DashboardPage from './(dashboard)/page';
 import { Header, Hero, Features, HowItWorks, Footer } from '@/components/landing';
 
-const baseUrl = "https://www.cronuptime.com";
+const baseUrl = "https://www.uptimetr.com";
 
 export const metadata: Metadata = {
   alternates: {

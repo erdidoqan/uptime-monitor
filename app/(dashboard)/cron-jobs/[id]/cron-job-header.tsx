@@ -76,15 +76,15 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
   }, [currentTime, nextRunAt, cronJob]);
 
   const formatTime = (timestamp: number | null) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return 'Hiçbir zaman';
     const diff = currentTime - timestamp;
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (minutes < 1) return 'Az önce';
+    if (minutes < 60) return `${minutes} dakika önce`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} saat önce`;
     const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
+    return `${days} gün önce`;
   };
 
   // Calculate success rate (last 30 days)
@@ -117,8 +117,8 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
   }, [cronJob, currentTime, nextRunAt]);
 
   const formatTimeUntil = (ms: number | null) => {
-    if (ms === null) return 'Paused';
-    if (ms <= 0) return 'Now';
+    if (ms === null) return 'Duraklatıldı';
+    if (ms <= 0) return 'Şimdi';
     
     const totalSeconds = Math.floor(ms / 1000);
     const days = Math.floor(totalSeconds / (24 * 60 * 60));
@@ -128,25 +128,25 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
 
     if (days > 0) {
       if (hours > 0) {
-        return `${days}d ${hours}h ${minutes}m`;
+        return `${days}g ${hours}s ${minutes}dk`;
       }
-      return `${days}d ${minutes}m`;
+      return `${days}g ${minutes}dk`;
     }
     if (hours > 0) {
       if (minutes > 0 && seconds > 0) {
-        return `${hours}h ${minutes}m ${seconds}s`;
+        return `${hours}s ${minutes}dk ${seconds}sn`;
       } else if (minutes > 0) {
-        return `${hours}h ${minutes}m`;
+        return `${hours}s ${minutes}dk`;
       } else if (seconds > 0) {
-        return `${hours}h ${seconds}s`;
+        return `${hours}s ${seconds}sn`;
       }
-      return `${hours}h`;
+      return `${hours}s`;
     }
     if (minutes > 0) {
       // Always show seconds when minutes > 0 for countdown
-      return `${minutes}m ${seconds}s`;
+      return `${minutes}dk ${seconds}sn`;
     }
-    return `${seconds}s`;
+    return `${seconds}sn`;
   };
 
   return (
@@ -154,7 +154,7 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
       <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-3 px-5 pt-5">
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Success Rate (30 days)
+            Başarı Oranı (30 gün)
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 pt-0">
@@ -167,14 +167,14 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
       <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-3 px-5 pt-5">
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Next run
+            Sonraki çalıştırma
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 pt-0">
           <div className="text-lg font-semibold text-foreground">
             {timeUntilNextRun !== null
               ? formatTimeUntil(timeUntilNextRun)
-              : 'Paused'}
+              : 'Duraklatıldı'}
           </div>
         </CardContent>
       </Card>
@@ -182,7 +182,7 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
       <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-3 px-5 pt-5">
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Last run at
+            Son çalıştırma
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 pt-0">
@@ -195,7 +195,7 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
       <Card className="border gap-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-3 px-5 pt-5">
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Total runs
+            Toplam çalıştırma
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 pt-0">
@@ -205,4 +205,3 @@ export function CronJobHeader({ cronJob, initialRuns }: CronJobHeaderProps) {
     </div>
   );
 }
-

@@ -38,7 +38,7 @@ export default function LoginPage() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Uptime Monitor</CardTitle>
+            <CardTitle className="text-2xl font-bold">UptimeTR</CardTitle>
             <CardDescription className="mt-2">
               Servislerinizi izleyin ve cron job&apos;larınızı yönetin
             </CardDescription>

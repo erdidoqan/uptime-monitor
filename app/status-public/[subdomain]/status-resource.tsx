@@ -36,27 +36,27 @@ const statusConfig: Record<string, {
   colorClass: string;
 }> = {
   up: {
-    label: 'Operational',
+    label: 'Çalışıyor',
     icon: CheckCircle2,
     colorClass: 'text-emerald-600 dark:text-emerald-400',
   },
   down: {
-    label: 'Down',
+    label: 'Çalışmıyor',
     icon: XCircle,
     colorClass: 'text-red-600 dark:text-red-400',
   },
   degraded: {
-    label: 'Degraded',
+    label: 'Düşük Performans',
     icon: AlertCircle,
     colorClass: 'text-amber-600 dark:text-amber-400',
   },
   maintenance: {
-    label: 'Maintenance',
+    label: 'Bakımda',
     icon: Wrench,
     colorClass: 'text-blue-600 dark:text-blue-400',
   },
   unknown: {
-    label: 'Unknown',
+    label: 'Bilinmiyor',
     icon: HelpCircle,
     colorClass: 'text-gray-500 dark:text-gray-400',
   },
@@ -93,7 +93,7 @@ export function StatusResource({ resource }: StatusResourceProps) {
                   <div className="flex items-center gap-2">
                     <TypeIcon className="h-3.5 w-3.5" />
                     <span className="text-xs text-muted-foreground">
-                      {resource.type === 'monitor' ? 'HTTP Monitor' : 'Cron Job'}
+                      {resource.type === 'monitor' ? 'HTTP Monitör' : 'Cron Job'}
                     </span>
                   </div>
                   {resource.url && (

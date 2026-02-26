@@ -26,30 +26,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, ...params } = body;
 
-    console.log(`Received email request: type=${type}, incidentId=${params.incidentId}, userId=${params.userId}`);
+    console.log(`[send-email] Received request: type=${type}, incidentId=${params.incidentId}, userId=${params.userId}`);
 
-    // Send email and await completion
+    if (type !== 'incident' && type !== 'resolved') {
+      return errorResponse('Invalid type. Must be "incident" or "resolved"', 400);
+    }
+
     try {
       if (type === 'incident') {
         await sendIncidentEmail(params);
-        console.log(`Email sent successfully for incident ${params.incidentId}`);
-      } else if (type === 'resolved') {
-        await sendIncidentResolvedEmail(params);
-        console.log(`Email sent successfully for resolved incident ${params.incidentId}`);
+        console.log(`[send-email] Incident email sent for ${params.incidentId}`);
       } else {
-        return errorResponse('Invalid type. Must be "incident" or "resolved"', 400);
+        await sendIncidentResolvedEmail(params);
+        console.log(`[send-email] Resolved email sent for ${params.incidentId}`);
       }
 
       return successResponse({ success: true, message: 'Email sent successfully' });
     } catch (emailError: any) {
-      console.error('Email sending failed:', emailError);
-      // Still return 200 to worker, but log the error
-      // Worker should not retry on email failures
-      return successResponse({ 
-        success: false, 
-        message: 'Email sending failed', 
-        error: emailError.message 
-      });
+      console.error(`[send-email] FAILED for ${type} ${params.incidentId}:`, emailError.message);
+      return errorResponse(`Email sending failed: ${emailError.message}`, 502);
     }
   } catch (error: any) {
     console.error('Send email error:', error);

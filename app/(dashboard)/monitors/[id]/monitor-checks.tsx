@@ -78,9 +78,9 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
       } catch (err) {
         console.error('Failed to load checks:', err);
         if (err instanceof ApiError && err.status === 401) {
-          setError('Unauthorized');
+          setError('Yetkisiz');
         } else {
-          setError('Failed to load checks');
+          setError('Kontroller yüklenemedi');
         }
         setChecks([]);
       } finally {
@@ -162,7 +162,7 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
     return (
       <Card className="border gap-0">
         <CardHeader className="pb-3 px-6 pt-6">
-          <CardTitle className="text-base">Response times</CardTitle>
+          <CardTitle className="text-base">Yanıt süreleri</CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-0">
           <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
@@ -177,14 +177,14 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
     <Card className="border gap-0">
       <CardHeader className="pb-3 px-6 pt-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Response times</CardTitle>
+          <CardTitle className="text-base">Yanıt süreleri</CardTitle>
           <div className="flex items-center gap-2">
             <Select defaultValue="all">
               <SelectTrigger className="w-[120px] h-8 text-xs">
-                <SelectValue placeholder="Region" />
+                <SelectValue placeholder="Bölge" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
+                <SelectItem value="all">Tüm Bölgeler</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex gap-1">
@@ -198,7 +198,7 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
                   setTimeRange('day');
                 }}
               >
-                Day
+                Gün
               </Button>
               <Button
                 type="button"
@@ -210,7 +210,7 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
                   setTimeRange('week');
                 }}
               >
-                Week
+                Hafta
               </Button>
               <Button
                 type="button"
@@ -222,7 +222,7 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
                   setTimeRange('month');
                 }}
               >
-                Month
+                Ay
               </Button>
             </div>
           </div>
@@ -242,9 +242,9 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
                 tickFormatter={(value) => {
                   const date = new Date(value);
                   if (timeRange === 'day') {
-                    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                   }
-                  return `${date.getMonth() + 1}/${date.getDate()}`;
+                  return `${date.getDate()}/${date.getMonth() + 1}`;
                 }}
               />
               <YAxis
@@ -256,9 +256,9 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
               <Tooltip
                 labelFormatter={(value) => {
                   const date = new Date(value);
-                  return date.toLocaleString();
+                  return date.toLocaleString('tr-TR');
                 }}
-                formatter={(value: number) => [`${value.toFixed(0)}ms`, 'Response time']}
+                formatter={(value: number) => [`${value.toFixed(0)}ms`, 'Yanıt süresi']}
               />
               <Line
                 type="monotone"
@@ -271,11 +271,10 @@ export function MonitorChecks({ monitorId, initialTimeRange = 'month', initialCh
           </ResponsiveContainer>
         ) : (
           <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-            No data available
+            Veri yok
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
-

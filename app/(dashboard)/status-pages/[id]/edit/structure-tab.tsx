@@ -49,7 +49,7 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
       setSections(data);
     } catch (err: any) {
       console.error('Failed to fetch sections:', err);
-      setError(err.message || 'Failed to load sections');
+      setError(err.message || 'Bölümler yüklenemedi');
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
       setSections((prev) => [...prev, newSection]);
     } catch (err: any) {
       console.error('Failed to add section:', err);
-      setError(err.message || 'Failed to add section');
+      setError(err.message || 'Bölüm eklenemedi');
     } finally {
       setAddingSection(false);
     }
@@ -122,7 +122,7 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
       setSections((prev) => prev.filter((s) => s.id !== sectionId));
     } catch (err: any) {
       console.error('Failed to delete section:', err);
-      setError(err.message || 'Failed to delete section');
+      setError(err.message || 'Bölüm silinemedi');
     }
   };
 
@@ -145,12 +145,12 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Left side - Description */}
       <div className="lg:col-span-1">
-        <h2 className="text-lg font-semibold mb-2">Monitors & Cron Jobs</h2>
+        <h2 className="text-lg font-semibold mb-2">Monitörler & Cron Job&apos;lar</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Pick the monitors and cron jobs you want to display on your status page.
+          Durum sayfanızda göstermek istediğiniz monitörleri ve cron job&apos;ları seçin.
         </p>
         <p className="text-sm text-muted-foreground">
-          You can re-order the monitors by dragging the cards, as well as give each monitor a public name and a short explanation of the service it's monitoring.
+          Kartları sürükleyerek monitörleri yeniden sıralayabilir, her monitöre genel bir ad ve izlediği hizmetin kısa bir açıklamasını verebilirsiniz.
         </p>
       </div>
 
@@ -166,13 +166,13 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
           <Card className="border">
             <CardContent className="pt-8 text-center py-16">
               <Layers className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-              <h3 className="text-sm font-semibold mb-1">No sections yet</h3>
+              <h3 className="text-sm font-semibold mb-1">Henüz bölüm yok</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Add sections to organize your monitors and cron jobs on the status page.
+                Durum sayfasında monitörlerinizi ve cron job&apos;larınızı düzenlemek için bölümler ekleyin.
               </p>
               <Button size="sm" onClick={handleAddSection} disabled={addingSection}>
                 <Plus className="mr-2 h-4 w-4" />
-                {addingSection ? 'Adding...' : 'Add Section'}
+                {addingSection ? 'Ekleniyor...' : 'Bölüm Ekle'}
               </Button>
             </CardContent>
           </Card>
@@ -207,7 +207,7 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
               disabled={addingSection}
             >
               <Plus className="mr-2 h-4 w-4" />
-              {addingSection ? 'Adding...' : 'Add Section'}
+              {addingSection ? 'Ekleniyor...' : 'Bölüm Ekle'}
             </Button>
           </>
         )}
@@ -215,4 +215,3 @@ export function StructureTab({ statusPageId }: StructureTabProps) {
     </div>
   );
 }
-

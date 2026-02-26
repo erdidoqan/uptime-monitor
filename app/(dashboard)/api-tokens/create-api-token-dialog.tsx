@@ -23,12 +23,12 @@ interface CreateApiTokenDialogProps {
 }
 
 const AVAILABLE_SCOPES = [
-  { value: 'monitors:read', label: 'Monitors: Read' },
-  { value: 'monitors:write', label: 'Monitors: Write' },
-  { value: 'cron-jobs:read', label: 'Cron Jobs: Read' },
-  { value: 'cron-jobs:write', label: 'Cron Jobs: Write' },
-  { value: 'incidents:read', label: 'Incidents: Read' },
-  { value: 'incidents:write', label: 'Incidents: Write' },
+  { value: 'monitors:read', label: 'Monitörler: Okuma' },
+  { value: 'monitors:write', label: 'Monitörler: Yazma' },
+  { value: 'cron-jobs:read', label: 'Cron Job\'lar: Okuma' },
+  { value: 'cron-jobs:write', label: 'Cron Job\'lar: Yazma' },
+  { value: 'incidents:read', label: 'Olaylar: Okuma' },
+  { value: 'incidents:write', label: 'Olaylar: Yazma' },
 ];
 
 export function CreateApiTokenDialog({
@@ -46,12 +46,12 @@ export function CreateApiTokenDialog({
     e.preventDefault();
     
     if (!session?.user?.apiToken) {
-      setError('Not authenticated');
+      setError('Oturum açılmamış');
       return;
     }
 
     if (selectedScopes.length === 0) {
-      setError('Please select at least one scope');
+      setError('Lütfen en az bir yetki seçin');
       return;
     }
 
@@ -74,7 +74,7 @@ export function CreateApiTokenDialog({
       if (expiresAt) {
         const date = new Date(expiresAt);
         if (date.getTime() <= Date.now()) {
-          setError('Expiration date must be in the future');
+          setError('Bitiş tarihi gelecekte olmalı');
           setSubmitting(false);
           return;
         }
@@ -96,9 +96,9 @@ export function CreateApiTokenDialog({
       resetForm();
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || 'Failed to create API token');
+        setError(err.message || 'API token oluşturulamadı');
       } else {
-        setError('An unexpected error occurred');
+        setError('Beklenmeyen bir hata oluştu');
       }
     } finally {
       setSubmitting(false);
@@ -139,26 +139,25 @@ export function CreateApiTokenDialog({
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Create API Token
+          API Token Oluştur
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create API Token</DialogTitle>
+            <DialogTitle>API Token Oluştur</DialogTitle>
             <DialogDescription>
-              Create a new API token for programmatic access. Select the scopes
-              that this token should have.
+              Programatik erişim için yeni bir API token oluşturun. Bu token&apos;ın sahip olması gereken yetkileri seçin.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Name (optional)</Label>
+              <Label htmlFor="name">Ad (isteğe bağlı)</Label>
               <Input
                 id="name"
-                placeholder="e.g. Production API, Development"
+                placeholder="örn. Üretim API, Geliştirme"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={submitting}
@@ -168,7 +167,7 @@ export function CreateApiTokenDialog({
             {/* Scopes */}
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
-                <Label>Scopes</Label>
+                <Label>Yetkiler</Label>
                 <Button
                   type="button"
                   variant="ghost"
@@ -178,8 +177,8 @@ export function CreateApiTokenDialog({
                   className="h-auto p-0 text-xs"
                 >
                   {selectedScopes.length === AVAILABLE_SCOPES.length
-                    ? 'Deselect All'
-                    : 'Select All'}
+                    ? 'Tümünü Kaldır'
+                    : 'Tümünü Seç'}
                 </Button>
               </div>
               <div className="space-y-2 border rounded-md p-3 max-h-[200px] overflow-y-auto">
@@ -207,7 +206,7 @@ export function CreateApiTokenDialog({
 
             {/* Expiration */}
             <div className="grid gap-2">
-              <Label htmlFor="expires_at">Expiration Date (optional)</Label>
+              <Label htmlFor="expires_at">Bitiş Tarihi (isteğe bağlı)</Label>
               <Input
                 id="expires_at"
                 type="datetime-local"
@@ -217,7 +216,7 @@ export function CreateApiTokenDialog({
                 min={new Date().toISOString().slice(0, 16)}
               />
               <p className="text-xs text-muted-foreground">
-                Leave empty for no expiration
+                Süresiz olması için boş bırakın
               </p>
             </div>
 
@@ -236,18 +235,18 @@ export function CreateApiTokenDialog({
               onClick={() => setOpen(false)}
               disabled={submitting}
             >
-              Cancel
+              İptal
             </Button>
             <Button type="submit" disabled={submitting || selectedScopes.length === 0}>
               {submitting ? (
                 <>
                   <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                  Creating...
+                  Oluşturuluyor...
                 </>
               ) : (
                 <>
                   <Key className="mr-2 h-4 w-4" />
-                  Create Token
+                  Token Oluştur
                 </>
               )}
             </Button>
@@ -257,4 +256,3 @@ export function CreateApiTokenDialog({
     </Dialog>
   );
 }
-

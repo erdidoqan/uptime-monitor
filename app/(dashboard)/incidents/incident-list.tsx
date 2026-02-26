@@ -37,7 +37,7 @@ function getFaviconUrl(url: string | undefined, size: number = 32): string | nul
 
 // Extract hostname from URL for display
 function getHostname(url: string | undefined): string {
-  if (!url) return 'Unknown';
+  if (!url) return 'Bilinmiyor';
   try {
     const urlObj = new URL(url);
     return urlObj.hostname;
@@ -54,11 +54,11 @@ function formatRelativeTime(timestamp: number, currentTime: number): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 30) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
+  if (seconds < 60) return 'Az önce';
+  if (minutes < 60) return `${minutes}dk önce`;
+  if (hours < 24) return `${hours}s önce`;
+  if (days < 30) return `${days}g önce`;
+  return new Date(timestamp).toLocaleDateString('tr-TR');
 }
 
 // Format duration
@@ -73,16 +73,16 @@ function formatDuration(startTime: number, endTime: number | null, currentTime: 
   const parts: string[] = [];
   
   if (days > 0) {
-    parts.push(`${days}d`);
+    parts.push(`${days}g`);
   }
   if (hours % 24 > 0 && parts.length < 2) {
-    parts.push(`${hours % 24}h`);
+    parts.push(`${hours % 24}s`);
   }
   if (minutes % 60 > 0 && parts.length < 2) {
-    parts.push(`${minutes % 60}m`);
+    parts.push(`${minutes % 60}dk`);
   }
   if (parts.length === 0) {
-    parts.push(`${seconds}s`);
+    parts.push(`${seconds}sn`);
   }
 
   return parts.join(' ');
@@ -90,14 +90,14 @@ function formatDuration(startTime: number, endTime: number | null, currentTime: 
 
 // Format cause for display
 function formatCause(cause: string | null): string {
-  if (!cause) return 'Unknown error';
+  if (!cause) return 'Bilinmeyen hata';
   
   const causeMap: Record<string, string> = {
-    'timeout': 'Connection timeout',
-    'http_error': 'HTTP error',
-    'keyword_missing': 'Keyword not found',
-    'ssl_error': 'SSL certificate error',
-    'dns_error': 'DNS resolution failed',
+    'timeout': 'Bağlantı zaman aşımı',
+    'http_error': 'HTTP hatası',
+    'keyword_missing': 'Anahtar kelime bulunamadı',
+    'ssl_error': 'SSL sertifika hatası',
+    'dns_error': 'DNS çözümlemesi başarısız',
   };
   
   return causeMap[cause] || cause;
@@ -199,7 +199,7 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
         <div className="relative">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search"
+            placeholder="Ara"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 pr-8 w-[180px] h-9 text-sm"
@@ -209,23 +209,23 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
         
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
           <SelectTrigger className="w-[130px] h-9 text-sm">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="ongoing">Ongoing ({ongoingCount})</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
+            <SelectItem value="all">Tüm Durumlar</SelectItem>
+            <SelectItem value="ongoing">Devam Eden ({ongoingCount})</SelectItem>
+            <SelectItem value="resolved">Çözülmüş</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
           <SelectTrigger className="w-[130px] h-9 text-sm">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder="Tür" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="monitor">Monitors</SelectItem>
-            <SelectItem value="cron">Cron Jobs</SelectItem>
+            <SelectItem value="all">Tüm Türler</SelectItem>
+            <SelectItem value="monitor">Monitörler</SelectItem>
+            <SelectItem value="cron">Cron Job&apos;lar</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -234,11 +234,11 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
         <Card className="border">
           <CardContent className="pt-8 text-center py-16">
             <AlertTriangle className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-            <h3 className="text-sm font-semibold mb-1">No incidents</h3>
+            <h3 className="text-sm font-semibold mb-1">Olay yok</h3>
             <p className="text-xs text-muted-foreground">
               {incidents.length === 0 
-                ? "Great! No incidents have been recorded yet."
-                : "No incidents match your filters."}
+                ? "Harika! Henüz hiç olay kaydedilmemiş."
+                : "Filtrelerinize uyan olay yok."}
             </p>
           </CardContent>
         </Card>
@@ -307,18 +307,18 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Open {hostname}</p>
+                                <p>{hostname} aç</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           {/* Type badge */}
-                          <span className="capitalize">{incident.type}</span>
+                          <span className="capitalize">{incident.type === 'monitor' ? 'Monitör' : 'Cron'}</span>
                           
                           {/* Status */}
                           <span className={`font-medium ${isOngoing ? 'text-red-600' : 'text-green-600'}`}>
-                            {isOngoing ? 'Ongoing' : 'Resolved'}
+                            {isOngoing ? 'Devam Ediyor' : 'Çözüldü'}
                           </span>
                           
                           {/* Duration */}
@@ -357,12 +357,12 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
                             {isResolving ? (
                               <span className="flex items-center gap-1">
                                 <span className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
-                                <span>Resolving</span>
+                                <span>Çözülüyor</span>
                               </span>
                             ) : (
                               <span className="flex items-center gap-1">
                                 <CheckCircle className="h-3.5 w-3.5" />
-                                <span>Resolve</span>
+                                <span>Çöz</span>
                               </span>
                             )}
                           </Button>
@@ -376,17 +376,17 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/incidents/${incident.id}`}>View details</Link>
+                              <Link href={`/incidents/${incident.id}`}>Detayları gör</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link href={`/${incident.type === 'monitor' ? 'monitors' : 'cron-jobs'}/${incident.source_id}`}>
-                                View {incident.type}
+                                {incident.type === 'monitor' ? 'Monitörü' : 'Cron job\'u'} görüntüle
                               </Link>
                             </DropdownMenuItem>
                             {incident.source_url && (
                               <DropdownMenuItem asChild>
                                 <a href={incident.source_url} target="_blank" rel="noopener noreferrer">
-                                  Visit site
+                                  Siteyi ziyaret et
                                   <ExternalLink className="w-3 h-3 ml-2" />
                                 </a>
                               </DropdownMenuItem>
@@ -405,4 +405,3 @@ export function IncidentList({ initialIncidents }: IncidentListProps) {
     </>
   );
 }
-

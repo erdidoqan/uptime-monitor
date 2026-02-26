@@ -69,12 +69,12 @@ export function ApiDocumentationContent() {
     { id: 'code-examples', label: 'Code Examples', icon: CodeIcon },
   ];
 
-  const curlExample = `curl -X GET https://www.cronuptime.com/api/monitors \\
+  const curlExample = `curl -X GET https://www.uptimetr.com/api/monitors \\
   -H "Authorization: Bearer YOUR_API_TOKEN" \\
   -H "Content-Type: application/json"`;
 
   const javascriptExample = `// Using fetch
-const response = await fetch('https://www.cronuptime.com/api/monitors', {
+const response = await fetch('https://www.uptimetr.com/api/monitors', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer YOUR_API_TOKEN',
@@ -93,7 +93,7 @@ headers = {
 }
 
 response = requests.get(
-    'https://www.cronuptime.com/api/monitors',
+    'https://www.uptimetr.com/api/monitors',
     headers=headers
 )
 
@@ -102,7 +102,7 @@ print(monitors)`;
 
   const nodeExample = `const axios = require('axios');
 
-const response = await axios.get('https://www.cronuptime.com/api/monitors', {
+const response = await axios.get('https://www.uptimetr.com/api/monitors', {
   headers: {
     'Authorization': 'Bearer YOUR_API_TOKEN',
     'Content-Type': 'application/json'
@@ -111,17 +111,17 @@ const response = await axios.get('https://www.cronuptime.com/api/monitors', {
 
 console.log(response.data);`;
 
-  const createMonitorExample = `curl -X POST https://www.cronuptime.com/api/monitors \\
+  const createMonitorExample = `curl -X POST https://www.uptimetr.com/api/monitors \\
   -H "Authorization: Bearer YOUR_API_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "My API Monitor",
     "url": "https://api.example.com/health",
     "interval_sec": 300,
-    "timeout_ms": 5000
+    "timeout_ms": 15000
   }'`;
 
-  const createCronJobExample = `curl -X POST https://www.cronuptime.com/api/cron-jobs \\
+  const createCronJobExample = `curl -X POST https://www.uptimetr.com/api/cron-jobs \\
   -H "Authorization: Bearer YOUR_API_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -129,7 +129,7 @@ console.log(response.data);`;
     "url": "https://api.example.com/backup",
     "method": "POST",
     "cron_expr": "0 2 * * *",
-    "timeout_ms": 30000
+    "timeout_ms": 15000
   }'`;
 
   return (
@@ -172,11 +172,11 @@ console.log(response.data);`;
             <Section id="getting-started" title="Getting Started">
               <div className="space-y-4 text-gray-300">
                 <p>
-                  The CronUptime API allows you to programmatically manage monitors, cron jobs, and incidents.
+                  The UptimeTR API allows you to programmatically manage monitors, cron jobs, and incidents.
                   All API requests should be made to the base URL:
                 </p>
                 <CodeBlock
-                  code="https://www.cronuptime.com/api"
+                  code="https://www.uptimetr.com/api"
                   language="text"
                   id="base-url"
                 />
@@ -511,7 +511,7 @@ console.log(response.data);`;
                 Ready to get started?
               </h3>
               <p className="text-gray-400 mb-6">
-                Create your first API token and start integrating CronUptime into your applications.
+                Create your first API token and start integrating UptimeTR into your applications.
               </p>
               <Link
                 href="/api-tokens"

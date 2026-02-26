@@ -1,0 +1,14 @@
+name = "uptime-browser-test"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+account_id = "0f6cb9b6c5fb3a6db6781f0dc9f36844"
+
+# Set in Cloudflare: wrangler secret put JWT_SECRET
+# Same value as Next.js JWT_SECRET for token verification
+
+[browser]
+binding = "BROWSER"
+
+[observability]
+enabled = true

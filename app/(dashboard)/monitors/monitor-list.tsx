@@ -38,7 +38,7 @@ function getHostname(url: string): string {
 
 // Format relative time (e.g., "2 min ago", "1 hour ago")
 function formatRelativeTime(timestamp: number | null, currentTime: number): string {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return 'Hiç';
   
   const diff = currentTime - timestamp;
   const seconds = Math.floor(diff / 1000);
@@ -46,10 +46,10 @@ function formatRelativeTime(timestamp: number | null, currentTime: number): stri
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${days}d ago`;
+  if (seconds < 60) return 'Az önce';
+  if (minutes < 60) return `${minutes}dk önce`;
+  if (hours < 24) return `${hours}sa önce`;
+  return `${days}g önce`;
 }
 
 interface MonitorListProps {
@@ -159,7 +159,7 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search"
+              placeholder="Ara"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 pr-8 w-[180px] h-9 text-sm"
@@ -174,14 +174,14 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
           <Card className="border">
             <CardContent className="pt-8 text-center py-16">
               <Monitor className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-              <h3 className="text-sm font-semibold mb-1">No monitors yet</h3>
+              <h3 className="text-sm font-semibold mb-1">Henüz monitör yok</h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Create your first monitor to start tracking uptime
+                Uptime takibi için ilk monitörünüzü oluşturun
               </p>
               <Button size="sm" asChild>
                 <Link href="/monitors/create">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Monitor
+                  Monitör Oluştur
                 </Link>
               </Button>
             </CardContent>
@@ -279,10 +279,10 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                         )}
                         {/* Status */}
                         {monitor.is_active === 0 ? (
-                          <span className="text-yellow-600 font-medium">Paused</span>
+                          <span className="text-yellow-600 font-medium">Duraklatıldı</span>
                         ) : (
                           <span className={`font-medium ${monitor.last_status === 'up' ? 'text-green-600' : monitor.last_status === 'down' ? 'text-red-600' : ''}`}>
-                            {monitor.last_status === 'up' ? 'Up' : monitor.last_status === 'down' ? 'Down' : 'Unknown'}
+                            {monitor.last_status === 'up' ? 'Çalışıyor' : monitor.last_status === 'down' ? 'Çalışmıyor' : 'Bilinmiyor'}
                             {monitor.last_status === 'up' && monitor.uptime_duration > 0 && (
                               <span className="text-muted-foreground font-normal"> {formatUptimeDuration(monitor.uptime_duration)}</span>
                             )}
@@ -308,7 +308,7 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                     <div className="flex items-center gap-4">
                       {/* Interval badge */}
                       <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                        Every {formatInterval(monitor.interval_sec)}
+                        Her {formatInterval(monitor.interval_sec)}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
@@ -318,18 +318,18 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/monitors/${monitor.id}`}>View details</Link>
+                            <Link href={`/monitors/${monitor.id}`}>Detayları gör</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <a href={monitor.url} target="_blank" rel="noopener noreferrer">
-                              Visit site
+                              Siteyi ziyaret et
                               <ExternalLink className="w-3 h-3 ml-2" />
                             </a>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link href={`/monitors/${monitor.id}/edit`}>Edit</Link>
+                            <Link href={`/monitors/${monitor.id}/edit`}>Düzenle</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">Sil</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -415,10 +415,10 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                       )}
                       {/* Status */}
                       {monitor.is_active === 0 ? (
-                        <span className="text-yellow-600 font-medium">Paused</span>
+                        <span className="text-yellow-600 font-medium">Duraklatıldı</span>
                       ) : (
                         <span className={`font-medium ${monitor.last_status === 'up' ? 'text-green-600' : monitor.last_status === 'down' ? 'text-red-600' : ''}`}>
-                          {monitor.last_status === 'up' ? 'Up' : monitor.last_status === 'down' ? 'Down' : 'Unknown'}
+                          {monitor.last_status === 'up' ? 'Çalışıyor' : monitor.last_status === 'down' ? 'Çalışmıyor' : 'Bilinmiyor'}
                           {monitor.last_status === 'up' && monitor.uptime_duration > 0 && (
                             <span className="text-muted-foreground font-normal"> {formatUptimeDuration(monitor.uptime_duration)}</span>
                           )}
@@ -444,7 +444,7 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                   <div className="flex items-center gap-4">
                     {/* Interval badge */}
                     <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                      Every {formatInterval(monitor.interval_sec)}
+                      Her {formatInterval(monitor.interval_sec)}
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
@@ -454,18 +454,18 @@ export function MonitorList({ initialMonitors, showSearch = true }: MonitorListP
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/monitors/${monitor.id}`}>View details</Link>
+                          <Link href={`/monitors/${monitor.id}`}>Detayları gör</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <a href={monitor.url} target="_blank" rel="noopener noreferrer">
-                            Visit site
+                            Siteyi ziyaret et
                             <ExternalLink className="w-3 h-3 ml-2" />
                           </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/monitors/${monitor.id}/edit`}>Edit</Link>
+                          <Link href={`/monitors/${monitor.id}/edit`}>Düzenle</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">Sil</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

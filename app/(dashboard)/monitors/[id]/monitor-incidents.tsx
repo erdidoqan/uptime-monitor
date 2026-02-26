@@ -17,11 +17,11 @@ function formatRelativeTime(timestamp: number, currentTime: number): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 30) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
+  if (seconds < 60) return 'Az önce';
+  if (minutes < 60) return `${minutes}dk önce`;
+  if (hours < 24) return `${hours}s önce`;
+  if (days < 30) return `${days}g önce`;
+  return new Date(timestamp).toLocaleDateString('tr-TR');
 }
 
 // Format duration
@@ -36,16 +36,16 @@ function formatDuration(startTime: number, endTime: number | null, currentTime: 
   const parts: string[] = [];
   
   if (days > 0) {
-    parts.push(`${days}d`);
+    parts.push(`${days}g`);
   }
   if (hours % 24 > 0 && parts.length < 2) {
-    parts.push(`${hours % 24}h`);
+    parts.push(`${hours % 24}s`);
   }
   if (minutes % 60 > 0 && parts.length < 2) {
-    parts.push(`${minutes % 60}m`);
+    parts.push(`${minutes % 60}dk`);
   }
   if (parts.length === 0) {
-    parts.push(`${seconds}s`);
+    parts.push(`${seconds}sn`);
   }
 
   return parts.join(' ');
@@ -53,14 +53,14 @@ function formatDuration(startTime: number, endTime: number | null, currentTime: 
 
 // Format cause for display
 function formatCause(cause: string | null): string {
-  if (!cause) return 'Unknown error';
+  if (!cause) return 'Bilinmeyen hata';
   
   const causeMap: Record<string, string> = {
-    'timeout': 'Timeout',
-    'http_error': 'HTTP error',
-    'keyword_missing': 'Keyword missing',
-    'ssl_error': 'SSL error',
-    'dns_error': 'DNS error',
+    'timeout': 'Zaman aşımı',
+    'http_error': 'HTTP hatası',
+    'keyword_missing': 'Anahtar kelime eksik',
+    'ssl_error': 'SSL hatası',
+    'dns_error': 'DNS hatası',
   };
   
   return causeMap[cause] || cause;
@@ -148,16 +148,16 @@ export function MonitorIncidents({ monitorId }: MonitorIncidentsProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            Incidents
+            Olaylar
             {ongoingIncidents.length > 0 && (
               <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full">
-                {ongoingIncidents.length} ongoing
+                {ongoingIncidents.length} devam ediyor
               </span>
             )}
           </CardTitle>
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/incidents?type=monitor`}>
-              View all
+              Tümünü gör
               <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
@@ -167,7 +167,7 @@ export function MonitorIncidents({ monitorId }: MonitorIncidentsProps) {
         {incidents.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <p className="text-sm">No incidents recorded</p>
+            <p className="text-sm">Kayıtlı olay yok</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -191,7 +191,7 @@ export function MonitorIncidents({ monitorId }: MonitorIncidentsProps) {
                     <div>
                       <div className="flex items-center gap-2 text-sm font-medium">
                         <span className={isOngoing ? 'text-red-600' : ''}>
-                          {isOngoing ? 'Ongoing' : 'Resolved'}
+                          {isOngoing ? 'Devam ediyor' : 'Çözüldü'}
                         </span>
                         {incident.cause && (
                           <span className="text-muted-foreground font-normal">
@@ -220,7 +220,7 @@ export function MonitorIncidents({ monitorId }: MonitorIncidentsProps) {
               <div className="text-center pt-2">
                 <Button variant="ghost" size="sm" asChild>
                   <Link href={`/incidents?type=monitor`}>
-                    View {incidents.length - 5} more incidents
+                    {incidents.length - 5} olay daha görüntüle
                   </Link>
                 </Button>
               </div>
@@ -231,4 +231,3 @@ export function MonitorIncidents({ monitorId }: MonitorIncidentsProps) {
     </Card>
   );
 }
-

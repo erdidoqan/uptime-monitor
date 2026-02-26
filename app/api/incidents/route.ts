@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { after } from 'next/server';
 import { getD1Client } from '@/lib/d1-client';
 import {
   authenticateRequestOrToken,
@@ -178,15 +179,21 @@ export async function POST(request: NextRequest) {
       [incidentId]
     );
 
-    // Send email notification (fire-and-forget)
-    sendIncidentEmail({
-      userId: auth.userId,
-      incidentType: type as 'monitor' | 'cron',
-      sourceId: source_id,
-      cause: cause || null,
-      httpStatus: http_status || null,
-      timestamp: now,
-      incidentId,
+    // Send email notification after response is sent
+    after(async () => {
+      try {
+        await sendIncidentEmail({
+          userId: auth.userId,
+          incidentType: type as 'monitor' | 'cron',
+          sourceId: source_id,
+          cause: cause || null,
+          httpStatus: http_status || null,
+          timestamp: now,
+          incidentId,
+        });
+      } catch (error) {
+        console.error(`Failed to send incident email for ${incidentId}:`, error);
+      }
     });
 
     return successResponse(incident, 201);

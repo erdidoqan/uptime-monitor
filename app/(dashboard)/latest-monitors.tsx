@@ -56,7 +56,7 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
   }, []);
 
   const formatUptimeDuration = (ms: number | undefined) => {
-    if (!ms || ms === 0) return '0s';
+    if (!ms || ms === 0) return '0sn';
     
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -71,28 +71,28 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
       parts.push(`${years}y`);
     }
     if (months > 0) {
-      parts.push(`${months % 12}mo`);
+      parts.push(`${months % 12}ay`);
     }
     if (days > 0 && parts.length < 2) {
-      parts.push(`${days % 30}d`);
+      parts.push(`${days % 30}g`);
     }
     if (hours > 0 && parts.length < 2) {
-      parts.push(`${hours % 24}h`);
+      parts.push(`${hours % 24}sa`);
     }
     if (minutes > 0 && parts.length < 2) {
-      parts.push(`${minutes % 60}m`);
+      parts.push(`${minutes % 60}dk`);
     }
     if (parts.length === 0) {
-      parts.push(`${seconds}s`);
+      parts.push(`${seconds}sn`);
     }
 
     return parts.join(' ');
   };
 
   const formatInterval = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 60) return `${seconds}sn`;
     const minutes = Math.floor(seconds / 60);
-    return `${minutes}m`;
+    return `${minutes}dk`;
   };
 
   // Calculate uptime/downtime duration based on last_status and last_checked_at
@@ -123,12 +123,12 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Latest monitors</h2>
+        <h2 className="text-lg font-semibold">Son monitörler</h2>
         <Link 
           href="/monitors" 
           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
         >
-          View all
+          Tümünü gör
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -138,14 +138,14 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
         <Card className="border">
           <CardContent className="pt-8 text-center py-12">
             <Monitor className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-            <h3 className="text-sm font-semibold mb-1">No monitors yet</h3>
+            <h3 className="text-sm font-semibold mb-1">Henüz monitör yok</h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Create your first monitor to start tracking uptime
+              Uptime takibi için ilk monitörünüzü oluşturun
             </p>
             <Button size="sm" asChild>
               <Link href="/monitors/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Monitor
+                Monitör Oluştur
               </Link>
             </Button>
           </CardContent>
@@ -217,7 +217,7 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
                           </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Open {hostname}</p>
+                          <p>{hostname} aç</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -228,10 +228,10 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
                       )}
                       {/* Status */}
                       {monitor.is_active === 0 ? (
-                        <span className="text-yellow-600 font-medium">Paused</span>
+                        <span className="text-yellow-600 font-medium">Duraklatıldı</span>
                       ) : (
                         <span className={`font-medium ${monitor.last_status === 'up' ? 'text-green-600' : monitor.last_status === 'down' ? 'text-red-600' : ''}`}>
-                          {monitor.last_status === 'up' ? 'Up' : monitor.last_status === 'down' ? 'Down' : 'Unknown'}
+                          {monitor.last_status === 'up' ? 'Çalışıyor' : monitor.last_status === 'down' ? 'Çalışmıyor' : 'Bilinmiyor'}
                           {monitor.last_status === 'up' && monitor.uptime_duration > 0 && (
                             <span className="text-muted-foreground font-normal"> {formatUptimeDuration(monitor.uptime_duration)}</span>
                           )}
@@ -256,18 +256,18 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/monitors/${monitor.id}`}>View details</Link>
+                          <Link href={`/monitors/${monitor.id}`}>Detayları gör</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <a href={monitor.url} target="_blank" rel="noopener noreferrer">
-                            Visit site
+                            Siteyi ziyaret et
                             <ExternalLink className="w-3 h-3 ml-2" />
                           </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/monitors/${monitor.id}/edit`}>Edit</Link>
+                          <Link href={`/monitors/${monitor.id}/edit`}>Düzenle</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">Sil</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -282,4 +282,3 @@ export function LatestMonitors({ initialMonitors }: LatestMonitorsProps) {
     </div>
   );
 }
-

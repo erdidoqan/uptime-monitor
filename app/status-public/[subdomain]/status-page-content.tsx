@@ -104,6 +104,7 @@ export function StatusPageContent({ initialData, subdomain }: StatusPageContentP
               key={section.id} 
               section={section}
               defaultExpanded={index === 0}
+              headingLevel={index === 0 ? 1 : 2}
             />
           ))}
         </div>

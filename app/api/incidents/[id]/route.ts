@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { after } from 'next/server';
 import { getD1Client } from '@/lib/d1-client';
 import {
   authenticateRequestOrToken,
@@ -161,14 +162,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         [eventId, id, auth.userId, now]
       );
 
-      // Send resolved email notification (fire-and-forget)
-      sendIncidentResolvedEmail({
-        userId: incident.user_id || auth.userId,
-        incidentType: incident.type as 'monitor' | 'cron',
-        sourceId: incident.source_id,
-        incidentId: id,
-        resolvedAt: now,
-        startedAt: incident.started_at,
+      // Send resolved email notification after response is sent
+      after(async () => {
+        try {
+          await sendIncidentResolvedEmail({
+            userId: incident.user_id || auth.userId,
+            incidentType: incident.type as 'monitor' | 'cron',
+            sourceId: incident.source_id,
+            incidentId: id,
+            resolvedAt: now,
+            startedAt: incident.started_at,
+          });
+        } catch (error) {
+          console.error(`Failed to send resolved email for incident ${id}:`, error);
+        }
       });
     } else {
       // reopen

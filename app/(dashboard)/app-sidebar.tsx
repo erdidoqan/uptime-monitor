@@ -17,39 +17,46 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Monitor, Timer, AlertTriangle, Key, Globe } from 'lucide-react';
+import { LayoutDashboard, Monitor, Timer, AlertTriangle, Key, Globe, Settings, ShieldCheck } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+
+const ADMIN_EMAIL = 'erdi.doqan@gmail.com';
 
 const navigation = [
   {
-    title: 'Dashboard',
+    title: 'Panel',
     url: '/',
     icon: LayoutDashboard,
   },
   {
-    title: 'Monitors',
+    title: 'Monitörler',
     url: '/monitors',
     icon: Monitor,
   },
   {
-    title: 'Cron Jobs',
+    title: 'Cron Job\'lar',
     url: '/cron-jobs',
     icon: Timer,
   },
   {
-    title: 'Incidents',
+    title: 'Olaylar',
     url: '/incidents',
     icon: AlertTriangle,
   },
   {
-    title: 'Status Pages',
+    title: 'Durum Sayfaları',
     url: '/status-pages',
     icon: Globe,
   },
   {
-    title: 'API Tokens',
+    title: 'API Anahtarları',
     url: '/api-tokens',
     icon: Key,
+  },
+  {
+    title: 'Ayarlar',
+    url: '/settings',
+    icon: Settings,
   },
 ];
 
@@ -76,17 +83,17 @@ export function AppSidebar({ user }: AppSidebarProps) {
         <Link href="/" className="flex items-center gap-2 px-4 py-3 hover:opacity-80 transition-opacity">
           <Image 
             src="/android-chrome-192x192.png" 
-            alt="CronUptime Logo" 
+            alt="UptimeTR Logo" 
             width={24} 
             height={24}
             className="rounded-sm"
           />
-          <span className="font-semibold">CronUptime</span>
+          <span className="font-semibold">UptimeTR</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigasyon</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => (
@@ -102,6 +109,19 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {user?.email === ADMIN_EMAIL && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive('/admin')}
+                  >
+                    <Link href="/admin">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Admin</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -114,7 +134,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
               {user.image ? (
                 <Image
                   src={user.image}
-                  alt="Profile"
+                  alt="Profil"
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-full object-cover"
@@ -137,7 +157,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
               className="w-full"
               onClick={() => signOut()}
             >
-              Sign Out
+              Çıkış Yap
             </Button>
           </div>
         )}
@@ -145,4 +165,3 @@ export function AppSidebar({ user }: AppSidebarProps) {
     </Sidebar>
   );
 }
-

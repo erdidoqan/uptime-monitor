@@ -24,7 +24,7 @@ export function UptimeBar({ history, className = '' }: UptimeBarProps) {
   // Format date for tooltip
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('tr-TR', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -54,7 +54,7 @@ export function UptimeBar({ history, className = '' }: UptimeBarProps) {
       return (
         <div className="text-center">
           <div className="font-medium">{formattedDate}</div>
-          <div className="text-muted-foreground text-xs">Not monitored</div>
+          <div className="text-muted-foreground text-xs">İzlenmiyor</div>
         </div>
       );
     }
@@ -63,11 +63,11 @@ export function UptimeBar({ history, className = '' }: UptimeBarProps) {
       <div className="text-center">
         <div className="font-medium">{formattedDate}</div>
         <div className="text-xs">
-          {day.uptimePercentage.toFixed(2)}% uptime
+          %{day.uptimePercentage.toFixed(2)} çalışma süresi
         </div>
         {day.downtimeMinutes > 0 && (
           <div className="text-red-400 text-xs">
-            Down for {formatDowntime(day.downtimeMinutes)}
+            Çalışmadı: {formatDowntime(day.downtimeMinutes)}
           </div>
         )}
       </div>
@@ -75,26 +75,26 @@ export function UptimeBar({ history, className = '' }: UptimeBarProps) {
   };
 
   const formatDowntime = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`;
+    if (minutes < 60) return `${minutes} dk`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (mins === 0) return `${hours}h`;
-    return `${hours}h ${mins}m`;
+    if (mins === 0) return `${hours} sa`;
+    return `${hours} sa ${mins} dk`;
   };
 
   // Calculate days label
   const daysLabel = useMemo(() => {
     const firstDate = history[0]?.date;
     const lastDate = history[history.length - 1]?.date;
-    if (!firstDate || !lastDate) return { start: '90 days ago', end: 'Today' };
+    if (!firstDate || !lastDate) return { start: '90 gün önce', end: 'Bugün' };
     
     const daysDiff = Math.ceil(
       (new Date(lastDate).getTime() - new Date(firstDate).getTime()) / (1000 * 60 * 60 * 24)
     );
     
     return {
-      start: `${daysDiff} days ago`,
-      end: 'Today',
+      start: `${daysDiff} gün önce`,
+      end: 'Bugün',
     };
   }, [history]);
 
@@ -136,7 +136,7 @@ export function UptimePercentage({ percentage, className = '' }: UptimePercentag
   if (percentage === null) {
     return (
       <span className={`text-sm text-muted-foreground ${className}`}>
-        N/A
+        Yok
       </span>
     );
   }
@@ -149,7 +149,7 @@ export function UptimePercentage({ percentage, className = '' }: UptimePercentag
 
   return (
     <span className={`text-sm font-medium ${color} ${className}`}>
-      {percentage.toFixed(3)}% uptime
+      %{percentage.toFixed(3)} çalışma süresi
     </span>
   );
 }

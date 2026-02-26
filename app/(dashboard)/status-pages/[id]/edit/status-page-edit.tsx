@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { api } from '@/lib/api-client';
@@ -17,12 +18,12 @@ import { TranslationsTab } from './translations-tab';
 type TabType = 'settings' | 'structure' | 'status-updates' | 'maintenance' | 'subscribers' | 'translations';
 
 const tabs: { id: TabType; label: string }[] = [
-  { id: 'settings', label: 'Settings' },
-  { id: 'structure', label: 'Structure' },
-  { id: 'status-updates', label: 'Status updates' },
-  { id: 'maintenance', label: 'Maintenance' },
-  { id: 'subscribers', label: 'Subscribers' },
-  { id: 'translations', label: 'Translations' },
+  { id: 'settings', label: 'Ayarlar' },
+  { id: 'structure', label: 'Yapı' },
+  { id: 'status-updates', label: 'Durum güncellemeleri' },
+  { id: 'maintenance', label: 'Bakım' },
+  { id: 'subscribers', label: 'Aboneler' },
+  { id: 'translations', label: 'Çeviriler' },
 ];
 
 interface StatusPageEditProps {
@@ -32,27 +33,33 @@ interface StatusPageEditProps {
 export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { status: sessionStatus } = useSession();
   const [statusPage, setStatusPage] = useState<StatusPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Load status page data
+  // Load status page data - wait for session to be ready first
   useEffect(() => {
+    // Don't fetch until session is loaded (token will be in localStorage)
+    if (sessionStatus === 'loading') {
+      return;
+    }
+
     const loadStatusPage = async () => {
       try {
         const data = await api.get<StatusPage>(`/status-pages/${statusPageId}`);
         setStatusPage(data);
       } catch (err: any) {
         console.error('Failed to load status page:', err);
-        setError(err.message || 'Failed to load status page');
+        setError(err.message || 'Durum sayfası yüklenemedi');
       } finally {
         setLoading(false);
       }
     };
     loadStatusPage();
-  }, [statusPageId]);
+  }, [statusPageId, sessionStatus]);
 
   // Show success message only when created=true query param exists
   useEffect(() => {
@@ -69,7 +76,7 @@ export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
 
   const pageUrl = statusPage?.custom_domain 
     ? `https://${statusPage.custom_domain}`
-    : statusPage ? `https://${statusPage.subdomain}.cronuptime.com` : '';
+    : statusPage ? `https://${statusPage.subdomain}.uptimetr.com` : '';
 
   return (
     <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px]">
@@ -77,14 +84,14 @@ export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
       <div className="mb-4 flex items-center gap-2 text-sm">
         <Link href="/status-pages" className="text-muted-foreground hover:text-foreground flex items-center gap-1">
           <ArrowLeft className="h-3.5 w-3.5" />
-          Status pages
+          Durum sayfaları
         </Link>
         <span className="text-muted-foreground">{'>'}</span>
         {loading ? (
           <Skeleton className="h-4 w-40" />
         ) : (
           <span className="text-muted-foreground">
-            {statusPage?.custom_domain || `${statusPage?.subdomain}.cronuptime.com`}
+            {statusPage?.custom_domain || `${statusPage?.subdomain}.uptimetr.com`}
           </span>
         )}
       </div>
@@ -96,7 +103,7 @@ export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
         ) : (
           <>
             <h1 className="text-2xl font-semibold">
-              {statusPage?.custom_domain || `${statusPage?.subdomain}.cronuptime.com`}
+              {statusPage?.custom_domain || `${statusPage?.subdomain}.uptimetr.com`}
             </h1>
             <a 
               href={pageUrl} 
@@ -121,7 +128,7 @@ export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
             </div>
             <div className="flex-1">
               <p className="font-medium text-green-800 dark:text-green-200">
-                Status page was successfully created.
+                Durum sayfası başarıyla oluşturuldu.
               </p>
               <a 
                 href={pageUrl}
@@ -129,7 +136,7 @@ export function StatusPageEdit({ statusPageId }: StatusPageEditProps) {
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline"
               >
-                Preview
+                Önizle
               </a>
             </div>
             <button
@@ -224,24 +231,3 @@ function SettingsTabSkeleton() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -119,12 +119,12 @@ export function IncidentActions({ incident }: IncidentActionsProps) {
           {isLoading ? (
             <>
               <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-              <span>Resolving...</span>
+              <span>Çözülüyor...</span>
             </>
           ) : (
             <>
               <CheckCircle className="h-4 w-4" />
-              <span>Resolve Incident</span>
+              <span>Olayı Çöz</span>
             </>
           )}
         </Button>
@@ -139,12 +139,12 @@ export function IncidentActions({ incident }: IncidentActionsProps) {
           {isLoading ? (
             <>
               <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-              <span>Reopening...</span>
+              <span>Yeniden açılıyor...</span>
             </>
           ) : (
             <>
               <RotateCcw className="h-4 w-4" />
-              <span>Reopen Incident</span>
+              <span>Olayı Yeniden Aç</span>
             </>
           )}
         </Button>
@@ -154,25 +154,25 @@ export function IncidentActions({ incident }: IncidentActionsProps) {
         <AlertDialogTrigger asChild>
           <Button type="button" variant="outline" className="gap-2 text-red-600 hover:text-red-700">
             <Trash2 className="h-4 w-4" />
-            <span>Delete</span>
+            <span>Sil</span>
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Incident</AlertDialogTitle>
+            <AlertDialogTitle>Olayı Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this incident? This action cannot be undone.
-              All comments and timeline events will be permanently removed.
+              Bu olayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+              Tüm yorumlar ve zaman çizelgesi olayları kalıcı olarak silinecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? 'Siliniyor...' : 'Sil'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -180,4 +180,3 @@ export function IncidentActions({ incident }: IncidentActionsProps) {
     </div>
   );
 }
-

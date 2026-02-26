@@ -440,7 +440,7 @@ function getHostname(url: string): string {
   try {
     return new URL(url).hostname;
   } catch {
-    return url || 'Unknown';
+    return url || 'Bilinmiyor';
   }
 }
 
@@ -454,8 +454,8 @@ export async function generateMetadata({
   
   if (!subdomain || typeof subdomain !== 'string') {
     return {
-      title: 'Status Page Not Found',
-      description: 'The requested status page could not be found.',
+      title: 'Durum Sayfası Bulunamadı',
+      description: 'İstenen durum sayfası bulunamadı.',
     };
   }
   
@@ -463,43 +463,76 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: 'Status Page Not Found',
-      description: 'The requested status page could not be found.',
+      title: 'Durum Sayfası Bulunamadı',
+      description: 'İstenen durum sayfası bulunamadı.',
     };
   }
 
   const statusText = {
-    operational: 'All Systems Operational',
-    degraded: 'Degraded Performance',
-    partial_outage: 'Partial System Outage',
-    major_outage: 'Major System Outage',
+    operational: 'Tüm Sistemler Çalışıyor',
+    degraded: 'Düşük Performans',
+    partial_outage: 'Kısmi Sistem Kesintisi',
+    major_outage: 'Büyük Sistem Kesintisi',
+  }[data.overallStatus];
+
+  const statusEmoji = {
+    operational: '✅',
+    degraded: '⚠️',
+    partial_outage: '🟠',
+    major_outage: '🔴',
   }[data.overallStatus];
 
   const pageUrl = data.customDomain 
     ? `https://${data.customDomain}`
-    : `https://${data.subdomain}.cronuptime.com`;
+    : `https://${data.subdomain}.uptimetr.com`;
+
+  // SEO optimized title with status indicator
+  const seoTitle = `${data.companyName} Çöktü mü? ${statusEmoji} Güncel arızalar, sorunlar ve hatalar`;
+  const seoDescription = `${data.companyName}'ta yaşanan güncel arızalar, sorunlar ve hatalar. Servis ile ilgili sorun mu yaşıyorsunuz? Buradan neler olduğunu öğrenebilirsiniz.`;
 
   return {
-    title: `${data.companyName} Status | CronUptime`,
-    description: `Real-time status and uptime monitoring for ${data.companyName}. Current status: ${statusText}`,
+    title: seoTitle,
+    description: seoDescription,
+    keywords: [
+      `${data.companyName} çöktü mü`,
+      `${data.companyName} erişim sorunu`,
+      `${data.companyName} durum`,
+      `${data.companyName} kesinti`,
+      `${data.companyName} uptime`,
+      `${data.companyName} status`,
+      'site çöktü mü',
+      'erişim sorunu',
+      'sistem durumu',
+    ],
     openGraph: {
-      title: `${data.companyName} Status`,
-      description: `Real-time status and uptime monitoring for ${data.companyName}. Current status: ${statusText}`,
+      title: `${data.companyName} Çöktü mü? | Canlı Durum`,
+      description: seoDescription,
       url: pageUrl,
-      siteName: `${data.companyName} Status`,
+      siteName: 'UptimeTR',
       type: 'website',
+      locale: 'tr_TR',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${data.companyName} Status`,
-      description: `Real-time status and uptime monitoring for ${data.companyName}. Current status: ${statusText}`,
+      title: `${data.companyName} Çöktü mü? ${statusEmoji}`,
+      description: seoDescription,
     },
     robots: {
       index: true,
       follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-snippet': -1,
+        'max-image-preview': 'large',
+        'max-video-preview': -1,
+      },
     },
     alternates: {
       canonical: pageUrl,
+    },
+    other: {
+      'google-site-verification': process.env.GOOGLE_SITE_VERIFICATION || '',
     },
   };
 }
@@ -522,19 +555,45 @@ export default async function StatusPublicPage({
     notFound();
   }
 
+  // Status text for JSON-LD
+  const statusText = {
+    operational: 'Tüm Sistemler Çalışıyor',
+    degraded: 'Düşük Performans',
+    partial_outage: 'Kısmi Sistem Kesintisi',
+    major_outage: 'Büyük Sistem Kesintisi',
+  }[data.overallStatus];
+
+  const pageUrl = data.customDomain 
+    ? `https://${data.customDomain}`
+    : `https://${data.subdomain}.uptimetr.com`;
+
   // JSON-LD structured data for SEO
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: `${data.companyName} Status`,
-    description: `Real-time status page for ${data.companyName}`,
-    url: data.customDomain 
-      ? `https://${data.customDomain}`
-      : `https://${data.subdomain}.cronuptime.com`,
-    publisher: {
+    '@id': pageUrl,
+    name: `${data.companyName} Çöktü mü? | Canlı Durum Sayfası`,
+    description: `${data.companyName} çöktü mü? Anlık durum: ${statusText}. Gerçek zamanlı sistem durumu ve uptime bilgileri.`,
+    url: pageUrl,
+    inLanguage: 'tr-TR',
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': 'https://uptimetr.com/#website',
+      name: 'UptimeTR',
+      url: 'https://uptimetr.com',
+    },
+    about: {
       '@type': 'Organization',
       name: data.companyName,
+      url: data.logoLinkUrl || pageUrl,
     },
+    mainEntity: {
+      '@type': 'WebApplication',
+      name: `${data.companyName} Durum Sayfası`,
+      applicationCategory: 'Status Page',
+      operatingSystem: 'Web',
+    },
+    dateModified: new Date().toISOString(),
   };
 
   return (

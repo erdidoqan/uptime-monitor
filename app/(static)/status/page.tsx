@@ -5,13 +5,13 @@ import { CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "System Status",
-  description: "Check the current status of CronUptime services and infrastructure.",
+  description: "Check the current status of UptimeTR services and infrastructure.",
   alternates: {
-    canonical: "https://www.cronuptime.com/status",
+    canonical: "https://www.uptimetr.com/status",
   },
   openGraph: {
-    title: "System Status - CronUptime",
-    description: "Check the current status of CronUptime services and infrastructure.",
+    title: "System Status - UptimeTR",
+    description: "Check the current status of UptimeTR services and infrastructure.",
   },
 };
 
@@ -72,7 +72,7 @@ export default function StatusPage() {
     <>
       <PageHeader
         title="System Status"
-        description="Real-time status of CronUptime services and infrastructure."
+        description="Real-time status of UptimeTR services and infrastructure."
       />
       
       <div className="mx-auto max-w-4xl px-6 lg:px-8 py-12 lg:py-16 space-y-12">

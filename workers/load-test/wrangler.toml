@@ -1,0 +1,28 @@
+name = "uptime-load-test"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "0f6cb9b6c5fb3a6db6781f0dc9f36844"
+
+# Set in Cloudflare: wrangler secret put JWT_SECRET
+# Same value as Next.js JWT_SECRET for token verification
+
+# İsteğe bağlı: Test iptali için KV. Açmak için:
+#   npx wrangler kv namespace create "LOAD_TEST_CANCEL"
+#   Çıkan id ile aşağıdaki blok ekleyin:
+# [[kv_namespaces]]
+# binding = "LOAD_TEST_CANCEL"
+# id = "<namespace_id>"
+
+# Multi-Region Durable Objects — Farklı kıtalardan farklı IP ile istek gönderir
+[durable_objects]
+bindings = [
+  { name = "LOAD_TEST_DO", class_name = "LoadTestDO" }
+]
+
+# DO migration — ilk deploy'da class oluşturur
+[[migrations]]
+tag = "v1"
+new_classes = ["LoadTestDO"]
+
+[vars]
+# LOAD_TEST_WORKER_URL will point to this worker's URL (e.g. https://uptime-load-test.<subdomain>.workers.dev)

@@ -12,7 +12,7 @@ interface StatusBannerProps {
 const statusConfig = {
   operational: {
     icon: CheckCircle2,
-    title: 'All services are online',
+    title: 'Tüm servisler çalışıyor',
     bgClass: 'bg-emerald-50 dark:bg-emerald-950/50',
     borderClass: 'border-emerald-200 dark:border-emerald-900',
     iconClass: 'text-emerald-600 dark:text-emerald-400',
@@ -20,7 +20,7 @@ const statusConfig = {
   },
   degraded: {
     icon: AlertCircle,
-    title: 'Some services are degraded',
+    title: 'Bazı servislerin performansı düşük',
     bgClass: 'bg-amber-50 dark:bg-amber-950/50',
     borderClass: 'border-amber-200 dark:border-amber-900',
     iconClass: 'text-amber-600 dark:text-amber-400',
@@ -28,7 +28,7 @@ const statusConfig = {
   },
   partial_outage: {
     icon: AlertTriangle,
-    title: 'Partial system outage',
+    title: 'Kısmi sistem kesintisi',
     bgClass: 'bg-orange-50 dark:bg-orange-950/50',
     borderClass: 'border-orange-200 dark:border-orange-900',
     iconClass: 'text-orange-600 dark:text-orange-400',
@@ -36,7 +36,7 @@ const statusConfig = {
   },
   major_outage: {
     icon: XCircle,
-    title: 'Major system outage',
+    title: 'Büyük sistem kesintisi',
     bgClass: 'bg-red-50 dark:bg-red-950/50',
     borderClass: 'border-red-200 dark:border-red-900',
     iconClass: 'text-red-600 dark:text-red-400',
@@ -57,10 +57,10 @@ export function StatusBanner({ status, isRefreshing }: StatusBannerProps) {
       )}
     >
       <div className="flex items-center gap-3">
-        <Icon className={cn('h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0', config.iconClass)} />
-        <h1 className={cn('text-lg sm:text-xl font-semibold', config.textClass)}>
+        <Icon className={cn('h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0', config.iconClass)} aria-hidden="true" />
+        <span className={cn('text-lg sm:text-xl font-semibold', config.textClass)} role="status">
           {config.title}
-        </h1>
+        </span>
         {isRefreshing && (
           <div className="ml-auto">
             <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full inline-block opacity-50" />

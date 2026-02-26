@@ -33,17 +33,17 @@ interface IncidentsContentProps {
 }
 
 function formatDuration(minutes: number | null): string {
-  if (minutes === null) return 'Unknown';
-  if (minutes < 1) return '< 1 min';
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes === null) return 'Bilinmiyor';
+  if (minutes < 1) return '< 1 dk';
+  if (minutes < 60) return `${minutes} dk`;
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}m`;
+  if (mins === 0) return `${hours} sa`;
+  return `${hours} sa ${mins} dk`;
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
+  return new Date(timestamp).toLocaleDateString('tr-TR', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -51,7 +51,7 @@ function formatDate(timestamp: number): string {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString('en-US', {
+  return new Date(timestamp).toLocaleTimeString('tr-TR', {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -88,7 +88,7 @@ export function IncidentsContent({ statusPage, incidents, subdomain }: Incidents
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         <h1 className="text-2xl font-bold text-foreground mb-6">
-          Previous Incidents
+          Geçmiş Olaylar
         </h1>
 
         {incidents.length === 0 ? (
@@ -99,10 +99,10 @@ export function IncidentsContent({ statusPage, incidents, subdomain }: Incidents
                   <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h2 className="text-lg font-semibold text-foreground mb-2">
-                  No incidents in the past 90 days
+                  Son 90 günde olay yok
                 </h2>
                 <p className="text-muted-foreground max-w-md">
-                  Great news! There have been no service disruptions during this period.
+                  Harika haber! Bu süre zarfında hiçbir hizmet kesintisi yaşanmadı.
                 </p>
               </div>
             </CardContent>
@@ -142,19 +142,19 @@ export function IncidentsContent({ statusPage, incidents, subdomain }: Incidents
                                   variant="outline" 
                                   className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800 text-xs"
                                 >
-                                  Resolved
+                                  Çözüldü
                                 </Badge>
                               </div>
                               
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <AlertCircle className="h-3.5 w-3.5" />
-                                  Started at {formatTime(incident.startedAt)}
+                                  Başlangıç: {formatTime(incident.startedAt)}
                                 </span>
                                 {incident.resolvedAt && (
                                   <span className="flex items-center gap-1">
                                     <CheckCircle2 className="h-3.5 w-3.5" />
-                                    Resolved at {formatTime(incident.resolvedAt)}
+                                    Çözüm: {formatTime(incident.resolvedAt)}
                                   </span>
                                 )}
                               </div>

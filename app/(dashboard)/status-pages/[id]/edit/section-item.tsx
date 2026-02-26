@@ -115,7 +115,7 @@ function SortableResourceItem({
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-          With status history
+          Durum geçmişi ile
         </span>
         <button
           type="button"
@@ -312,10 +312,10 @@ export function SectionItem({ section, onUpdate, onDelete }: SectionItemProps) {
 
               {/* Section title preview */}
               <span className="text-sm font-medium truncate">
-                {name || 'Untitled section'}
+                {name || 'Adsız bölüm'}
               </span>
               <span className="text-xs text-muted-foreground">
-                ({resources.length} resource{resources.length !== 1 ? 's' : ''})
+                ({resources.length} kaynak)
               </span>
             </div>
 
@@ -331,7 +331,7 @@ export function SectionItem({ section, onUpdate, onDelete }: SectionItemProps) {
                   className="text-red-600 cursor-pointer"
                   onClick={() => setDeleteDialogOpen(true)}
                 >
-                  Delete section
+                  Bölümü sil
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -342,23 +342,23 @@ export function SectionItem({ section, onUpdate, onDelete }: SectionItemProps) {
             <div className="px-4 pb-4 pt-0 pl-12 space-y-4">
               {/* Section name */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-muted-foreground">Section name</Label>
+                <Label className="text-sm font-medium text-muted-foreground">Bölüm adı</Label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onBlur={handleNameBlur}
-                  placeholder="Leave blank to hide the section heading."
+                  placeholder="Bölüm başlığını gizlemek için boş bırakın."
                   className="max-w-md"
                   disabled={saving}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Leave blank to hide the section heading.
+                  Bölüm başlığını gizlemek için boş bırakın.
                 </p>
               </div>
 
               {/* Resources */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium text-muted-foreground">Resources</Label>
+                <Label className="text-sm font-medium text-muted-foreground">Kaynaklar</Label>
                 
                 {/* Resource search */}
                 <ResourceSearch 
@@ -404,19 +404,19 @@ export function SectionItem({ section, onUpdate, onDelete }: SectionItemProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Section</AlertDialogTitle>
+            <AlertDialogTitle>Bölümü Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this section? All resources in this section will be removed from the status page.
+              Bu bölümü silmek istediğinizden emin misiniz? Bu bölümdeki tüm kaynaklar durum sayfasından kaldırılacak.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Siliniyor...' : 'Sil'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

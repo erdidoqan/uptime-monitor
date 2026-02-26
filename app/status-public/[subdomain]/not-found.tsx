@@ -13,27 +13,27 @@ export default function StatusPageNotFound() {
 
         {/* Message */}
         <h1 className="text-3xl font-bold text-foreground mb-4">
-          Status Page Not Found
+          Durum Sayfası Bulunamadı
         </h1>
         <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-          The status page you&apos;re looking for doesn&apos;t exist or has been deactivated.
+          Aradığınız durum sayfası bulunamadı veya devre dışı bırakılmış.
         </p>
 
         {/* CTA */}
         <div className="space-y-4">
           <a
-            href="https://cronuptime.com"
+            href="https://uptimetr.com"
             className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-medium transition-all"
           >
-            Create Your Status Page
+            Durum Sayfanızı Oluşturun
           </a>
           <p className="text-sm text-muted-foreground">
-            Monitor your services with{' '}
+            Servislerinizi izleyin:{' '}
             <a
-              href="https://cronuptime.com"
+              href="https://uptimetr.com"
               className="text-purple-500 hover:underline"
             >
-              CronUptime
+              UptimeTR
             </a>
           </p>
         </div>

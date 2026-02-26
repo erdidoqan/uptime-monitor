@@ -1,5 +1,5 @@
 import { ShaderBackground } from "./shader-background";
-import { HeroCronForm } from "./hero-cron-form";
+import { HeroMonitorForm } from "./hero-monitor-form";
 
 export function Hero() {
   return (
@@ -25,36 +25,36 @@ export function Hero() {
           {/* Left side - Text Content */}
           <div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-              Schedule cron jobs.
+              Web sitelerinizi
               <br />
-              <span className="gradient-text">Monitor uptime.</span>
+              <span className="gradient-text">7/24 izleyin.</span>
             </h1>
             <p className="text-xl sm:text-2xl text-white/80 max-w-xl leading-relaxed mb-8">
-              Keep your APIs healthy with scheduled HTTP requests. Monitor endpoints, track response times, and get notified when things go wrong.
+              Web sitelerinizin ve API&apos;lerinizin kesintisiz çalıştığından emin olun. Yanıt sürelerini takip edin ve sorun olduğunda anında bildirim alın.
             </p>
             
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mb-8">
               <div>
-                <div className="text-3xl font-bold text-white">99.9%</div>
+                <div className="text-3xl font-bold text-white">%99.9</div>
                 <div className="text-sm text-white/60">Uptime</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white">&lt;100ms</div>
-                <div className="text-sm text-white/60">Avg Latency</div>
+                <div className="text-sm text-white/60">Ort. Gecikme</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-white">24/7</div>
-                <div className="text-sm text-white/60">Monitoring</div>
+                <div className="text-3xl font-bold text-white">7/24</div>
+                <div className="text-sm text-white/60">İzleme</div>
               </div>
             </div>
 
             {/* Features list */}
             <div className="space-y-3">
               {[
-                'Real-time HTTP endpoint monitoring',
-                'Flexible cron expressions & intervals',
-                'Instant failure notifications',
+                'Gerçek zamanlı uptime izleme',
+                '5 dakikadan 30 dakikaya esnek aralıklar',
+                'Anlık hata bildirimleri',
               ].map((feature) => (
                 <div key={feature} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -68,13 +68,12 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Right side - Cron Form */}
+          {/* Right side - Monitor Form */}
           <div className="lg:pl-8">
-            <HeroCronForm />
+            <HeroMonitorForm />
           </div>
         </div>
       </div>
     </section>
   );
 }
-

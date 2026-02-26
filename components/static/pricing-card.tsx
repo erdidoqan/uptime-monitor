@@ -1,6 +1,10 @@
-import { Check } from "lucide-react";
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { trackInitiateCheckout } from "@/lib/analytics";
 
 interface PricingFeature {
   text: string;
@@ -17,6 +21,7 @@ interface PricingCardProps {
   buttonHref: string;
   highlighted?: boolean;
   badge?: string;
+  polarCheckoutUrl?: string; // Full Polar checkout URL for embed
 }
 
 export function PricingCard({
@@ -29,7 +34,49 @@ export function PricingCard({
   buttonHref,
   highlighted = false,
   badge,
+  polarCheckoutUrl,
 }: PricingCardProps) {
+  const [loading, setLoading] = useState(false);
+
+  // Preload Polar checkout module
+  useEffect(() => {
+    if (polarCheckoutUrl) {
+      import("@polar-sh/checkout/embed").catch(console.error);
+    }
+  }, [polarCheckoutUrl]);
+
+  // Parse price value from string (e.g., "$5" -> 5)
+  const priceValue = parseFloat(price.replace(/[^0-9.]/g, '')) || 0;
+
+  // Open checkout modal
+  const openCheckout = useCallback(async () => {
+    if (!polarCheckoutUrl) return;
+    
+    // Track InitiateCheckout event for Facebook Pixel
+    trackInitiateCheckout({
+      planName: name,
+      value: priceValue,
+      currency: 'USD',
+    });
+    
+    setLoading(true);
+    try {
+      const { PolarEmbedCheckout } = await import("@polar-sh/checkout/embed");
+      await PolarEmbedCheckout.create(polarCheckoutUrl, { theme: "dark" });
+    } catch {
+      // Fallback: open in new tab
+      window.open(polarCheckoutUrl, "_blank");
+    } finally {
+      setLoading(false);
+    }
+  }, [polarCheckoutUrl, name, priceValue]);
+
+  const buttonClasses = `w-full ${
+    highlighted
+      ? "bg-purple-500 hover:bg-purple-600 text-white"
+      : "bg-white/10 hover:bg-white/20 text-white"
+  }`;
+
   return (
     <div
       className={`relative rounded-2xl border p-8 ${
@@ -81,17 +128,29 @@ export function PricingCard({
         ))}
       </ul>
 
-      <Link href={buttonHref}>
+      {polarCheckoutUrl ? (
         <Button
-          className={`w-full ${
-            highlighted
-              ? "bg-purple-500 hover:bg-purple-600 text-white"
-              : "bg-white/10 hover:bg-white/20 text-white"
-          }`}
+          type="button"
+          onClick={openCheckout}
+          disabled={loading}
+          className={buttonClasses}
         >
-          {buttonText}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Yükleniyor...
+            </>
+          ) : (
+            buttonText
+          )}
         </Button>
-      </Link>
+      ) : (
+        <Link href={buttonHref}>
+          <Button className={buttonClasses}>
+            {buttonText}
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

@@ -14,10 +14,12 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Info, ChevronRight, Check, Zap, Loader2 } from 'lucide-react';
 import { parseCurlCommand } from '@/lib/curl-parser';
 import { TestResultModal, TestResult } from '@/components/shared/test-result-modal';
+import { UpgradeModal } from '@/components/shared/upgrade-modal';
 
 export function CreateCronJobForm() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   
   const [form, setForm] = useState({
     name: '',
@@ -59,63 +61,63 @@ export function CreateCronJobForm() {
   // Cron Expression Presets
   const CRON_PRESETS = {
     frequent: {
-      everyMinute: { label: 'Every minute', value: '* * * * *' },
-      every5Min: { label: 'Every 5 minutes', value: '*/5 * * * *' },
-      every10Min: { label: 'Every 10 minutes', value: '*/10 * * * *' },
+      everyMinute: { label: 'Her dakika', value: '* * * * *' },
+      every5Min: { label: 'Her 5 dakikada', value: '*/5 * * * *' },
+      every10Min: { label: 'Her 10 dakikada', value: '*/10 * * * *' },
     },
     hourly: {
-      every15Min: { label: 'Every 15 minutes', value: '*/15 * * * *' },
-      every30Min: { label: 'Every 30 minutes', value: '*/30 * * * *' },
-      everyHour: { label: 'Every hour at minute 0', value: '0 * * * *' },
+      every15Min: { label: 'Her 15 dakikada', value: '*/15 * * * *' },
+      every30Min: { label: 'Her 30 dakikada', value: '*/30 * * * *' },
+      everyHour: { label: 'Her saat başı', value: '0 * * * *' },
     },
     daily: {
-      midnight: { label: 'Every day at 00:00', value: '0 0 * * *' },
-      earlyMorning: { label: 'Every day at 06:00', value: '0 6 * * *' },
-      morning: { label: 'Every day at 09:00', value: '0 9 * * *' },
-      noon: { label: 'Every day at 12:00', value: '0 12 * * *' },
-      afternoon: { label: 'Every day at 15:00', value: '0 15 * * *' },
-      evening: { label: 'Every day at 18:00', value: '0 18 * * *' },
-      night: { label: 'Every day at 21:00', value: '0 21 * * *' },
-      endOfDay: { label: 'Every day at 23:59', value: '59 23 * * *' },
+      midnight: { label: 'Her gün 00:00\'da', value: '0 0 * * *' },
+      earlyMorning: { label: 'Her gün 06:00\'da', value: '0 6 * * *' },
+      morning: { label: 'Her gün 09:00\'da', value: '0 9 * * *' },
+      noon: { label: 'Her gün 12:00\'de', value: '0 12 * * *' },
+      afternoon: { label: 'Her gün 15:00\'te', value: '0 15 * * *' },
+      evening: { label: 'Her gün 18:00\'de', value: '0 18 * * *' },
+      night: { label: 'Her gün 21:00\'de', value: '0 21 * * *' },
+      endOfDay: { label: 'Her gün 23:59\'da', value: '59 23 * * *' },
     },
     weekly: {
-      monday: { label: 'Every Monday at 00:00', value: '0 0 * * 1' },
-      tuesday: { label: 'Every Tuesday at 00:00', value: '0 0 * * 2' },
-      wednesday: { label: 'Every Wednesday at 00:00', value: '0 0 * * 3' },
-      thursday: { label: 'Every Thursday at 00:00', value: '0 0 * * 4' },
-      friday: { label: 'Every Friday at 00:00', value: '0 0 * * 5' },
-      saturday: { label: 'Every Saturday at 00:00', value: '0 0 * * 6' },
-      sunday: { label: 'Every Sunday at 00:00', value: '0 0 * * 0' },
-      mondayMorning: { label: 'Every Monday at 09:00', value: '0 9 * * 1' },
-      fridayEvening: { label: 'Every Friday at 18:00', value: '0 18 * * 5' },
+      monday: { label: 'Her Pazartesi 00:00\'da', value: '0 0 * * 1' },
+      tuesday: { label: 'Her Salı 00:00\'da', value: '0 0 * * 2' },
+      wednesday: { label: 'Her Çarşamba 00:00\'da', value: '0 0 * * 3' },
+      thursday: { label: 'Her Perşembe 00:00\'da', value: '0 0 * * 4' },
+      friday: { label: 'Her Cuma 00:00\'da', value: '0 0 * * 5' },
+      saturday: { label: 'Her Cumartesi 00:00\'da', value: '0 0 * * 6' },
+      sunday: { label: 'Her Pazar 00:00\'da', value: '0 0 * * 0' },
+      mondayMorning: { label: 'Her Pazartesi 09:00\'da', value: '0 9 * * 1' },
+      fridayEvening: { label: 'Her Cuma 18:00\'de', value: '0 18 * * 5' },
     },
     monthly: {
-      firstDay: { label: '1st of every month at 00:00', value: '0 0 1 * *' },
-      fifteenthDay: { label: '15th of every month at 00:00', value: '0 0 15 * *' },
-      lastDay: { label: 'Last day of every month at 23:59', value: '59 23 L * *' },
+      firstDay: { label: 'Her ayın 1\'inde 00:00\'da', value: '0 0 1 * *' },
+      fifteenthDay: { label: 'Her ayın 15\'inde 00:00\'da', value: '0 0 15 * *' },
+      lastDay: { label: 'Her ayın son günü 23:59\'da', value: '59 23 L * *' },
     },
   };
 
   // Interval Presets (in seconds)
   const INTERVAL_PRESETS = {
     minutes: [
-      { label: '1 minute', value: '60' },
-      { label: '5 minutes', value: '300' },
-      { label: '10 minutes', value: '600' },
-      { label: '15 minutes', value: '900' },
-      { label: '30 minutes', value: '1800' },
+      { label: '1 dakika', value: '60' },
+      { label: '5 dakika', value: '300' },
+      { label: '10 dakika', value: '600' },
+      { label: '15 dakika', value: '900' },
+      { label: '30 dakika', value: '1800' },
     ],
     hours: [
-      { label: '1 hour', value: '3600' },
-      { label: '2 hours', value: '7200' },
-      { label: '3 hours', value: '10800' },
-      { label: '6 hours', value: '21600' },
-      { label: '12 hours', value: '43200' },
+      { label: '1 saat', value: '3600' },
+      { label: '2 saat', value: '7200' },
+      { label: '3 saat', value: '10800' },
+      { label: '6 saat', value: '21600' },
+      { label: '12 saat', value: '43200' },
     ],
     days: [
-      { label: '1 day', value: '86400' },
-      { label: '2 days', value: '172800' },
-      { label: '7 days', value: '604800' },
+      { label: '1 gün', value: '86400' },
+      { label: '2 gün', value: '172800' },
+      { label: '7 gün', value: '604800' },
     ],
   };
 
@@ -145,7 +147,7 @@ export function CreateCronJobForm() {
         setCurlParseError(null);
         setTimeout(() => setIsCurlParsed(false), 3000); // Hide badge after 3 seconds
       } else {
-        setCurlParseError('Failed to parse curl command. Please check the format.');
+        setCurlParseError('Curl komutu ayrıştırılamadı. Lütfen formatı kontrol edin.');
         setTimeout(() => setCurlParseError(null), 3000);
       }
     }
@@ -172,7 +174,7 @@ export function CreateCronJobForm() {
       try {
         headersParsed = JSON.parse(form.headers_json);
       } catch {
-        return { error: 'Invalid JSON format for headers' };
+        return { error: 'Header\'lar için geçersiz JSON formatı' };
       }
     }
 
@@ -241,7 +243,7 @@ export function CreateCronJobForm() {
         status_code: null,
         duration_ms: 0,
         response_body: null,
-        error: error instanceof Error ? error.message : 'Failed to test request',
+        error: error instanceof Error ? error.message : 'İstek test edilemedi',
       });
       setTestModalOpen(true);
     } finally {
@@ -303,10 +305,13 @@ export function CreateCronJobForm() {
       router.push('/cron-jobs');
     } catch (error) {
       console.error('Failed to create cron job:', error);
-      if (error instanceof ApiError) {
-        alert(`Failed to create cron job: ${error.message}`);
+      if (error instanceof ApiError && error.status === 402) {
+        // Subscription limit reached
+        setUpgradeModalOpen(true);
+      } else if (error instanceof ApiError) {
+        alert(`Cron job oluşturulamadı: ${error.message}`);
       } else {
-        alert('Failed to create cron job');
+        alert('Cron job oluşturulamadı');
       }
     } finally {
       setSubmitting(false);
@@ -318,10 +323,10 @@ export function CreateCronJobForm() {
       <div className="mb-6">
         <Link href="/cron-jobs" className="text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="inline mr-2 h-4 w-4" />
-          Cron Jobs
+          Cron Job&apos;lar
         </Link>
         <span className="text-sm text-muted-foreground mx-2">/</span>
-        <span className="text-sm font-medium">Create cron job</span>
+        <span className="text-sm font-medium">Cron job oluştur</span>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -330,9 +335,9 @@ export function CreateCronJobForm() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left side - Description */}
             <div className="lg:col-span-1">
-              <h2 className="text-lg font-semibold mb-2">What to schedule</h2>
+              <h2 className="text-lg font-semibold mb-2">Ne zamanlanacak</h2>
               <p className="text-sm text-muted-foreground">
-                Configure the HTTP request you want to schedule. You can set the URL, HTTP method, headers, and request body.
+                Zamanlamak istediğiniz HTTP isteğini yapılandırın. URL, HTTP metodu, header&apos;lar ve istek gövdesini ayarlayabilirsiniz.
               </p>
             </div>
 
@@ -343,12 +348,12 @@ export function CreateCronJobForm() {
                   {/* Method + URL */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5">
-                      <Label className="text-sm font-semibold">Request</Label>
+                      <Label className="text-sm font-semibold">İstek</Label>
                       <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       {isCurlParsed && (
                         <Badge variant="default" className="text-xs">
                           <Check className="h-3 w-3 mr-1" />
-                          Curl imported
+                          Curl içe aktarıldı
                         </Badge>
                       )}
                     </div>
@@ -375,7 +380,7 @@ export function CreateCronJobForm() {
                         value={form.url}
                         onChange={(e) => setForm(prev => ({ ...prev, url: e.target.value }))}
                         onPaste={handleUrlPaste}
-                        placeholder="https:// or paste curl command"
+                        placeholder="https:// veya curl komutu yapıştırın"
                         className="flex-1 rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         required
                       />
@@ -384,13 +389,13 @@ export function CreateCronJobForm() {
                       <p className="text-xs text-red-500">{curlParseError}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      The URL that will be called when the cron job runs. You can also paste a curl command here.
+                      Cron job çalıştığında çağrılacak URL. Buraya curl komutu da yapıştırabilirsiniz.
                     </p>
                   </div>
 
                   {/* Headers */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Headers (JSON, optional)</Label>
+                    <Label className="text-sm font-semibold">Header&apos;lar (JSON, isteğe bağlı)</Label>
                     <Textarea
                       value={form.headers_json}
                       onChange={(e) => setForm(prev => ({ ...prev, headers_json: e.target.value }))}
@@ -398,21 +403,21 @@ export function CreateCronJobForm() {
                       rows={3}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter headers as a JSON object. Leave empty if not needed.
+                      Header&apos;ları JSON nesnesi olarak girin. Gerekmiyorsa boş bırakın.
                     </p>
                   </div>
 
                   {/* Body */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Body (optional)</Label>
+                    <Label className="text-sm font-semibold">Gövde (isteğe bağlı)</Label>
                     <Textarea
                       value={form.body}
                       onChange={(e) => setForm(prev => ({ ...prev, body: e.target.value }))}
-                      placeholder="Request body"
+                      placeholder="İstek gövdesi"
                       rows={4}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Request body for POST, PUT, PATCH requests.
+                      POST, PUT, PATCH istekleri için istek gövdesi.
                     </p>
                   </div>
                 </CardContent>
@@ -423,9 +428,9 @@ export function CreateCronJobForm() {
           {/* Schedule section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
-              <h2 className="text-lg font-semibold mb-2">Schedule</h2>
+              <h2 className="text-lg font-semibold mb-2">Zamanlama</h2>
               <p className="text-sm text-muted-foreground">
-                Choose when and how often the cron job should run. You can use cron expressions for specific times or intervals for regular intervals.
+                Cron job&apos;un ne zaman ve ne sıklıkla çalışacağını seçin. Belirli zamanlar için cron ifadeleri veya düzenli aralıklar için interval kullanabilirsiniz.
               </p>
             </div>
             <div className="lg:col-span-2">
@@ -433,7 +438,7 @@ export function CreateCronJobForm() {
                 <CardContent className="px-6 py-6 space-y-6">
                   {/* Schedule Type Selection */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Schedule Type</Label>
+                    <Label className="text-sm font-semibold">Zamanlama Türü</Label>
                     <Select
                       value={form.scheduleType}
                       onValueChange={(value) => setForm(prev => ({ ...prev, scheduleType: value as 'cron' | 'interval' }))}
@@ -442,14 +447,14 @@ export function CreateCronJobForm() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cron">Cron Expression</SelectItem>
-                        <SelectItem value="interval">Interval</SelectItem>
+                        <SelectItem value="cron">Cron İfadesi</SelectItem>
+                        <SelectItem value="interval">Aralık</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       {form.scheduleType === 'cron' 
-                        ? 'Use cron expressions for specific times (e.g., daily at midnight, weekly on Monday).'
-                        : 'Use intervals for regular time-based execution (e.g., every 5 minutes, every hour).'}
+                        ? 'Belirli zamanlar için cron ifadeleri kullanın (örn. her gün gece yarısı, her Pazartesi).'
+                        : 'Düzenli zaman bazlı çalıştırma için aralık kullanın (örn. her 5 dakikada, her saatte).'}
                     </p>
                   </div>
 
@@ -459,7 +464,7 @@ export function CreateCronJobForm() {
                       <div className="border-t -mx-6"></div>
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-sm font-semibold">Cron Expression Mode</Label>
+                          <Label className="text-sm font-semibold">Cron İfade Modu</Label>
                           <Select
                             value={form.cronMode}
                             onValueChange={(value) => setForm(prev => ({ ...prev, cronMode: value as 'preset' | 'template' | 'custom' }))}
@@ -468,9 +473,9 @@ export function CreateCronJobForm() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="preset">Preset</SelectItem>
-                              <SelectItem value="template">Template</SelectItem>
-                              <SelectItem value="custom">Custom Expression</SelectItem>
+                              <SelectItem value="preset">Hazır Ayar</SelectItem>
+                              <SelectItem value="template">Şablon</SelectItem>
+                              <SelectItem value="custom">Özel İfade</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -478,13 +483,13 @@ export function CreateCronJobForm() {
                         {/* Preset Mode */}
                         {form.cronMode === 'preset' && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Select Preset</Label>
+                            <Label className="text-sm font-semibold">Hazır Ayar Seçin</Label>
                             <Select
                               value={form.cronPreset}
                               onValueChange={(value) => setForm(prev => ({ ...prev, cronPreset: value }))}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Choose a preset schedule" />
+                                <SelectValue placeholder="Bir zamanlama seçin" />
                               </SelectTrigger>
                               <SelectContent>
                                 {Object.entries(CRON_PRESETS.frequent).map(([key, preset]) => (
@@ -515,7 +520,7 @@ export function CreateCronJobForm() {
                               </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                              Choose from common scheduling presets.
+                              Yaygın zamanlama ön ayarlarından seçin.
                             </p>
                           </div>
                         )}
@@ -524,7 +529,7 @@ export function CreateCronJobForm() {
                         {form.cronMode === 'template' && (
                           <div className="space-y-4">
                             <div className="space-y-2">
-                              <Label className="text-sm font-semibold">Template Type</Label>
+                              <Label className="text-sm font-semibold">Şablon Türü</Label>
                               <Select
                                 value={form.cronTemplate}
                                 onValueChange={(value) => setForm(prev => ({ ...prev, cronTemplate: value as 'daily' | 'weekly' | 'monthly' }))}
@@ -533,23 +538,23 @@ export function CreateCronJobForm() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="daily">Daily</SelectItem>
-                                  <SelectItem value="weekly">Weekly</SelectItem>
-                                  <SelectItem value="monthly">Monthly</SelectItem>
+                                  <SelectItem value="daily">Günlük</SelectItem>
+                                  <SelectItem value="weekly">Haftalık</SelectItem>
+                                  <SelectItem value="monthly">Aylık</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-sm font-semibold">Time</Label>
+                              <Label className="text-sm font-semibold">Saat</Label>
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-muted-foreground">Hour</Label>
+                                  <Label className="text-xs text-muted-foreground">Saat</Label>
                                   <Select
                                     value={form.cronTemplateHour}
                                     onValueChange={(value) => setForm(prev => ({ ...prev, cronTemplateHour: value }))}
                                   >
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Hour" />
+                                      <SelectValue placeholder="Saat" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {Array.from({ length: 24 }, (_, i) => (
@@ -561,13 +566,13 @@ export function CreateCronJobForm() {
                                   </Select>
                                 </div>
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-muted-foreground">Minute</Label>
+                                  <Label className="text-xs text-muted-foreground">Dakika</Label>
                                   <Select
                                     value={form.cronTemplateMinute}
                                     onValueChange={(value) => setForm(prev => ({ ...prev, cronTemplateMinute: value }))}
                                   >
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Minute" />
+                                      <SelectValue placeholder="Dakika" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {[0, 15, 30, 45].map(m => (
@@ -582,7 +587,7 @@ export function CreateCronJobForm() {
                             </div>
                             {form.cronTemplate === 'weekly' && (
                               <div className="space-y-2">
-                                <Label className="text-sm font-semibold">Day of Week</Label>
+                                <Label className="text-sm font-semibold">Haftanın Günü</Label>
                                 <Select
                                   value={form.cronTemplateDay}
                                   onValueChange={(value) => setForm(prev => ({ ...prev, cronTemplateDay: value }))}
@@ -591,20 +596,20 @@ export function CreateCronJobForm() {
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="0">Sunday</SelectItem>
-                                    <SelectItem value="1">Monday</SelectItem>
-                                    <SelectItem value="2">Tuesday</SelectItem>
-                                    <SelectItem value="3">Wednesday</SelectItem>
-                                    <SelectItem value="4">Thursday</SelectItem>
-                                    <SelectItem value="5">Friday</SelectItem>
-                                    <SelectItem value="6">Saturday</SelectItem>
+                                    <SelectItem value="0">Pazar</SelectItem>
+                                    <SelectItem value="1">Pazartesi</SelectItem>
+                                    <SelectItem value="2">Salı</SelectItem>
+                                    <SelectItem value="3">Çarşamba</SelectItem>
+                                    <SelectItem value="4">Perşembe</SelectItem>
+                                    <SelectItem value="5">Cuma</SelectItem>
+                                    <SelectItem value="6">Cumartesi</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             )}
                             {form.cronTemplate === 'monthly' && (
                               <div className="space-y-2">
-                                <Label className="text-sm font-semibold">Day of Month (1-31)</Label>
+                                <Label className="text-sm font-semibold">Ayın Günü (1-31)</Label>
                                 <Input
                                   type="number"
                                   min="1"
@@ -616,7 +621,7 @@ export function CreateCronJobForm() {
                               </div>
                             )}
                             <div className="p-3 bg-muted/50 rounded-md">
-                              <p className="text-xs font-medium mb-1">Generated Cron Expression:</p>
+                              <p className="text-xs font-medium mb-1">Oluşturulan Cron İfadesi:</p>
                               <p className="text-xs font-mono text-muted-foreground">{generateCronFromTemplate()}</p>
                             </div>
                           </div>
@@ -625,14 +630,14 @@ export function CreateCronJobForm() {
                         {/* Custom Mode */}
                         {form.cronMode === 'custom' && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Cron Expression</Label>
+                            <Label className="text-sm font-semibold">Cron İfadesi</Label>
                             <Input
                               value={form.cron_expr}
                               onChange={(e) => setForm(prev => ({ ...prev, cron_expr: e.target.value }))}
                               placeholder="0 0 * * *"
                             />
                             <p className="text-xs text-muted-foreground">
-                              Enter a cron expression in the format: minute hour day month day-of-week
+                              Cron ifadesini şu formatta girin: dakika saat gün ay haftanın-günü
                             </p>
                           </div>
                         )}
@@ -646,7 +651,7 @@ export function CreateCronJobForm() {
                       <div className="border-t -mx-6"></div>
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label className="text-sm font-semibold">Interval Mode</Label>
+                          <Label className="text-sm font-semibold">Aralık Modu</Label>
                           <Select
                             value={form.intervalMode}
                             onValueChange={(value) => setForm(prev => ({ ...prev, intervalMode: value as 'preset' | 'custom' }))}
@@ -655,8 +660,8 @@ export function CreateCronJobForm() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="preset">Preset</SelectItem>
-                              <SelectItem value="custom">Custom</SelectItem>
+                              <SelectItem value="preset">Hazır Ayar</SelectItem>
+                              <SelectItem value="custom">Özel</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -664,13 +669,13 @@ export function CreateCronJobForm() {
                         {/* Preset Intervals */}
                         {form.intervalMode === 'preset' && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Select Interval</Label>
+                            <Label className="text-sm font-semibold">Aralık Seçin</Label>
                             <Select
                               value={form.intervalPreset}
                               onValueChange={(value) => setForm(prev => ({ ...prev, intervalPreset: value }))}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Choose an interval" />
+                                <SelectValue placeholder="Bir aralık seçin" />
                               </SelectTrigger>
                               <SelectContent>
                                 {INTERVAL_PRESETS.minutes.map((preset) => (
@@ -691,7 +696,7 @@ export function CreateCronJobForm() {
                               </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                              Choose from common interval presets.
+                              Yaygın aralık ön ayarlarından seçin.
                             </p>
                           </div>
                         )}
@@ -699,7 +704,7 @@ export function CreateCronJobForm() {
                         {/* Custom Interval */}
                         {form.intervalMode === 'custom' && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Interval (seconds)</Label>
+                            <Label className="text-sm font-semibold">Aralık (saniye)</Label>
                             <Input
                               type="number"
                               min="1"
@@ -708,7 +713,7 @@ export function CreateCronJobForm() {
                               placeholder="3600"
                             />
                             <p className="text-xs text-muted-foreground">
-                              Enter the interval in seconds (e.g., 3600 for 1 hour).
+                              Aralığı saniye cinsinden girin (örn. 1 saat için 3600).
                             </p>
                           </div>
                         )}
@@ -728,7 +733,7 @@ export function CreateCronJobForm() {
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <ChevronRight className={`h-4 w-4 transition-transform ${advancedSettingsOpen ? 'rotate-90' : ''}`} />
-              Advanced settings
+              Gelişmiş ayarlar
             </button>
           </div>
 
@@ -737,9 +742,9 @@ export function CreateCronJobForm() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
               {/* Left side - Description */}
               <div className="lg:col-span-1">
-                <h2 className="text-lg font-semibold mb-2">Advanced settings</h2>
+                <h2 className="text-lg font-semibold mb-2">Gelişmiş ayarlar</h2>
                 <p className="text-sm text-muted-foreground">
-                  Configure additional options like expected HTTP status codes and keyword validation.
+                  Beklenen HTTP durum kodları ve anahtar kelime doğrulaması gibi ek seçenekleri yapılandırın.
                 </p>
               </div>
 
@@ -749,20 +754,20 @@ export function CreateCronJobForm() {
                   <CardContent className="px-6 py-6 space-y-6">
                     {/* Pronounceable cron job name */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Pronounceable cron job name</Label>
+                      <Label className="text-sm font-semibold">Okunabilir cron job adı</Label>
                       <Input
                         value={form.name}
                         onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="e.g. Daily Backup Job"
+                        placeholder="örn. Günlük Yedekleme"
                       />
                       <p className="text-xs text-muted-foreground">
-                        A friendly name for this cron job.
+                        Bu cron job için kolay anlaşılır bir ad.
                       </p>
                     </div>
 
                     {/* Expected HTTP status range */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Expected HTTP Status Range</Label>
+                      <Label className="text-sm font-semibold">Beklenen HTTP Durum Aralığı</Label>
                       <div className="grid grid-cols-2 gap-4">
                         <Select
                           value={form.expected_min}
@@ -800,20 +805,20 @@ export function CreateCronJobForm() {
                         </Select>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        The HTTP status code range that indicates a successful response. Default is 200-299.
+                        Başarılı bir yanıtı gösteren HTTP durum kodu aralığı. Varsayılan 200-299.
                       </p>
                     </div>
 
                     {/* Keyword validation */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Keyword validation (optional)</Label>
+                      <Label className="text-sm font-semibold">Anahtar kelime doğrulaması (isteğe bağlı)</Label>
                       <Input
                         value={form.keyword}
                         onChange={(e) => setForm(prev => ({ ...prev, keyword: e.target.value }))}
-                        placeholder="Enter keyword to check in response"
+                        placeholder="Yanıtta kontrol edilecek anahtar kelime"
                       />
                       <p className="text-xs text-muted-foreground">
-                        If provided, the response body must contain this keyword for the run to be considered successful.
+                        Sağlanırsa, çalıştırmanın başarılı sayılması için yanıt gövdesi bu anahtar kelimeyi içermelidir.
                       </p>
                     </div>
                   </CardContent>
@@ -830,7 +835,7 @@ export function CreateCronJobForm() {
             variant="outline"
             onClick={() => router.back()}
           >
-            Cancel
+            İptal
           </Button>
           {!testPassed ? (
             <Button
@@ -841,12 +846,12 @@ export function CreateCronJobForm() {
               {testLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing...
+                  Test ediliyor...
                 </>
               ) : (
                 <>
                   <Zap className="mr-2 h-4 w-4" />
-                  Test Request
+                  İsteği Test Et
                 </>
               )}
             </Button>
@@ -855,12 +860,12 @@ export function CreateCronJobForm() {
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Oluşturuluyor...
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Create Cron Job
+                  Cron Job Oluştur
                 </>
               )}
             </Button>
@@ -875,7 +880,12 @@ export function CreateCronJobForm() {
         result={testResult}
         onEditRequest={() => setTestModalOpen(false)}
       />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+      />
     </div>
   );
 }
-

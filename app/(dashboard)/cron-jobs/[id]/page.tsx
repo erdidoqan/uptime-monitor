@@ -90,9 +90,9 @@ async function CronJobHeaderTopData({ cronJobId }: { cronJobId: string }) {
     return (
       <Card className="border">
         <CardContent className="pt-6 text-center py-12">
-          <p className="text-sm text-muted-foreground">Cron job not found</p>
+          <p className="text-sm text-muted-foreground">Cron job bulunamadı</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/cron-jobs">Back to Cron Jobs</Link>
+            <Link href="/cron-jobs">Cron Job&apos;lara Dön</Link>
           </Button>
         </CardContent>
       </Card>
@@ -126,9 +126,9 @@ export default async function CronJobDetailPage({ params }: PageProps) {
       <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
         <Card className="border">
           <CardContent className="pt-6 text-center py-12">
-            <p className="text-sm text-muted-foreground">Cron job ID is required</p>
+            <p className="text-sm text-muted-foreground">Cron job ID gerekli</p>
             <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link href="/cron-jobs">Back to Cron Jobs</Link>
+              <Link href="/cron-jobs">Cron Job&apos;lara Dön</Link>
             </Button>
           </CardContent>
         </Card>
@@ -144,7 +144,7 @@ export default async function CronJobDetailPage({ params }: PageProps) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/cron-jobs">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Cron Jobs
+            Cron Job&apos;lara Dön
           </Link>
         </Button>
       </div>
@@ -232,4 +232,3 @@ async function CronJobRunsWrapper({ cronJobId }: { cronJobId: string }) {
   
   return <CronJobRuns cronJobId={cronJobId} initialRuns={initialRuns} initialTimeRange="month" />;
 }
-

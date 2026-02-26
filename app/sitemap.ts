@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { getAllIntervalSlugs, getAllPlatformSlugs } from "@/components/seo";
+import { getD1Client } from "@/lib/d1-client";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://www.cronuptime.com";
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = "https://www.uptimetr.com";
   const currentDate = new Date();
 
   // Static pages with their priorities and change frequencies
@@ -68,39 +68,54 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/cron-expression-translator`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
       url: `${baseUrl}/api-docs`,
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/karsilastirma/uptimerobot`,
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 
-  // SEO pages for cron intervals
-  const cronIntervalPages: MetadataRoute.Sitemap = getAllIntervalSlugs().map(
-    (slug) => ({
-      url: `${baseUrl}/${slug}`,
-      lastModified: currentDate,
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    })
-  );
+  // Fetch active public status pages from database
+  let statusPageUrls: MetadataRoute.Sitemap = [];
+  try {
+    const db = getD1Client();
+    const statusPages = await db.queryAll<{
+      subdomain: string;
+      custom_domain: string | null;
+      updated_at: number | null;
+      created_at: number;
+    }>(
+      `SELECT subdomain, custom_domain, updated_at, created_at
+       FROM status_pages 
+       WHERE is_active = 1`
+    );
 
-  // SEO pages for platforms
-  const platformPages: MetadataRoute.Sitemap = getAllPlatformSlugs().map(
-    (slug) => ({
-      url: `${baseUrl}/${slug}`,
-      lastModified: currentDate,
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    })
-  );
+    statusPageUrls = (statusPages as any[]).map((page) => {
+      const pageUrl = page.custom_domain
+        ? `https://${page.custom_domain}`
+        : `https://${page.subdomain}.uptimetr.com`;
+      
+      const lastModified = page.updated_at 
+        ? new Date(page.updated_at) 
+        : new Date(page.created_at);
 
-  return [...staticPages, ...cronIntervalPages, ...platformPages];
+      return {
+        url: pageUrl,
+        lastModified,
+        changeFrequency: "hourly" as const,
+        priority: 0.8,
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch status pages for sitemap:", error);
+    // Continue with static pages only if DB fetch fails
+  }
+
+  return [...staticPages, ...statusPageUrls];
 }
-

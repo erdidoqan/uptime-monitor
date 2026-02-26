@@ -30,15 +30,15 @@ export function CronJobHeaderTop({ cronJob }: CronJobHeaderTopProps) {
       const days = Math.floor(cronJob.interval_sec / 86400);
       
       if (days > 0) {
-        return `Every ${days} day${days > 1 ? 's' : ''}`;
+        return `Her ${days} günde bir`;
       } else if (hours > 0) {
-        return `Every ${hours} hour${hours > 1 ? 's' : ''}`;
+        return `Her ${hours} saatte bir`;
       } else if (minutes > 0) {
-        return `Every ${minutes} minute${minutes > 1 ? 's' : ''}`;
+        return `Her ${minutes} dakikada bir`;
       }
-      return `Every ${cronJob.interval_sec} second${cronJob.interval_sec > 1 ? 's' : ''}`;
+      return `Her ${cronJob.interval_sec} saniyede bir`;
     }
-    return 'No schedule';
+    return 'Zamanlama yok';
   };
 
   return (
@@ -65,12 +65,12 @@ export function CronJobHeaderTop({ cronJob }: CronJobHeaderTopProps) {
         {cronJob.is_active === 0 ? (
           <>
             <Clock className="h-3.5 w-3.5 text-yellow-500" />
-            <span className="text-sm text-yellow-600 font-medium">Paused</span>
+            <span className="text-sm text-yellow-600 font-medium">Duraklatıldı</span>
           </>
         ) : cronJob.last_status === null ? (
           <>
             <Clock className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-sm text-gray-600 font-medium">Pending</span>
+            <span className="text-sm text-gray-600 font-medium">Bekliyor</span>
           </>
         ) : cronJob.last_status === 'success' ? (
           <>
@@ -83,21 +83,20 @@ export function CronJobHeaderTop({ cronJob }: CronJobHeaderTopProps) {
               </div>
               <CheckCircle2 className="h-4 w-4 text-green-500 relative z-10 animate-status-pulse" />
             </div>
-            <span className="text-sm text-green-600 font-medium">Success</span>
+            <span className="text-sm text-green-600 font-medium">Başarılı</span>
           </>
         ) : (
           <>
             <XCircle className="h-3.5 w-3.5 text-red-500" />
-            <span className="text-sm text-red-600 font-medium">Failed</span>
+            <span className="text-sm text-red-600 font-medium">Başarısız</span>
           </>
         )}
         <span className="text-sm text-muted-foreground">
           {cronJob.is_active === 0 
-            ? 'Cron job paused' 
+            ? 'Cron job duraklatıldı' 
             : getScheduleDescription()}
         </span>
       </div>
     </div>
   );
 }
-

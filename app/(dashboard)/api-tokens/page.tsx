@@ -57,16 +57,16 @@ export default function ApiTokensPage() {
       {/* Header - always visible */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-semibold">API Tokens</h1>
+          <h1 className="text-2xl font-semibold">API Token&apos;ları</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage your API tokens for programmatic access
+            Programatik erişim için API token&apos;larınızı yönetin
           </p>
         </div>
         <Link
           href="/api-docs"
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
         >
-          <span>View API Documentation</span>
+          <span>API Dokümantasyonu</span>
           <ExternalLink className="h-4 w-4" />
         </Link>
       </div>
@@ -78,4 +78,3 @@ export default function ApiTokensPage() {
     </div>
   );
 }
-

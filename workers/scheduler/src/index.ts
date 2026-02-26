@@ -20,6 +20,8 @@ interface Env {
   // Turkey proxy for geo-restricted sites
   TR_PROXY_URL?: string;
   TR_PROXY_SECRET?: string;
+  // Campaign email secret
+  CAMPAIGN_API_SECRET?: string;
 }
 
 function getD1Client(env: Env): D1Client {
@@ -210,10 +212,11 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
     keyword: string | null;
     interval_sec: number;
     last_status: string | null;
+    fail_streak: number;
     created_at: number;
     use_tr_proxy: number | null;
   }>(
-    `SELECT id, user_id, url, method, headers_json, body, timeout_ms, expected_min, expected_max, keyword, interval_sec, last_status, created_at, use_tr_proxy
+    `SELECT id, user_id, url, method, headers_json, body, timeout_ms, expected_min, expected_max, keyword, interval_sec, last_status, fail_streak, created_at, use_tr_proxy
      FROM monitors
      WHERE is_active = 1
        AND next_run_at <= ?
@@ -332,8 +335,8 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
             clearTimeout(timeoutId);
             responseStatus = response.status;
             
-            // Read body if keyword check is needed
-            if (monitor.keyword) {
+            // Read body if keyword check is needed OR if 403 (for Cloudflare detection)
+            if (monitor.keyword || responseStatus === 403) {
               try {
                 bodyText = await response.text();
               } catch {
@@ -372,10 +375,37 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
         const minStatus = monitor.expected_min ?? 200;
         const maxStatus = monitor.expected_max ?? 399;
         
-        const statusInRange = httpStatus !== null && httpStatus >= minStatus && httpStatus <= maxStatus;
-        const keywordMatch = !monitor.keyword || (bodyText && bodyText.includes(monitor.keyword));
+        // Check if this is a Cloudflare challenge page (403 but site is actually up)
+        // Cloudflare returns 403 with JS challenge for bot protection - site is working
+        const isCloudflareChallenge = httpStatus === 403 && bodyText && (
+          bodyText.includes('_cf_chl_opt') || 
+          bodyText.includes('Just a moment') ||
+          bodyText.includes('challenge-platform') ||
+          bodyText.includes('cf-chl-bypass')
+        );
+        
+        // Debug: Log Cloudflare detection details for 403 responses
+        if (httpStatus === 403) {
+          console.log(`Monitor ${monitor.id} got 403:`, {
+            bodyLength: bodyText?.length || 0,
+            hasBody: !!bodyText,
+            hasCfChlOpt: bodyText?.includes('_cf_chl_opt') || false,
+            hasJustAMoment: bodyText?.includes('Just a moment') || false,
+            isCloudflareChallenge,
+            bodyPreview: bodyText?.substring(0, 200) || 'empty',
+          });
+        }
+        
+        // If Cloudflare challenge, treat as "up" - site is responding, just has bot protection
+        const statusInRange = isCloudflareChallenge || (httpStatus !== null && httpStatus >= minStatus && httpStatus <= maxStatus);
+        const keywordMatch = !monitor.keyword || isCloudflareChallenge || (bodyText && bodyText.includes(monitor.keyword));
 
         status = statusInRange && keywordMatch ? 'up' : 'down';
+        
+        // Log Cloudflare challenge detection
+        if (isCloudflareChallenge) {
+          console.log(`Monitor ${monitor.id} detected Cloudflare challenge (403), treating as UP`);
+        }
         
         // If retry was successful after timeout, log it
         if (checkResult.error === null) {
@@ -408,9 +438,13 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
         };
         await addCheckToBuffer(checksBucket, check, monitor.created_at);
 
-        // Incident management (BEFORE status update, so we can use old last_status)
+        // Incident management with fail_streak logic (prevents false positives)
+        // Only open incident after 2 consecutive failures
         const nextRunAt = now + monitor.interval_sec * 1000;
-        if (monitor.last_status === 'up' && status === 'down') {
+        const currentFailStreak = monitor.fail_streak || 0;
+        const newFailStreak = status === 'down' ? currentFailStreak + 1 : 0;
+        
+        if (status === 'down' && newFailStreak >= 2) {
           // Check if incident already exists (prevent race condition)
           const existingIncident = await db.queryFirst<{ id: string }>(
             `SELECT id FROM incidents 
@@ -419,7 +453,7 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
           );
 
           if (!existingIncident) {
-            // Open incident
+            // Open incident after 2 consecutive failures
             const incidentId = crypto.randomUUID();
             const cause = !statusInRange ? 'http_error' : !keywordMatch ? 'keyword_missing' : 'unknown';
             await db.execute(
@@ -471,9 +505,11 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
                 ctx.waitUntil(requestScreenshotViaAPI(env, incidentId));
               }
             }
+
+            console.log(`Monitor ${monitor.id} incident opened after ${newFailStreak} consecutive failures`);
           }
-        } else if (monitor.last_status === 'down' && status === 'up') {
-          // Close incident and add auto_resolved event
+        } else if (status === 'up') {
+          // Close incident if exists (when recovering from failure)
           const openIncident = await db.queryFirst<{ id: string }>(
             `SELECT id FROM incidents 
              WHERE type = 'monitor' AND source_id = ? AND resolved_at IS NULL`,
@@ -511,23 +547,25 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
                 startedAt: incident.started_at,
               }));
             }
+
+            console.log(`Monitor ${monitor.id} recovered, incident closed`);
           }
         }
 
-        // Update monitor (D1 writes optimization: only update status if changed)
-        // IMPORTANT: Update AFTER incident management so we can use old last_status
+        // Update monitor with fail_streak
+        // IMPORTANT: Update AFTER incident management so we can use old fail_streak
         const statusChanged = monitor.last_status !== status;
         
-        if (statusChanged) {
-          // Full update when status changes
+        if (statusChanged || newFailStreak !== currentFailStreak) {
+          // Full update when status or fail_streak changes
           await db.execute(
             `UPDATE monitors 
-             SET last_status = ?, last_latency_ms = ?, last_checked_at = ?, next_run_at = ?, locked_at = NULL
+             SET last_status = ?, last_latency_ms = ?, last_checked_at = ?, next_run_at = ?, fail_streak = ?, locked_at = NULL
              WHERE id = ?`,
-            [status, latency, now, nextRunAt, monitor.id]
+            [status, latency, now, nextRunAt, newFailStreak, monitor.id]
           );
         } else {
-          // Minimal update when status unchanged (only last_checked_at and next_run_at)
+          // Minimal update when nothing changed (only last_checked_at and next_run_at)
           await db.execute(
             `UPDATE monitors 
              SET last_checked_at = ?, next_run_at = ?, locked_at = NULL
@@ -562,8 +600,13 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
         };
         await addCheckToBuffer(checksBucket, check, monitor.created_at);
 
-        // Open incident if was up (BEFORE status update)
-        if (monitor.last_status === 'up') {
+        // Calculate fail_streak for error case
+        const nextRunAt = now + monitor.interval_sec * 1000;
+        const currentFailStreak = monitor.fail_streak || 0;
+        const newFailStreak = currentFailStreak + 1;
+
+        // Open incident after 2 consecutive failures (prevents false positives)
+        if (newFailStreak >= 2) {
           // Check if incident already exists (prevent race condition)
           const existingIncident = await db.queryFirst<{ id: string }>(
             `SELECT id FROM incidents 
@@ -619,23 +662,24 @@ async function processMonitors(db: D1Client, checksBucket: R2Bucket, env: Env, c
                 ctx.waitUntil(requestScreenshotViaAPI(env, incidentId));
               }
             }
+
+            console.log(`Monitor ${monitor.id} incident opened after ${newFailStreak} consecutive failures (error case)`);
           }
         }
 
-        // Update monitor (D1 writes optimization: only update status if changed)
-        const nextRunAt = now + monitor.interval_sec * 1000;
+        // Update monitor with fail_streak
         const statusChanged = monitor.last_status !== 'down';
         
-        if (statusChanged) {
-          // Full update when status changes
+        if (statusChanged || newFailStreak !== currentFailStreak) {
+          // Full update when status or fail_streak changes
           await db.execute(
             `UPDATE monitors 
-             SET last_status = 'down', last_latency_ms = ?, last_checked_at = ?, next_run_at = ?, locked_at = NULL
+             SET last_status = 'down', last_latency_ms = ?, last_checked_at = ?, next_run_at = ?, fail_streak = ?, locked_at = NULL
              WHERE id = ?`,
-            [latency, now, nextRunAt, monitor.id]
+            [latency, now, nextRunAt, newFailStreak, monitor.id]
           );
         } else {
-          // Minimal update when status unchanged
+          // Minimal update when nothing changed
           await db.execute(
             `UPDATE monitors 
              SET last_checked_at = ?, next_run_at = ?, locked_at = NULL
@@ -1043,12 +1087,53 @@ async function cleanupStaleLocks(db: D1Client) {
   }
 }
 
+/**
+ * Gunluk kampanya emaili: load test yapmis free kullanicilara Pro upgrade maili gonder.
+ * Next.js API'yi cagirir, API hedef kitleyi sorgular ve emailleri gonderir.
+ */
+async function sendDailyCampaignEmails(env: Env): Promise<void> {
+  const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.uptimetr.com';
+  const secret = env.CAMPAIGN_API_SECRET;
+  if (!secret) return;
+
+  try {
+    const res = await fetch(`${apiUrl}/api/email/campaign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Campaign-Secret': secret,
+      },
+      body: JSON.stringify({
+        campaign: 'pro_upgrade_loadtest_v1',
+        limit: 50,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[campaign] API returned ${res.status}: ${text}`);
+      return;
+    }
+
+    const data = await res.json() as { sent?: number; errors?: number; totalTargets?: number };
+    console.log(`[campaign] Daily send complete: ${data.sent ?? 0} sent, ${data.errors ?? 0} errors, ${data.totalTargets ?? 0} targets`);
+  } catch (err) {
+    console.error('[campaign] Failed to call campaign API:', err);
+  }
+}
+
 async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext) {
   const db = getD1Client(env);
 
   if (cron === '0 3 * * *') {
     // Daily prune at 3 AM
     await pruneLogs(db);
+    // Daily campaign emails — yeni load test yapmis free kullanicilara
+    if (env.CAMPAIGN_API_SECRET) {
+      await sendDailyCampaignEmails(env).catch((err) => {
+        console.error('[scheduler] Campaign email error:', err);
+      });
+    }
   } else if (cron === '*/10 * * * *') {
     // Every 10 minutes: flush all buffers (safety flush)
     await flushAllBuffers(env.CHECKS_BUCKET);
@@ -1336,6 +1421,79 @@ export default {
           'Access-Control-Allow-Headers': 'Content-Type, X-File-Path',
         },
       });
+    }
+
+    // Test endpoint for Cloudflare detection
+    if (url.pathname === '/test-cf' && request.method === 'POST') {
+      try {
+        const body = await request.json() as { url: string };
+        const testUrl = body.url;
+        
+        if (!testUrl) {
+          return new Response(JSON.stringify({ error: 'URL required' }), { status: 400 });
+        }
+        
+        // Debug: Log proxy URL
+        const proxyUrl = env.TR_PROXY_URL;
+        if (!proxyUrl) {
+          return new Response(JSON.stringify({ error: 'TR_PROXY_URL not configured' }), { status: 500 });
+        }
+        
+        // Test with proxy
+        const proxyResponse = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.TR_PROXY_SECRET}`,
+          },
+          body: JSON.stringify({
+            url: testUrl,
+            method: 'GET',
+            timeout_ms: 15000,
+          }),
+        });
+        
+        const proxyRawText = await proxyResponse.text();
+        
+        let proxyResult: { success: boolean; status?: number; body?: string; error?: string };
+        try {
+          proxyResult = JSON.parse(proxyRawText);
+        } catch (e) {
+          return new Response(JSON.stringify({
+            error: 'Proxy response is not JSON',
+            proxyUrl: proxyUrl,
+            proxyStatus: proxyResponse.status,
+            proxyRawText: proxyRawText.substring(0, 500),
+          }, null, 2), { status: 500 });
+        }
+        
+        const httpStatus = proxyResult.status || 0;
+        const bodyText = proxyResult.body || '';
+        
+        // Check Cloudflare challenge
+        const isCloudflareChallenge = httpStatus === 403 && bodyText && (
+          bodyText.includes('_cf_chl_opt') || 
+          bodyText.includes('Just a moment') ||
+          bodyText.includes('challenge-platform') ||
+          bodyText.includes('cf-chl-bypass')
+        );
+        
+        return new Response(JSON.stringify({
+          url: testUrl,
+          httpStatus,
+          bodyLength: bodyText.length,
+          bodyPreview: bodyText.substring(0, 300),
+          hasCfChlOpt: bodyText.includes('_cf_chl_opt'),
+          hasJustAMoment: bodyText.includes('Just a moment'),
+          hasChallengePlatform: bodyText.includes('challenge-platform'),
+          isCloudflareChallenge,
+          wouldBeStatus: isCloudflareChallenge ? 'up' : (httpStatus >= 200 && httpStatus <= 399 ? 'up' : 'down'),
+        }, null, 2), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      }
     }
 
     // Manual trigger for testing (only in development)

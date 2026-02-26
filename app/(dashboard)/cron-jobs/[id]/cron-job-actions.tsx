@@ -32,7 +32,7 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Failed to toggle pause:', error);
-      alert('Failed to toggle pause');
+      alert('Duraklatma/devam ettirme başarısız');
     } finally {
       setPausing(false);
     }
@@ -45,15 +45,15 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
     setTriggering(true);
     try {
       await api.post(`/cron-jobs/${cronJob.id}/trigger`, {});
-      alert('Cron job triggered! It will run on the next worker execution (within 1 minute).');
+      alert('Cron job tetiklendi! Sonraki worker çalışmasında (1 dakika içinde) çalışacak.');
       router.refresh();
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Failed to trigger cron job:', error);
       if (error instanceof ApiError) {
-        alert(`Failed to trigger cron job: ${error.message}`);
+        alert(`Cron job tetiklenemedi: ${error.message}`);
       } else {
-        alert('Failed to trigger cron job');
+        alert('Cron job tetiklenemedi');
       }
     } finally {
       setTriggering(false);
@@ -64,7 +64,7 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
     event.preventDefault();
     if (!cronJob || !cronJob.id) return;
     
-    if (!confirm('Are you sure you want to delete this cron job? This action cannot be undone.')) {
+    if (!confirm('Bu cron job\'u silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
       return;
     }
     
@@ -76,9 +76,9 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
     } catch (error) {
       console.error('Failed to delete cron job:', error);
       if (error instanceof ApiError) {
-        alert(`Failed to delete cron job: ${error.message}`);
+        alert(`Cron job silinemedi: ${error.message}`);
       } else {
-        alert('Failed to delete cron job');
+        alert('Cron job silinemedi');
       }
       setDeleting(false);
     }
@@ -95,7 +95,7 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
           disabled={triggering}
         >
           <PlayCircle className="mr-2 h-4 w-4" />
-          {triggering ? 'Triggering...' : 'Run Now'}
+          {triggering ? 'Tetikleniyor...' : 'Şimdi Çalıştır'}
         </Button>
       )}
       <Button 
@@ -108,19 +108,19 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
         {cronJob.is_active === 0 ? (
           <>
             <Play className="mr-2 h-4 w-4" />
-            {pausing ? 'Resuming...' : 'Resume'}
+            {pausing ? 'Devam ettiriliyor...' : 'Devam Et'}
           </>
         ) : (
           <>
             <Pause className="mr-2 h-4 w-4" />
-            {pausing ? 'Pausing...' : 'Pause'}
+            {pausing ? 'Duraklatılıyor...' : 'Duraklat'}
           </>
         )}
       </Button>
       <Button variant="outline" size="sm" asChild>
         <Link href={`/cron-jobs/${cronJob.id}/edit`}>
           <Settings className="mr-2 h-4 w-4" />
-          Configure
+          Yapılandır
         </Link>
       </Button>
       <Button 
@@ -131,9 +131,8 @@ export function CronJobActions({ cronJob, onUpdate }: CronJobActionsProps) {
         disabled={deleting}
       >
         <Trash2 className="mr-2 h-4 w-4" />
-        {deleting ? 'Deleting...' : 'Delete'}
+        {deleting ? 'Siliniyor...' : 'Sil'}
       </Button>
     </div>
   );
 }
-

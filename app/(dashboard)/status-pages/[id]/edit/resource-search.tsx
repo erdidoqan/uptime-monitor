@@ -154,7 +154,7 @@ export function ResourceSearch({ onSelect, disabled, excludedResources = [] }: R
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search to add resources"
+          placeholder="Kaynak eklemek için arayın"
           className="pl-9 pr-4"
           disabled={disabled}
         />
@@ -168,13 +168,13 @@ export function ResourceSearch({ onSelect, disabled, excludedResources = [] }: R
           {loading ? (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+              <span className="ml-2 text-sm text-muted-foreground">Yükleniyor...</span>
             </div>
           ) : results.length === 0 ? (
             <div className="p-4 text-center">
               <Search className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
-                {query ? 'No resources found' : (excludedResources.length > 0 ? 'All resources added' : 'Start typing to search')}
+                {query ? 'Kaynak bulunamadı' : (excludedResources.length > 0 ? 'Tüm kaynaklar eklendi' : 'Aramak için yazmaya başlayın')}
               </p>
             </div>
           ) : (
@@ -182,7 +182,7 @@ export function ResourceSearch({ onSelect, disabled, excludedResources = [] }: R
               {monitorResults.length > 0 && (
                 <>
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Monitors
+                    Monitörler
                   </div>
                   {monitorResults.map((result) => (
                     <button
@@ -201,7 +201,7 @@ export function ResourceSearch({ onSelect, disabled, excludedResources = [] }: R
               {cronJobResults.length > 0 && (
                 <>
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide mt-2">
-                    Cron Jobs
+                    Cron Job&apos;lar
                   </div>
                   {cronJobResults.map((result) => (
                     <button

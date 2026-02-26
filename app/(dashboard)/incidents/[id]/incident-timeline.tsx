@@ -25,30 +25,27 @@ function formatDateTime(timestamp: number): string {
   const isThisYear = date.getFullYear() === now.getFullYear();
 
   if (isToday) {
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString('tr-TR', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true,
     });
   }
 
   if (isThisYear) {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('tr-TR', {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true,
     });
   }
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('tr-TR', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
   });
 }
 
@@ -73,17 +70,17 @@ function getEventTitle(event: IncidentEvent): string {
   switch (event.event_type) {
     case 'started':
       if (event.content === 'Incident reopened') {
-        return 'Incident reopened';
+        return 'Olay yeniden açıldı';
       }
-      return 'Incident started';
+      return 'Olay başladı';
     case 'resolved':
-      return 'Incident resolved manually';
+      return 'Olay manuel olarak çözüldü';
     case 'auto_resolved':
-      return 'Incident auto-resolved';
+      return 'Olay otomatik çözüldü';
     case 'comment':
-      return event.user_name || event.user_email || 'User';
+      return event.user_name || event.user_email || 'Kullanıcı';
     default:
-      return 'Event';
+      return 'Olay';
   }
 }
 
@@ -230,7 +227,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
   return (
     <Card className="border">
       <CardHeader className="px-6 py-5">
-        <CardTitle className="text-lg font-semibold">Timeline</CardTitle>
+        <CardTitle className="text-lg font-semibold">Zaman Çizelgesi</CardTitle>
       </CardHeader>
       
       <CardContent className="px-6 pb-6 pt-0">
@@ -241,7 +238,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
             {userImage ? (
               <Image
                 src={userImage}
-                alt="Your avatar"
+                alt="Avatarınız"
                 width={44}
                 height={44}
                 className="w-11 h-11 rounded-full object-cover"
@@ -256,7 +253,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
           {/* Input area */}
           <div className="flex-1 relative">
             <Textarea
-              placeholder="Leave a comment or post-mortem. You can use markdown here..."
+              placeholder="Yorum veya post-mortem bırakın. Burada markdown kullanabilirsiniz..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="min-h-[100px] resize-none pr-20 text-sm"
@@ -272,7 +269,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                 <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
               ) : (
                 <>
-                  Post
+                  Gönder
                   <Send className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -303,7 +300,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                     {isComment && event.user_image ? (
                       <Image
                         src={event.user_image}
-                        alt={event.user_name || 'User'}
+                        alt={event.user_name || 'Kullanıcı'}
                         width={44}
                         height={44}
                         className="w-11 h-11 rounded-full object-cover ring-4 ring-background"
@@ -337,7 +334,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                               className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                             >
                               <Pencil className="w-3 h-3" />
-                              Edit
+                              Düzenle
                             </button>
                             <button
                               type="button"
@@ -345,7 +342,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                               className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
                             >
                               <Trash2 className="w-3 h-3" />
-                              Remove
+                              Kaldır
                             </button>
                           </div>
                         )}
@@ -353,7 +350,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                       <span className="text-xs text-muted-foreground flex-shrink-0">
                         {formatDateTime(event.created_at)}
                         {event.updated_at && event.updated_at !== event.created_at && (
-                          <span className="ml-1">(edited)</span>
+                          <span className="ml-1">(düzenlendi)</span>
                         )}
                       </span>
                     </div>
@@ -379,7 +376,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                               {isUpdating ? (
                                 <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                               ) : (
-                                'Save'
+                                'Kaydet'
                               )}
                             </Button>
                             <Button
@@ -389,7 +386,7 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
                               onClick={handleEditCancel}
                               disabled={isUpdating}
                             >
-                              Cancel
+                              İptal
                             </Button>
                           </div>
                         </div>
@@ -411,8 +408,8 @@ export function IncidentTimeline({ incidentId, initialEvents, isResolved }: Inci
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="text-sm font-medium text-foreground">No timeline events yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Add a comment to start the conversation</p>
+              <p className="text-sm font-medium text-foreground">Henüz zaman çizelgesi olayı yok</p>
+              <p className="text-xs text-muted-foreground mt-1">Sohbeti başlatmak için bir yorum ekleyin</p>
             </div>
           )}
         </div>

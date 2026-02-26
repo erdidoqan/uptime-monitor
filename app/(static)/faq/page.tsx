@@ -3,75 +3,76 @@ import { PageHeader } from "@/components/static";
 import { FAQAccordion } from "@/components/static/faq-accordion";
 
 export const metadata: Metadata = {
-  title: "FAQ",
-  description: "Frequently asked questions about CronUptime cron job scheduling and uptime monitoring.",
+  title: "SSS",
+  description: "UptimeTR cron job zamanlama ve uptime izleme hakkında sık sorulan sorular.",
   alternates: {
-    canonical: "https://www.cronuptime.com/faq",
+    canonical: "https://www.uptimetr.com/faq",
   },
   openGraph: {
-    title: "FAQ - CronUptime",
-    description: "Frequently asked questions about CronUptime cron job scheduling and uptime monitoring.",
+    title: "SSS - UptimeTR",
+    description: "UptimeTR cron job zamanlama ve uptime izleme hakkında sık sorulan sorular.",
+    url: "https://www.uptimetr.com/faq",
   },
 };
 
 const generalFAQs = [
   {
-    question: "What is CronUptime?",
-    answer: "CronUptime is a cron job scheduling and uptime monitoring service. You can schedule HTTP requests to run at specific intervals (like every 5 minutes) without managing your own servers.",
+    question: "UptimeTR nedir?",
+    answer: "UptimeTR, cron job zamanlama ve uptime izleme hizmetidir. Kendi sunucularınızı yönetmeden belirli aralıklarla (örneğin her 5 dakikada bir) HTTP istekleri zamanlayabilirsiniz.",
   },
   {
-    question: "Do I need to create an account?",
-    answer: "No! You can create one cron job without signing up. It will run for 7 days. If you want more cron jobs or permanent scheduling, you can sign in with Google.",
+    question: "Hesap oluşturmam gerekiyor mu?",
+    answer: "Hayır! Kayıt olmadan bir cron job oluşturabilirsiniz. 7 gün boyunca çalışır. Daha fazla cron job veya kalıcı zamanlama istiyorsanız, Google ile giriş yapabilirsiniz.",
   },
   {
-    question: "Is CronUptime free?",
-    answer: "Yes, we offer a free tier with up to 5 cron jobs. Guest users can also try the service without signing up, with 1 cron job that runs for 7 days.",
+    question: "UptimeTR ücretsiz mi?",
+    answer: "Evet, 5 cron job'a kadar ücretsiz bir plan sunuyoruz. Misafir kullanıcılar da 7 gün çalışan 1 cron job ile kayıt olmadan hizmeti deneyebilir.",
   },
   {
-    question: "How reliable is CronUptime?",
-    answer: "We run on Cloudflare's global network with 99.9%+ uptime. Our distributed infrastructure ensures your cron jobs execute on time, every time.",
+    question: "UptimeTR ne kadar güvenilir?",
+    answer: "Cloudflare'in %99.9+ uptime'lı global ağı üzerinde çalışıyoruz. Dağıtılmış altyapımız, cron job'larınızın her seferinde zamanında çalışmasını sağlar.",
   },
 ];
 
 const technicalFAQs = [
   {
-    question: "What HTTP methods are supported?",
-    answer: "We support GET, POST, PUT, PATCH, and DELETE methods. You can also add custom headers and request bodies for authenticated requests.",
+    question: "Hangi HTTP metodları destekleniyor?",
+    answer: "GET, POST, PUT, PATCH ve DELETE metodlarını destekliyoruz. Kimlik doğrulamalı istekler için özel header'lar ve istek gövdeleri de ekleyebilirsiniz.",
   },
   {
-    question: "Can I paste a curl command?",
-    answer: "Yes! When creating a cron job, you can paste a curl command directly into the URL field. We'll automatically extract the URL, method, headers, and body.",
+    question: "Curl komutu yapıştırabilir miyim?",
+    answer: "Evet! Cron job oluştururken, URL alanına doğrudan bir curl komutu yapıştırabilirsiniz. URL, metod, header'lar ve gövdeyi otomatik olarak çıkaracağız.",
   },
   {
-    question: "What's the minimum interval?",
-    answer: "For guest users, the minimum interval is 5 minutes. For registered free users, it's 1 minute. Pro users can also use cron expressions for more complex schedules.",
+    question: "Minimum aralık nedir?",
+    answer: "Misafir kullanıcılar için minimum aralık 5 dakikadır. Kayıtlı ücretsiz kullanıcılar için 1 dakikadır. Pro kullanıcılar daha karmaşık zamanlamalar için cron ifadeleri de kullanabilir.",
   },
   {
-    question: "How long are execution logs kept?",
-    answer: "Guest users: 7 days. Free users: 30 days. Pro users: 90 days. Team users: 1 year. Logs include response status, duration, and response body (truncated to 10KB).",
+    question: "Çalıştırma günlükleri ne kadar süre saklanıyor?",
+    answer: "Misafir kullanıcılar: 7 gün. Ücretsiz kullanıcılar: 30 gün. Pro kullanıcılar: 90 gün. Takım kullanıcıları: 1 yıl. Günlükler yanıt durumu, süre ve yanıt gövdesini (10KB'ye kesilmiş) içerir.",
   },
   {
-    question: "What happens if my endpoint is slow?",
-    answer: "We have a 30-second timeout for all requests. If your endpoint doesn't respond within that time, we'll mark the execution as failed and log a timeout error.",
+    question: "Endpoint'im yavaşsa ne olur?",
+    answer: "Tüm istekler için 30 saniyelik bir zaman aşımı var. Endpoint'iniz bu süre içinde yanıt vermezse, çalıştırmayı başarısız olarak işaretleyeceğiz ve bir zaman aşımı hatası kaydedeceğiz.",
   },
   {
-    question: "Do you support webhooks and notifications?",
-    answer: "Free users get email notifications for failures. Pro users also get webhook notifications so you can integrate with Slack, Discord, or your own systems.",
+    question: "Webhook ve bildirimleri destekliyor musunuz?",
+    answer: "Ücretsiz kullanıcılar hatalar için e-posta bildirimleri alır. Pro kullanıcılar ayrıca Slack, Discord veya kendi sistemlerinizle entegre olabilmeniz için webhook bildirimleri de alır.",
   },
 ];
 
 const billingFAQs = [
   {
-    question: "When will Pro and Team plans be available?",
-    answer: "We're currently in beta with our Free tier. Pro and Team plans will be available soon. Sign up for our newsletter to be notified when they launch.",
+    question: "Pro ve Takım planları ne zaman kullanılabilir olacak?",
+    answer: "Şu anda Ücretsiz planımızla beta aşamasındayız. Pro ve Takım planları yakında kullanılabilir olacak. Başlatıldığında bildirim almak için bültenimize kaydolun.",
   },
   {
-    question: "What payment methods do you accept?",
-    answer: "When paid plans launch, we'll accept all major credit cards through Stripe. We may also support PayPal and other payment methods based on demand.",
+    question: "Hangi ödeme yöntemlerini kabul ediyorsunuz?",
+    answer: "Ücretli planlar başlatıldığında, Stripe üzerinden tüm büyük kredi kartlarını kabul edeceğiz. Talebe göre PayPal ve diğer ödeme yöntemlerini de destekleyebiliriz.",
   },
   {
-    question: "Can I cancel my subscription anytime?",
-    answer: "Yes, you can cancel at any time. Your cron jobs will continue running until the end of your billing period, then downgrade to the free tier limits.",
+    question: "Aboneliğimi istediğim zaman iptal edebilir miyim?",
+    answer: "Evet, istediğiniz zaman iptal edebilirsiniz. Cron job'larınız fatura döneminizin sonuna kadar çalışmaya devam edecek, ardından ücretsiz plan limitlerine düşecek.",
   },
 ];
 
@@ -79,46 +80,45 @@ export default function FAQPage() {
   return (
     <>
       <PageHeader
-        title="Frequently Asked Questions"
-        description="Find answers to common questions about CronUptime."
+        title="Sık Sorulan Sorular"
+        description="UptimeTR hakkında sık sorulan soruların cevaplarını bulun."
       />
       
       <div className="mx-auto max-w-4xl px-6 lg:px-8 py-12 lg:py-16 space-y-12">
         {/* General */}
         <section>
-          <h2 className="text-xl font-semibold text-white mb-6">General</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Genel</h2>
           <FAQAccordion items={generalFAQs} />
         </section>
 
         {/* Technical */}
         <section>
-          <h2 className="text-xl font-semibold text-white mb-6">Technical</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Teknik</h2>
           <FAQAccordion items={technicalFAQs} />
         </section>
 
         {/* Billing */}
         <section>
-          <h2 className="text-xl font-semibold text-white mb-6">Billing & Plans</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Faturalandırma ve Planlar</h2>
           <FAQAccordion items={billingFAQs} />
         </section>
 
         {/* Still have questions */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
           <h3 className="text-lg font-semibold text-white mb-3">
-            Still have questions?
+            Hâlâ sorularınız mı var?
           </h3>
           <p className="text-gray-400 mb-4">
-            Can&apos;t find what you&apos;re looking for? We&apos;re here to help.
+            Aradığınızı bulamıyor musunuz? Yardımcı olmak için buradayız.
           </p>
           <a
             href="/contact"
             className="inline-flex items-center justify-center px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-colors"
           >
-            Contact Us
+            Bize Ulaşın
           </a>
         </div>
       </div>
     </>
   );
 }
-

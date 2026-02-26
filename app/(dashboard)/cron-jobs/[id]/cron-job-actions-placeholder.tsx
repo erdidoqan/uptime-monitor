@@ -45,15 +45,15 @@ export function CronJobActionsPlaceholder({ cronJobId }: CronJobActionsPlacehold
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" disabled>
           <Pause className="mr-2 h-4 w-4" />
-          Pause
+          Duraklat
         </Button>
         <Button variant="outline" size="sm" disabled>
           <Settings className="mr-2 h-4 w-4" />
-          Configure
+          Yapılandır
         </Button>
         <Button variant="outline" size="sm" disabled>
           <Trash2 className="mr-2 h-4 w-4" />
-          Delete
+          Sil
         </Button>
       </div>
     );
@@ -62,4 +62,3 @@ export function CronJobActionsPlaceholder({ cronJobId }: CronJobActionsPlacehold
   // Show real actions when cron job loads
   return <CronJobActions cronJob={cronJob} />;
 }
-

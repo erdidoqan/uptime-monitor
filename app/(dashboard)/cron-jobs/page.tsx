@@ -54,15 +54,15 @@ export default function CronJobsPage() {
     <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-semibold">Cron Jobs</h1>
+          <h1 className="text-2xl font-semibold">Cron Job&apos;lar</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your scheduled HTTP requests
+            Zamanlanmış HTTP isteklerinizi yönetin
           </p>
         </div>
         <Button size="sm" asChild>
           <Link href="/cron-jobs/create">
             <Plus className="mr-2 h-4 w-4" />
-            New Cron Job
+            Yeni Cron Job
           </Link>
         </Button>
       </div>

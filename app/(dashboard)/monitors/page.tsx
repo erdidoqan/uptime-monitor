@@ -84,11 +84,11 @@ export default function MonitorsPage() {
     <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
       {/* Header - always visible */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Monitors</h1>
+        <h1 className="text-2xl font-semibold">Monitörler</h1>
         <Button size="sm" asChild>
           <Link href="/monitors/create">
             <Plus className="mr-2 h-4 w-4" />
-            Create monitor
+            Monitör Oluştur
           </Link>
         </Button>
       </div>

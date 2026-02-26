@@ -3,13 +3,13 @@ import { PageHeader, ProseContainer } from "@/components/static";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms and conditions for using CronUptime services.",
+  description: "Terms and conditions for using UptimeTR services.",
   alternates: {
-    canonical: "https://www.cronuptime.com/terms",
+    canonical: "https://www.uptimetr.com/terms",
   },
   openGraph: {
-    title: "Terms of Service - CronUptime",
-    description: "Terms and conditions for using CronUptime services.",
+    title: "Terms of Service - UptimeTR",
+    description: "Terms and conditions for using UptimeTR services.",
   },
 };
 
@@ -24,13 +24,13 @@ export default function TermsPage() {
       <ProseContainer>
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using CronUptime (&quot;the Service&quot;), you agree to be bound by these 
+          By accessing or using UptimeTR (&quot;the Service&quot;), you agree to be bound by these 
           Terms of Service. If you do not agree to these terms, please do not use our Service.
         </p>
 
         <h2>2. Description of Service</h2>
         <p>
-          CronUptime provides cron job scheduling and uptime monitoring services. We offer 
+          UptimeTR provides cron job scheduling and uptime monitoring services. We offer 
           both free and paid tiers with varying features and limitations.
         </p>
 
@@ -83,7 +83,7 @@ export default function TermsPage() {
 
         <h2>7. Limitation of Liability</h2>
         <p>
-          CronUptime is provided &quot;as is&quot; without warranties of any kind. We are not liable 
+          UptimeTR is provided &quot;as is&quot; without warranties of any kind. We are not liable 
           for any damages arising from your use of the Service, including but not limited to:
         </p>
         <ul>

@@ -45,7 +45,7 @@ export function MonitorHeaderTop({ monitor }: MonitorHeaderTopProps) {
         {monitor.is_active === 0 ? (
           <>
             <Clock className="h-3.5 w-3.5 text-yellow-500" />
-            <span className="text-sm text-yellow-600 font-medium">Paused</span>
+            <span className="text-sm text-yellow-600 font-medium">Duraklatıldı</span>
           </>
         ) : monitor.last_status === 'up' ? (
           <>
@@ -58,21 +58,20 @@ export function MonitorHeaderTop({ monitor }: MonitorHeaderTopProps) {
               </div>
               <CheckCircle2 className="h-4 w-4 text-green-500 relative z-10 animate-status-pulse" />
             </div>
-            <span className="text-sm text-green-600 font-medium">Up</span>
+            <span className="text-sm text-green-600 font-medium">Açık</span>
           </>
         ) : (
           <>
             <XCircle className="h-3.5 w-3.5 text-red-500" />
-            <span className="text-sm text-red-600 font-medium">Down</span>
+            <span className="text-sm text-red-600 font-medium">Kapalı</span>
           </>
         )}
         <span className="text-sm text-muted-foreground">
           {monitor.is_active === 0 
-            ? 'Monitoring paused' 
-            : `Checked every ${monitor.interval_sec} seconds`}
+            ? 'İzleme duraklatıldı' 
+            : `Her ${monitor.interval_sec} saniyede bir kontrol ediliyor`}
         </span>
       </div>
     </div>
   );
 }
-

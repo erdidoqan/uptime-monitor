@@ -91,9 +91,9 @@ async function IncidentDetailWrapper({ incidentId }: { incidentId: string }) {
     return (
       <Card className="border">
         <CardContent className="pt-6 text-center py-12">
-          <p className="text-sm text-muted-foreground">Incident not found</p>
+          <p className="text-sm text-muted-foreground">Olay bulunamadı</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/incidents">Back to Incidents</Link>
+            <Link href="/incidents">Olaylara Dön</Link>
           </Button>
         </CardContent>
       </Card>
@@ -124,9 +124,9 @@ export default async function IncidentDetailPage({ params }: PageProps) {
       <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
         <Card className="border">
           <CardContent className="pt-6 text-center py-12">
-            <p className="text-sm text-muted-foreground">Incident ID is required</p>
+            <p className="text-sm text-muted-foreground">Olay ID gerekli</p>
             <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link href="/incidents">Back to Incidents</Link>
+              <Link href="/incidents">Olaylara Dön</Link>
             </Button>
           </CardContent>
         </Card>
@@ -141,7 +141,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/incidents">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Incidents
+            Olaylara Dön
           </Link>
         </Button>
       </div>
@@ -161,4 +161,3 @@ export default async function IncidentDetailPage({ params }: PageProps) {
     </div>
   );
 }
-

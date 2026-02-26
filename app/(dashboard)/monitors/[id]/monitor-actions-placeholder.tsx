@@ -45,19 +45,19 @@ export function MonitorActionsPlaceholder({ monitorId }: MonitorActionsPlacehold
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" disabled>
           <Send className="mr-2 h-4 w-4" />
-          Send test alert
+          Test uyarısı gönder
         </Button>
         <Button variant="outline" size="sm" disabled>
           <Shield className="mr-2 h-4 w-4" />
-          Incidents
+          Olaylar
         </Button>
         <Button variant="outline" size="sm" disabled>
           <Pause className="mr-2 h-4 w-4" />
-          Pause
+          Duraklat
         </Button>
         <Button variant="outline" size="sm" disabled>
           <Settings className="mr-2 h-4 w-4" />
-          Configure
+          Yapılandır
         </Button>
       </div>
     );
@@ -66,4 +66,3 @@ export function MonitorActionsPlaceholder({ monitorId }: MonitorActionsPlacehold
   // Show real actions when monitor loads
   return <MonitorActions monitor={monitor} />;
 }
-

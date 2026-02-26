@@ -22,7 +22,7 @@ function getFaviconUrl(url: string | undefined, size: number = 32): string | nul
 
 // Extract hostname from URL
 function getHostname(url: string | undefined): string {
-  if (!url) return 'Unknown';
+  if (!url) return 'Bilinmiyor';
   try {
     const urlObj = new URL(url);
     return urlObj.hostname;
@@ -33,14 +33,14 @@ function getHostname(url: string | undefined): string {
 
 // Format cause for display
 function formatCause(cause: string | null, httpStatus: number | null): string {
-  if (!cause) return 'Unknown error';
+  if (!cause) return 'Bilinmeyen hata';
   
   const causeMap: Record<string, string> = {
-    'timeout': 'Connection timeout',
-    'http_error': `HTTP error${httpStatus ? ` (${httpStatus})` : ''}`,
-    'keyword_missing': 'Keyword not found',
-    'ssl_error': 'SSL certificate error',
-    'dns_error': 'DNS resolution failed',
+    'timeout': 'Bağlantı zaman aşımı',
+    'http_error': `HTTP hatası${httpStatus ? ` (${httpStatus})` : ''}`,
+    'keyword_missing': 'Anahtar kelime bulunamadı',
+    'ssl_error': 'SSL sertifika hatası',
+    'dns_error': 'DNS çözümlemesi başarısız',
   };
   
   return causeMap[cause] || cause;
@@ -69,19 +69,19 @@ function formatDuration(startTime: number, endTime: number | null, currentTime: 
   const parts: string[] = [];
   
   if (days > 0) {
-    parts.push(`${days}d`);
+    parts.push(`${days}g`);
   }
   if (hours % 24 > 0) {
-    parts.push(`${hours % 24}h`);
+    parts.push(`${hours % 24}s`);
   }
   if (minutes % 60 > 0 && days === 0) {
-    parts.push(`${minutes % 60}m`);
+    parts.push(`${minutes % 60}dk`);
   }
   if (seconds % 60 > 0 && hours === 0) {
-    parts.push(`${seconds % 60}s`);
+    parts.push(`${seconds % 60}sn`);
   }
   if (parts.length === 0) {
-    parts.push('0s');
+    parts.push('0sn');
   }
 
   return parts.join(' ');
@@ -138,11 +138,11 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
               {incident.source_name || hostname}
             </h1>
             <Badge variant={isOngoing ? 'destructive' : 'default'}>
-              {isOngoing ? 'Ongoing' : 'Resolved'}
+              {isOngoing ? 'Devam Ediyor' : 'Çözüldü'}
             </Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="capitalize">{incident.type}</span>
+            <span className="capitalize">{incident.type === 'monitor' ? 'Monitör' : 'Cron'}</span>
             {incident.source_url && (
               <>
                 <span>•</span>
@@ -162,7 +162,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
               href={`/${incident.type === 'monitor' ? 'monitors' : 'cron-jobs'}/${incident.source_id}`}
               className="hover:text-foreground transition-colors"
             >
-              View {incident.type}
+              {incident.type === 'monitor' ? 'Monitörü' : 'Cron job\'u'} görüntüle
             </Link>
           </div>
         </div>
@@ -182,7 +182,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <Clock className="w-4 h-4" />
-              <span>Duration</span>
+              <span>Süre</span>
             </div>
             <div className="text-lg font-semibold">
               {formatDuration(incident.started_at, incident.resolved_at, currentTime)}
@@ -195,7 +195,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <AlertTriangle className="w-4 h-4" />
-              <span>Started</span>
+              <span>Başlangıç</span>
             </div>
             <div className="text-lg font-semibold">
               {formatDateTime(incident.started_at)}
@@ -208,7 +208,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <AlertTriangle className="w-4 h-4" />
-              <span>Cause</span>
+              <span>Neden</span>
             </div>
             <div className="text-lg font-semibold">
               {formatCause(incident.cause, incident.http_status)}
@@ -224,7 +224,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ImageIcon className="w-4 h-4" />
-                <span>Screenshot</span>
+                <span>Ekran Görüntüsü</span>
               </div>
             </div>
             <Dialog>
@@ -233,7 +233,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
                   <div className="relative w-full" style={{ maxHeight: '300px', aspectRatio: '16/9' }}>
                     <Image
                       src={incident.screenshot_url}
-                      alt="Incident screenshot"
+                      alt="Olay ekran görüntüsü"
                       width={1920}
                       height={1080}
                       className="w-full h-full object-contain"
@@ -241,7 +241,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                       <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-4 py-2 rounded-md backdrop-blur-sm">
-                        Click to enlarge
+                        Büyütmek için tıklayın
                       </span>
                     </div>
                   </div>
@@ -251,7 +251,7 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
                 <div className="relative w-full h-[90vh] flex items-center justify-center bg-black/95">
                   <Image
                     src={incident.screenshot_url}
-                    alt="Incident screenshot (full size)"
+                    alt="Olay ekran görüntüsü (tam boyut)"
                     width={1920}
                     height={1080}
                     className="max-w-full max-h-full object-contain"
@@ -266,4 +266,3 @@ export function IncidentHeader({ incident, actions }: IncidentHeaderProps) {
     </div>
   );
 }
-

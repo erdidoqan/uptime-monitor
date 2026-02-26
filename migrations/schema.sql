@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS monitors (
   last_status TEXT,
   last_latency_ms INTEGER,
   last_checked_at INTEGER,
+  fail_streak INTEGER DEFAULT 0, -- Consecutive failure count for false positive prevention
   created_at INTEGER NOT NULL,
   recovery_period_sec INTEGER,
   confirmation_period_sec INTEGER

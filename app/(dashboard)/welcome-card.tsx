@@ -29,24 +29,24 @@ export function WelcomeCard({ hasMonitors, hasCronJobs }: WelcomeCardProps) {
   const tasks: TaskItem[] = [
     {
       id: 1,
-      title: 'Create an account',
-      description: 'You can manage your account to update your email, billing information, and more.',
+      title: 'Hesap oluşturun',
+      description: 'E-posta, fatura bilgileri ve daha fazlasını güncellemek için hesabınızı yönetebilirsiniz.',
       completed: true, // Always completed since user is logged in
     },
     {
       id: 2,
-      title: 'Set up Monitors',
-      description: 'Add monitors to track the uptime of your websites and APIs.',
+      title: 'Monitör kurun',
+      description: 'Web sitelerinizin ve API\'lerinizin uptime\'ını takip etmek için monitör ekleyin.',
       completed: hasMonitors,
-      buttonText: 'Create Monitor',
+      buttonText: 'Monitör Oluştur',
       buttonHref: '/monitors/create',
     },
     {
       id: 3,
-      title: 'Run Cronjob',
-      description: 'Schedule HTTP requests to run at specific intervals.',
+      title: 'Cron Job çalıştırın',
+      description: 'Belirli aralıklarla çalışacak HTTP istekleri zamanlayın.',
       completed: hasCronJobs,
-      buttonText: 'Create Cron Job',
+      buttonText: 'Cron Job Oluştur',
       buttonHref: '/cron-jobs',
     },
   ];
@@ -61,7 +61,7 @@ export function WelcomeCard({ hasMonitors, hasCronJobs }: WelcomeCardProps) {
               {userImage ? (
                 <Image
                   src={userImage}
-                  alt={userName || 'User avatar'}
+                  alt={userName || 'Kullanıcı avatarı'}
                   width={60}
                   height={60}
                   className="w-full h-full object-cover"
@@ -74,9 +74,9 @@ export function WelcomeCard({ hasMonitors, hasCronJobs }: WelcomeCardProps) {
         </div>
 
         {/* Title & Description */}
-        <h2 className="text-xl font-semibold mb-2">Welcome to Uptime Monitor!</h2>
+        <h2 className="text-xl font-semibold mb-2">UptimeTR&apos;ye Hoş Geldiniz!</h2>
         <p className="text-sm text-muted-foreground mb-6">
-          Follow these steps to make the most out of your experience. Track your services, schedule cron jobs, and monitor system health.
+          Deneyiminizden en iyi şekilde yararlanmak için bu adımları izleyin. Servislerinizi takip edin, cron job&apos;lar zamanlayın ve sistem sağlığını izleyin.
         </p>
 
         {/* Task List */}
@@ -121,4 +121,3 @@ export function WelcomeCard({ hasMonitors, hasCronJobs }: WelcomeCardProps) {
     </Card>
   );
 }
-

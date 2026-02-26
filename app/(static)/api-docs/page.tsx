@@ -3,24 +3,24 @@ import { PageHeader } from "@/components/static";
 import { ApiDocumentationContent } from "./api-documentation-content";
 
 export const metadata: Metadata = {
-  title: "API Documentation - CronUptime API Reference",
-  description: "Complete API documentation for CronUptime. Learn how to use API tokens to programmatically manage monitors, cron jobs, and incidents.",
+  title: "API Documentation - UptimeTR API Reference",
+  description: "Complete API documentation for UptimeTR. Learn how to use API tokens to programmatically manage monitors, cron jobs, and incidents.",
   keywords: [
     "API documentation",
     "REST API",
     "API tokens",
     "API reference",
-    "CronUptime API",
+    "UptimeTR API",
     "programmatic access",
     "API integration"
   ].join(", "),
   alternates: {
-    canonical: "https://www.cronuptime.com/api-docs",
+    canonical: "https://www.uptimetr.com/api-docs",
   },
   openGraph: {
-    title: "API Documentation - CronUptime API Reference",
-    description: "Complete API documentation for CronUptime. Learn how to use API tokens to programmatically manage monitors, cron jobs, and incidents.",
-    url: "https://www.cronuptime.com/api-docs",
+    title: "API Documentation - UptimeTR API Reference",
+    description: "Complete API documentation for UptimeTR. Learn how to use API tokens to programmatically manage monitors, cron jobs, and incidents.",
+    url: "https://www.uptimetr.com/api-docs",
     type: "website",
   },
 };
@@ -29,12 +29,12 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "APIReference",
-  name: "CronUptime API",
+  name: "UptimeTR API",
   description: "REST API for managing cron jobs, monitors, and incidents",
-  url: "https://www.cronuptime.com/api-docs",
+  url: "https://www.uptimetr.com/api-docs",
   provider: {
     "@type": "Organization",
-    name: "CronUptime",
+    name: "UptimeTR",
   },
 };
 
@@ -47,7 +47,7 @@ export default function ApiDocsPage() {
       />
       <PageHeader
         title="API Documentation"
-        description="Integrate CronUptime into your applications with our REST API. Manage monitors, cron jobs, and incidents programmatically."
+        description="Integrate UptimeTR into your applications with our REST API. Manage monitors, cron jobs, and incidents programmatically."
       />
       
       <ApiDocumentationContent />

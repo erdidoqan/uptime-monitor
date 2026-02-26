@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getD1Client } from '@/lib/d1-client';
 
 // Main domains that should not be treated as subdomains
-const MAIN_DOMAINS = ['cronuptime.com', 'www.cronuptime.com', 'localhost', 'localhost:3000'];
-
-// Cache for custom domain lookups (in-memory, resets on server restart)
-// In production, consider using Redis or similar for distributed caching
-const customDomainCache = new Map<string, { subdomain: string; expires: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const MAIN_DOMAINS = ['uptimetr.com', 'www.uptimetr.com', 'localhost', 'localhost:3000'];
 
 // Extract subdomain from host
 function getSubdomain(host: string): string | null {
@@ -25,9 +19,9 @@ function getSubdomain(host: string): string | null {
     return null;
   }
   
-  // Check if it's a subdomain of cronuptime.com
-  if (hostWithoutPort.endsWith('.cronuptime.com')) {
-    const subdomain = hostWithoutPort.replace('.cronuptime.com', '');
+  // Check if it's a subdomain of uptimetr.com
+  if (hostWithoutPort.endsWith('.uptimetr.com')) {
+    const subdomain = hostWithoutPort.replace('.uptimetr.com', '');
     // Ignore www
     if (subdomain === 'www') {
       return null;
@@ -45,51 +39,12 @@ function getSubdomain(host: string): string | null {
   return null;
 }
 
-// Look up custom domain in database and return corresponding subdomain
-async function getSubdomainFromCustomDomain(host: string): Promise<string | null> {
-  const hostWithoutPort = host.split(':')[0];
-  
-  // Check cache first
-  const cached = customDomainCache.get(hostWithoutPort);
-  if (cached && cached.expires > Date.now()) {
-    return cached.subdomain;
-  }
-  
-  try {
-    const db = getD1Client();
-    const statusPage = await db.queryFirst<{ subdomain: string }>(
-      `SELECT subdomain FROM status_pages 
-       WHERE custom_domain = ? AND is_active = 1 
-       LIMIT 1`,
-      [hostWithoutPort.toLowerCase()]
-    );
-    
-    if (statusPage) {
-      // Cache the result
-      customDomainCache.set(hostWithoutPort, {
-        subdomain: statusPage.subdomain,
-        expires: Date.now() + CACHE_TTL,
-      });
-      return statusPage.subdomain;
-    }
-  } catch (error) {
-    console.error('Failed to lookup custom domain:', error);
-  }
-  
-  return null;
-}
-
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const pathname = request.nextUrl.pathname;
   
-  // First, check for subdomain (status page on cronuptime.com)
-  let subdomain = getSubdomain(host);
-  
-  // If not a subdomain, check if it's a custom domain
-  if (!subdomain) {
-    subdomain = await getSubdomainFromCustomDomain(host);
-  }
+  // Check for subdomain (status page on *.uptimetr.com)
+  const subdomain = getSubdomain(host);
   
   if (subdomain) {
     // Rewrite to status-public route
@@ -106,11 +61,9 @@ export async function middleware(request: NextRequest) {
     }
   }
   
-  // Note: We don't call auth() here because middleware runs in edge runtime
-  // and NextAuth session callback requires Node.js runtime (for crypto operations).
-  // Auth checks are handled at the route level where nodejs runtime is available.
+  // Note: Custom domain support is handled at the route level
+  // to avoid database calls in edge middleware (causes timeout)
   
-  // Let the routes handle themselves
   return NextResponse.next();
 }
 

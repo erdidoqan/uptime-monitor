@@ -10,9 +10,9 @@ interface NavigationProps {
 }
 
 const navItems = [
-  { label: 'Status', href: '' },
-  { label: 'Maintenance', href: '/maintenance' },
-  { label: 'Previous incidents', href: '/incidents' },
+  { label: 'Durum', href: '' },
+  { label: 'Bakım', href: '/maintenance' },
+  { label: 'Geçmiş Olaylar', href: '/incidents' },
 ];
 
 export function Navigation({ subdomain }: NavigationProps) {
@@ -25,11 +25,11 @@ export function Navigation({ subdomain }: NavigationProps) {
       const hostname = window.location.hostname;
       // Check if it's a subdomain (not main domain and not localhost)
       const isSubdomain = 
-        hostname !== 'cronuptime.com' && 
-        hostname !== 'www.cronuptime.com' &&
+        hostname !== 'uptimetr.com' && 
+        hostname !== 'www.uptimetr.com' &&
         hostname !== 'localhost' &&
         hostname !== '127.0.0.1' &&
-        (hostname.endsWith('.cronuptime.com') || hostname.endsWith('.localhost'));
+        (hostname.endsWith('.uptimetr.com') || hostname.endsWith('.localhost'));
       setIsSubdomainAccess(isSubdomain);
     }
   }, []);

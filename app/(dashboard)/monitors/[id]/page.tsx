@@ -109,9 +109,9 @@ async function MonitorHeaderTopData({ monitorId }: { monitorId: string }) {
     return (
       <Card className="border">
         <CardContent className="pt-6 text-center py-12">
-          <p className="text-sm text-muted-foreground">Monitor not found</p>
+          <p className="text-sm text-muted-foreground">Monitör bulunamadı</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/monitors">Back to Monitors</Link>
+            <Link href="/monitors">Monitörlere Dön</Link>
           </Button>
         </CardContent>
       </Card>
@@ -146,9 +146,9 @@ export default async function MonitorDetailPage({ params }: PageProps) {
       <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
         <Card className="border">
           <CardContent className="pt-6 text-center py-12">
-            <p className="text-sm text-muted-foreground">Monitor ID is required</p>
+            <p className="text-sm text-muted-foreground">Monitör ID gerekli</p>
             <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link href="/monitors">Back to Monitors</Link>
+              <Link href="/monitors">Monitörlere Dön</Link>
             </Button>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ export default async function MonitorDetailPage({ params }: PageProps) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/monitors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Monitors
+            Monitörlere Dön
           </Link>
         </Button>
       </div>

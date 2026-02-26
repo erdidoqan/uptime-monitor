@@ -16,19 +16,20 @@ interface StatusHeaderProps {
 
 export function StatusHeader({ companyName, subdomain, logoUrl, logoLinkUrl, contactUrl }: StatusHeaderProps) {
   const Logo = () => (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center">
       {logoUrl ? (
         <Image
           src={logoUrl}
           alt={companyName}
-          width={32}
-          height={32}
-          className="object-contain rounded-lg"
+          width={200}
+          height={40}
+          className="h-8 w-auto object-contain"
+          style={{ maxWidth: '180px' }}
         />
       ) : (
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">
-            {companyName.charAt(0).toUpperCase()}
+        <div className="h-8 px-3 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <span className="text-white font-bold text-sm whitespace-nowrap">
+            {companyName}
           </span>
         </div>
       )}
@@ -74,7 +75,7 @@ export function StatusHeader({ companyName, subdomain, logoUrl, logoLinkUrl, con
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Get in touch
+                  İletişim
                 </a>
               </Button>
             )}

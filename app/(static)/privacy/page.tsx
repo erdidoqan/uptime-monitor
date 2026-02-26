@@ -3,13 +3,13 @@ import { PageHeader, ProseContainer } from "@/components/static";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Learn how CronUptime collects, uses, and protects your data.",
+  description: "Learn how UptimeTR collects, uses, and protects your data.",
   alternates: {
-    canonical: "https://www.cronuptime.com/privacy",
+    canonical: "https://www.uptimetr.com/privacy",
   },
   openGraph: {
-    title: "Privacy Policy - CronUptime",
-    description: "Learn how CronUptime collects, uses, and protects your data.",
+    title: "Privacy Policy - UptimeTR",
+    description: "Learn how UptimeTR collects, uses, and protects your data.",
   },
 };
 

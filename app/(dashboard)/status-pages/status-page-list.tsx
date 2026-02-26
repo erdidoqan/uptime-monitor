@@ -67,7 +67,7 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
     if (statusPage.custom_domain) {
       return `https://${statusPage.custom_domain}`;
     }
-    return `https://${statusPage.subdomain}.cronuptime.com`;
+    return `https://${statusPage.subdomain}.uptimetr.com`;
   };
 
   return (
@@ -77,7 +77,7 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
         <div className="relative">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search"
+            placeholder="Ara"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 pr-8 w-[180px] h-9 text-sm"
@@ -90,14 +90,14 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
         <Card className="border">
           <CardContent className="pt-8 text-center py-16">
             <Globe className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-            <h3 className="text-sm font-semibold mb-1">No status pages yet</h3>
+            <h3 className="text-sm font-semibold mb-1">Henüz durum sayfası yok</h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Create your first status page to inform users about your services
+              Kullanıcılarınızı hizmetleriniz hakkında bilgilendirmek için ilk durum sayfanızı oluşturun
             </p>
             <Button size="sm" asChild>
               <Link href="/status-pages/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Status Page
+                Durum Sayfası Oluştur
               </Link>
             </Button>
           </CardContent>
@@ -150,10 +150,10 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="truncate">
-                          {statusPage.custom_domain || `${statusPage.subdomain}.cronuptime.com`}
+                          {statusPage.custom_domain || `${statusPage.subdomain}.uptimetr.com`}
                         </span>
                         {statusPage.is_active === 0 && (
-                          <span className="text-yellow-600 font-medium">Inactive</span>
+                          <span className="text-yellow-600 font-medium">Pasif</span>
                         )}
                       </div>
                     </div>
@@ -168,11 +168,11 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/status-pages/${statusPage.id}/edit`}>Edit</Link>
+                            <Link href={`/status-pages/${statusPage.id}/edit`}>Düzenle</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <a href={pageUrl} target="_blank" rel="noopener noreferrer">
-                              Preview
+                              Önizle
                               <ExternalLink className="w-3 h-3 ml-2" />
                             </a>
                           </DropdownMenuItem>
@@ -184,7 +184,7 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
                               setDeleteDialogOpen(true);
                             }}
                           >
-                            Delete
+                            Sil
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -201,19 +201,19 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Status Page</AlertDialogTitle>
+            <AlertDialogTitle>Durum Sayfasını Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{statusPageToDelete?.company_name}"? This action cannot be undone.
+              &quot;{statusPageToDelete?.company_name}&quot; sayfasını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>İptal</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}
               disabled={deleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Siliniyor...' : 'Sil'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -221,24 +221,3 @@ export function StatusPageList({ initialStatusPages }: StatusPageListProps) {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
