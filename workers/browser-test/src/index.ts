@@ -3,7 +3,7 @@ import * as jose from 'jose';
 
 /* ───────── Constants ───────── */
 
-const MAX_BROWSERS_PER_BATCH = 10;
+const MAX_BROWSERS_PER_BATCH = 30;
 const MAX_TABS_PER_BROWSER = 10;
 const PAGE_TIMEOUT_MS = 30_000;
 const PAGE_TIMEOUT_PROXY_MS = 60_000;

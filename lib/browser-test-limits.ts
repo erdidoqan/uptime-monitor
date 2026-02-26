@@ -14,7 +14,7 @@ export type UserTier = 'guest' | 'free' | 'pro' | 'enterprise';
 
 export const GUEST_MAX_BROWSERS = 3;
 export const FREE_MAX_BROWSERS = 5;
-export const PRO_MAX_BROWSERS = 10;
+export const PRO_MAX_BROWSERS = 30;
 
 export const GUEST_MAX_TABS = 3;
 export const FREE_MAX_TABS = 5;
@@ -55,7 +55,7 @@ export function getMaxTabsForTier(tier: UserTier): number {
  */
 const RAMP_MILESTONES_GUEST = [1, 3] as const;
 const RAMP_MILESTONES_FREE = [1, 3, 5] as const;
-const RAMP_MILESTONES_PRO = [1, 3, 5, 7, 10] as const;
+const RAMP_MILESTONES_PRO = [1, 3, 5, 10, 15, 20, 30] as const;
 
 export function getRampSteps(targetBrowsers: number, tier: UserTier): number[] {
   let milestones: readonly number[];
