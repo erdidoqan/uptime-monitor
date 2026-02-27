@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Monitor, Timer, AlertTriangle, Key, Globe, Settings, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Monitor, Timer, AlertTriangle, Key, Globe, Settings, ShieldCheck, Megaphone } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const ADMIN_EMAIL = 'erdi.doqan@gmail.com';
@@ -42,6 +42,11 @@ const navigation = [
     title: 'Olaylar',
     url: '/incidents',
     icon: AlertTriangle,
+  },
+  {
+    title: 'Trafik Kampanyaları',
+    url: '/traffic-campaigns',
+    icon: Megaphone,
   },
   {
     title: 'Durum Sayfaları',

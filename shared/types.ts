@@ -121,6 +121,30 @@ export interface ApiToken {
   revoked_at: number | null;
 }
 
+export interface TrafficCampaign {
+  id: string;
+  user_id: string;
+  name: string;
+  url: string;
+  daily_visitors: number;
+  browsers_per_run: number;
+  tabs_per_browser: number;
+  traffic_source: 'direct' | 'organic' | 'social';
+  session_duration: 'fast' | 'realistic' | 'long';
+  use_proxy: number;
+  start_hour: number;
+  end_hour: number;
+  is_active: number;
+  next_run_at: number | null;
+  locked_at: number | null;
+  last_run_at: number | null;
+  last_status: string | null;
+  total_runs: number;
+  total_visits_sent: number;
+  created_at: number;
+  updated_at: number | null;
+}
+
 export interface StatusPage {
   id: string;
   user_id: string;

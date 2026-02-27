@@ -1,14 +1,22 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
+import { Upload, X, Loader2, Copy, Check, ExternalLink, RefreshCw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import type { StatusPage } from '@/shared/types';
+
+interface DomainStatus {
+  configured: boolean;
+  domain: string | null;
+  verified?: boolean;
+  dns?: { configured: boolean; type: string | null };
+  instructions?: { type: string; name: string; value: string; purpose: string }[];
+}
 
 interface SettingsTabProps {
   statusPage: StatusPage;
@@ -30,6 +38,11 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Domain verification state
+  const [domainStatus, setDomainStatus] = useState<DomainStatus | null>(null);
+  const [domainLoading, setDomainLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
   const [form, setForm] = useState({
     company_name: statusPage.company_name,
     subdomain: statusPage.subdomain,
@@ -37,6 +50,35 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
     contact_url: statusPage.contact_url || '',
     custom_domain: statusPage.custom_domain || '',
   });
+
+  const checkDomainStatus = useCallback(async () => {
+    if (!statusPage.custom_domain) return;
+    setDomainLoading(true);
+    try {
+      const result = await api.get<DomainStatus>(`/status-pages/${statusPage.id}/domain`);
+      setDomainStatus(result);
+    } catch {
+      // silently ignore - non-critical
+    } finally {
+      setDomainLoading(false);
+    }
+  }, [statusPage.id, statusPage.custom_domain]);
+
+  const handleVerifyDomain = useCallback(async () => {
+    setVerifying(true);
+    try {
+      await api.post(`/status-pages/${statusPage.id}/domain`);
+      await checkDomainStatus();
+    } catch {
+      // status will be refreshed anyway
+    } finally {
+      setVerifying(false);
+    }
+  }, [statusPage.id, checkDomainStatus]);
+
+  useEffect(() => {
+    checkDomainStatus();
+  }, [checkDomainStatus]);
 
   const handleLogoUpload = useCallback(async (file: File) => {
     setUploadError(null);
@@ -406,11 +448,111 @@ export function SettingsTab({ statusPage, onUpdate }: SettingsTabProps) {
                     placeholder="status.stripe.com"
                   />
                 </div>
-                {form.custom_domain && (
-                  <div className="bg-muted/50 rounded-lg p-4 text-sm">
-                    <p>
-                      Lütfen <strong>{form.custom_domain}</strong> adresini aşağıdaki CNAME kayıtlarını yapılandırarak UptimeTR&apos;ye yönlendirin.
+
+                {/* Domain status badge */}
+                {statusPage.custom_domain && domainStatus && (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                    domainStatus.configured
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                      : domainStatus.verified
+                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                  }`}>
+                    {domainStatus.configured ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                        <span>Domain aktif ve çalışıyor</span>
+                      </>
+                    ) : domainStatus.verified ? (
+                      <>
+                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        <span>Domain doğrulandı, DNS yapılandırması bekleniyor</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                        <span>DNS yapılandırması gerekiyor</span>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* DNS Instructions */}
+                {statusPage.custom_domain && domainStatus?.instructions && domainStatus.instructions.length > 0 && !domainStatus.configured && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      DNS sağlayıcınızda aşağıdaki kayıtları ekleyin:
                     </p>
+                    <div className="overflow-hidden rounded-lg border">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-muted/50">
+                            <th className="px-4 py-2 text-left font-medium">Tür</th>
+                            <th className="px-4 py-2 text-left font-medium">Ad</th>
+                            <th className="px-4 py-2 text-left font-medium">Değer</th>
+                            <th className="px-4 py-2 text-left font-medium">Açıklama</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {domainStatus.instructions.map((inst, i) => (
+                            <tr key={i} className="border-t">
+                              <td className="px-4 py-2">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                                  {inst.type}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 font-mono text-xs">{inst.name}</td>
+                              <td className="px-4 py-2 font-mono text-xs break-all">{inst.value}</td>
+                              <td className="px-4 py-2 text-muted-foreground">{inst.purpose}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleVerifyDomain}
+                        disabled={verifying || domainLoading}
+                      >
+                        {verifying ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                        )}
+                        Doğrulamayı kontrol et
+                      </Button>
+                      {domainLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      DNS değişikliklerinin yayılması birkaç dakika sürebilir.
+                    </p>
+                  </div>
+                )}
+
+                {/* Fully configured */}
+                {statusPage.custom_domain && domainStatus?.configured && (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`https://${statusPage.custom_domain}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      https://{statusPage.custom_domain} <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+
+                {/* Loading state for initial check */}
+                {statusPage.custom_domain && !domainStatus && domainLoading && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Domain durumu kontrol ediliyor...
                   </div>
                 )}
               </CardContent>

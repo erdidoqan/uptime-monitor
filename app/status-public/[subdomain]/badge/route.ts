@@ -37,7 +37,8 @@ export async function GET(
   try {
     const db = getD1Client();
 
-    const statusPage = await db.queryFirst<{
+    const slug = subdomain.toLowerCase();
+    let statusPage = await db.queryFirst<{
       id: string;
       company_name: string;
       subdomain: string;
@@ -46,8 +47,17 @@ export async function GET(
       `SELECT id, company_name, subdomain, custom_domain
        FROM status_pages 
        WHERE subdomain = ? AND is_active = 1`,
-      [subdomain.toLowerCase()]
+      [slug]
     );
+
+    if (!statusPage) {
+      statusPage = await db.queryFirst(
+        `SELECT id, company_name, subdomain, custom_domain
+         FROM status_pages 
+         WHERE custom_domain = ? AND is_active = 1`,
+        [slug]
+      );
+    }
 
     if (!statusPage) {
       return new NextResponse('Status page not found', { status: 404 });

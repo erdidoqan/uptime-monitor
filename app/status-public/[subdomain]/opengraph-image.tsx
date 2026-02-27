@@ -151,14 +151,21 @@ export default async function Image({
   try {
     const db = getD1Client();
     
-    const statusPage = await db.queryFirst<{
+    const slug = subdomain.toLowerCase();
+    let statusPage = await db.queryFirst<{
       id: string;
       company_name: string;
       logo_url: string | null;
     }>(
       `SELECT id, company_name, logo_url FROM status_pages WHERE subdomain = ? AND is_active = 1`,
-      [subdomain.toLowerCase()]
+      [slug]
     );
+    if (!statusPage) {
+      statusPage = await db.queryFirst(
+        `SELECT id, company_name, logo_url FROM status_pages WHERE custom_domain = ? AND is_active = 1`,
+        [slug]
+      );
+    }
     
     if (statusPage) {
       companyName = statusPage.company_name;

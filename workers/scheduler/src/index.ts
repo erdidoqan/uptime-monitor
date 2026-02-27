@@ -1,6 +1,7 @@
 import { D1Client } from './d1-client';
 import { appendCheckToR2, getChecksFromR2, batchAppendChecksToR2, type MonitorCheck } from './r2-checks';
 import { calculateNextRun, shouldRunThisMinute, hasIntervalPassed } from './cron-utils';
+import { SignJWT } from 'jose';
 import type { ScheduledEvent, ExecutionContext, R2Bucket } from '@cloudflare/workers-types';
 
 // Memory buffer for batch flushing (10 minutes after monitor creation)
@@ -22,6 +23,9 @@ interface Env {
   TR_PROXY_SECRET?: string;
   // Campaign email secret
   CAMPAIGN_API_SECRET?: string;
+  // Browser test worker
+  BROWSER_TEST_WORKER_URL?: string;
+  BROWSER_TEST_JWT_SECRET?: string;
 }
 
 function getD1Client(env: Env): D1Client {
@@ -1077,9 +1081,15 @@ async function cleanupStaleLocks(db: D1Client) {
       [lockTimeout]
     );
 
+    // Clean stale locks for traffic campaigns
+    const staleCampaigns = await db.execute(
+      `UPDATE traffic_campaigns SET locked_at = NULL WHERE locked_at IS NOT NULL AND locked_at < ?`,
+      [lockTimeout]
+    );
+
     // Log if any locks were cleaned (for debugging)
-    if (staleMonitors.meta?.changes > 0 || staleCronJobs.meta?.changes > 0) {
-      console.log(`Cleaned up stale locks: ${staleMonitors.meta?.changes || 0} monitors, ${staleCronJobs.meta?.changes || 0} cron jobs`);
+    if (staleMonitors.meta?.changes > 0 || staleCronJobs.meta?.changes > 0 || staleCampaigns.meta?.changes > 0) {
+      console.log(`Cleaned up stale locks: ${staleMonitors.meta?.changes || 0} monitors, ${staleCronJobs.meta?.changes || 0} cron jobs, ${staleCampaigns.meta?.changes || 0} campaigns`);
     }
   } catch (error) {
     console.error('Error cleaning up stale locks:', error);
@@ -1122,6 +1132,157 @@ async function sendDailyCampaignEmails(env: Env): Promise<void> {
   }
 }
 
+async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionContext) {
+  if (!env.BROWSER_TEST_WORKER_URL || !env.BROWSER_TEST_JWT_SECRET) {
+    return;
+  }
+
+  const now = Date.now();
+  const lockTimeout = now - 600_000; // 10 min stale lock
+
+  const dueCampaigns = await db.queryAll<{
+    id: string;
+    user_id: string;
+    url: string;
+    daily_visitors: number;
+    browsers_per_run: number;
+    tabs_per_browser: number;
+    traffic_source: string;
+    session_duration: string;
+    use_proxy: number;
+    start_hour: number;
+    end_hour: number;
+    total_visits_sent: number;
+    total_runs: number;
+  }>(
+    `SELECT id, user_id, url, daily_visitors, browsers_per_run, tabs_per_browser,
+            traffic_source, session_duration, use_proxy, start_hour, end_hour,
+            total_visits_sent, total_runs
+     FROM traffic_campaigns
+     WHERE is_active = 1
+       AND next_run_at <= ?
+       AND (locked_at IS NULL OR locked_at < ?)
+     LIMIT 5`,
+    [now, lockTimeout]
+  );
+
+  if (dueCampaigns.length === 0) return;
+
+  const campaignIds = dueCampaigns.map(c => c.id);
+  await db.execute(
+    `UPDATE traffic_campaigns SET locked_at = ? WHERE id IN (${campaignIds.map(() => '?').join(',')}) AND locked_at IS NULL`,
+    [now, ...campaignIds]
+  );
+
+  const workerBaseUrl = env.BROWSER_TEST_WORKER_URL.replace(/\/$/, '');
+  const jwtSecretBytes = new TextEncoder().encode(env.BROWSER_TEST_JWT_SECRET);
+
+  for (const campaign of dueCampaigns) {
+    try {
+      const currentHour = new Date().getUTCHours();
+      if (currentHour < campaign.start_hour || currentHour >= campaign.end_hour) {
+        const tomorrow = new Date();
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + (currentHour >= campaign.end_hour ? 1 : 0));
+        tomorrow.setUTCHours(campaign.start_hour, 0, 0, 0);
+        await db.execute(
+          `UPDATE traffic_campaigns SET next_run_at = ?, locked_at = NULL WHERE id = ?`,
+          [tomorrow.getTime(), campaign.id]
+        );
+        continue;
+      }
+
+      const runId = crypto.randomUUID();
+      const browsers = campaign.browsers_per_run;
+      const tabs = campaign.tabs_per_browser;
+
+      const token = await new SignJWT({
+        url: campaign.url,
+        maxBrowsers: browsers,
+        maxTabs: tabs,
+        maxBatches: 1,
+        runId,
+        useProxy: !!campaign.use_proxy,
+        trafficSource: campaign.traffic_source,
+        sessionDuration: campaign.session_duration,
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('10m')
+        .sign(jwtSecretBytes);
+
+      const response = await fetch(`${workerBaseUrl}/browser-test-batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          url: campaign.url,
+          browsers,
+          tabsPerBrowser: tabs,
+          useProxy: !!campaign.use_proxy,
+          trafficSource: campaign.traffic_source,
+          sessionDuration: campaign.session_duration,
+        }),
+      });
+
+      let visitsSent = 0;
+      let lastStatus = 'error';
+
+      if (response.ok && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line);
+              if (event.type === 'tab' && event.ok) {
+                visitsSent++;
+              }
+            } catch {}
+          }
+        }
+
+        lastStatus = visitsSent > 0 ? 'success' : 'no_visits';
+      } else {
+        console.error(`[campaign] Worker returned ${response.status} for campaign ${campaign.id}`);
+        lastStatus = `error_${response.status}`;
+      }
+
+      const visitsPerRun = browsers * tabs;
+      const runsPerDay = Math.max(1, Math.ceil(campaign.daily_visitors / visitsPerRun));
+      const workingHours = campaign.end_hour - campaign.start_hour;
+      const intervalMs = Math.floor((workingHours * 3600 * 1000) / runsPerDay);
+      const nextRunAt = now + intervalMs;
+
+      await db.execute(
+        `UPDATE traffic_campaigns
+         SET last_run_at = ?, last_status = ?, next_run_at = ?,
+             total_runs = total_runs + 1, total_visits_sent = total_visits_sent + ?,
+             locked_at = NULL, updated_at = ?
+         WHERE id = ?`,
+        [now, lastStatus, nextRunAt, visitsSent, now, campaign.id]
+      );
+
+      console.log(`[campaign] ${campaign.id}: sent ${visitsSent} visits, next in ${Math.round(intervalMs / 60000)}min`);
+    } catch (err) {
+      console.error(`[campaign] Error processing campaign ${campaign.id}:`, err);
+      await db.execute(
+        `UPDATE traffic_campaigns SET locked_at = NULL WHERE id = ?`,
+        [campaign.id]
+      );
+    }
+  }
+}
+
 async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext) {
   const db = getD1Client(env);
 
@@ -1140,7 +1301,11 @@ async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext)
   } else {
     // Every minute: first clean up stale locks, then process jobs
     await cleanupStaleLocks(db);
-    await Promise.all([processMonitors(db, env.CHECKS_BUCKET, env, ctx), processCronJobs(db, env, ctx)]);
+    await Promise.all([
+      processMonitors(db, env.CHECKS_BUCKET, env, ctx),
+      processCronJobs(db, env, ctx),
+      processTrafficCampaigns(db, env, ctx),
+    ]);
   }
 }
 

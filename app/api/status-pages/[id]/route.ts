@@ -8,6 +8,7 @@ import {
   successResponse,
   notFoundResponse,
 } from '@/lib/api-helpers';
+import { addDomainToProject, removeDomainFromProject, isVercelConfigured } from '@/lib/vercel-domain';
 
 export async function GET(
   request: NextRequest,
@@ -99,6 +100,23 @@ export async function PUT(
     }
 
     const now = Date.now();
+    const oldCustomDomain = (existing as any).custom_domain;
+    const newCustomDomain = custom_domain !== undefined ? (custom_domain || null) : oldCustomDomain;
+
+    // Manage Vercel domain when custom_domain changes
+    if (isVercelConfigured() && newCustomDomain !== oldCustomDomain) {
+      try {
+        if (oldCustomDomain) {
+          await removeDomainFromProject(oldCustomDomain);
+        }
+        if (newCustomDomain) {
+          await addDomainToProject(newCustomDomain);
+        }
+      } catch (err) {
+        console.error('Vercel domain operation failed:', err);
+        // Don't block the update - domain can be retried via verification endpoint
+      }
+    }
 
     await db.execute(
       `UPDATE status_pages SET
@@ -114,7 +132,7 @@ export async function PUT(
       [
         company_name || null,
         subdomain ? subdomain.toLowerCase() : null,
-        custom_domain !== undefined ? custom_domain : (existing as any).custom_domain,
+        newCustomDomain,
         logo_url !== undefined ? logo_url : (existing as any).logo_url,
         logo_link_url !== undefined ? logo_link_url : (existing as any).logo_link_url,
         contact_url !== undefined ? contact_url : (existing as any).contact_url,
@@ -154,8 +172,8 @@ export async function DELETE(
     const db = getD1Client();
 
     // Check ownership
-    const existing = await db.queryFirst(
-      'SELECT id FROM status_pages WHERE id = ? AND user_id = ?',
+    const existing = await db.queryFirst<{ id: string; custom_domain: string | null }>(
+      'SELECT id, custom_domain FROM status_pages WHERE id = ? AND user_id = ?',
       [id, auth.userId]
     );
 
@@ -163,9 +181,15 @@ export async function DELETE(
       return notFoundResponse('Status page not found');
     }
 
-    // Get subdomain before deletion for Vercel cleanup
-    const subdomain = (existing as any).subdomain;
-    const domainToRemove = `${subdomain}.uptimetr.com`;
+    // Remove custom domain from Vercel if configured
+    const customDomain = existing.custom_domain;
+    if (customDomain && isVercelConfigured()) {
+      try {
+        await removeDomainFromProject(customDomain);
+      } catch (err) {
+        console.error('Failed to remove domain from Vercel:', err);
+      }
+    }
 
     // Delete related resources and sections first (cascade)
     await db.execute(
@@ -176,9 +200,6 @@ export async function DELETE(
     );
     await db.execute('DELETE FROM status_page_sections WHERE status_page_id = ?', [id]);
     await db.execute('DELETE FROM status_pages WHERE id = ?', [id]);
-
-    // Note: Subdomain routing handled by wildcard domain *.uptimetr.com
-    // No need to remove individual subdomains from Vercel
 
     return successResponse({ message: 'Status page deleted successfully' });
   } catch (error: any) {

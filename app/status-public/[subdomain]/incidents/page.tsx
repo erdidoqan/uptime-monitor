@@ -38,7 +38,8 @@ async function fetchStatusPageWithIncidents(subdomain: string): Promise<{
     
     const db = getD1Client();
 
-    const statusPage = await db.queryFirst<{
+    const slug = subdomain.toLowerCase();
+    let statusPage = await db.queryFirst<{
       id: string;
       company_name: string;
       subdomain: string;
@@ -51,8 +52,17 @@ async function fetchStatusPageWithIncidents(subdomain: string): Promise<{
       `SELECT id, company_name, subdomain, custom_domain, logo_url, logo_link_url, contact_url, is_active
        FROM status_pages 
        WHERE subdomain = ? AND is_active = 1`,
-      [subdomain.toLowerCase()]
+      [slug]
     );
+
+    if (!statusPage) {
+      statusPage = await db.queryFirst(
+        `SELECT id, company_name, subdomain, custom_domain, logo_url, logo_link_url, contact_url, is_active
+         FROM status_pages 
+         WHERE custom_domain = ? AND is_active = 1`,
+        [slug]
+      );
+    }
 
     if (!statusPage) {
       return null;

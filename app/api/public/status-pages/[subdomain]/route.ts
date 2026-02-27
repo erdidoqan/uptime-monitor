@@ -9,9 +9,10 @@ export async function GET(
   try {
     const { subdomain } = await params;
     const db = getD1Client();
+    const slug = subdomain.toLowerCase();
 
-    // Get status page by subdomain
-    const statusPage = await db.queryFirst<{
+    // Get status page by subdomain, then fall back to custom_domain
+    let statusPage = await db.queryFirst<{
       id: string;
       company_name: string;
       subdomain: string;
@@ -24,8 +25,17 @@ export async function GET(
       `SELECT id, company_name, subdomain, custom_domain, logo_url, logo_link_url, contact_url, is_active
        FROM status_pages 
        WHERE subdomain = ? AND is_active = 1`,
-      [subdomain.toLowerCase()]
+      [slug]
     );
+
+    if (!statusPage) {
+      statusPage = await db.queryFirst(
+        `SELECT id, company_name, subdomain, custom_domain, logo_url, logo_link_url, contact_url, is_active
+         FROM status_pages 
+         WHERE custom_domain = ? AND is_active = 1`,
+        [slug]
+      );
+    }
 
     if (!statusPage) {
       return NextResponse.json(

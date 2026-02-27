@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Main domains that should not be treated as subdomains
-const MAIN_DOMAINS = ['uptimetr.com', 'www.uptimetr.com', 'localhost', 'localhost:3000'];
+const MAIN_DOMAINS = ['uptimetr.com', 'www.uptimetr.com', 'cronuptime.com', 'www.cronuptime.com', 'localhost', 'localhost:3000'];
+
+// Known app domains (requests to these should never be treated as custom domains)
+const APP_DOMAINS = [
+  'uptimetr.com',
+  'cronuptime.com',
+  'vercel.app',
+  'vercel-dns.com',
+];
 
 // Extract subdomain from host
 function getSubdomain(host: string): string | null {
@@ -39,30 +47,43 @@ function getSubdomain(host: string): string | null {
   return null;
 }
 
+function isCustomDomain(host: string): boolean {
+  const hostWithoutPort = host.split(':')[0];
+  if (hostWithoutPort === 'localhost' || hostWithoutPort === '127.0.0.1') {
+    return false;
+  }
+  return !APP_DOMAINS.some(domain => hostWithoutPort === domain || hostWithoutPort.endsWith(`.${domain}`));
+}
+
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const pathname = request.nextUrl.pathname;
   
+  // Skip static/API routes
+  if (pathname.startsWith('/api') || 
+      pathname.startsWith('/_next') || 
+      pathname.startsWith('/favicon') ||
+      pathname.includes('.')) {
+    return NextResponse.next();
+  }
+
   // Check for subdomain (status page on *.uptimetr.com)
   const subdomain = getSubdomain(host);
   
   if (subdomain) {
-    // Rewrite to status-public route
-    // Don't rewrite API routes or static files
-    if (!pathname.startsWith('/api') && 
-        !pathname.startsWith('/_next') && 
-        !pathname.startsWith('/favicon') &&
-        !pathname.includes('.')) {
-      
-      // Rewrite to /status-public/[subdomain]
-      const url = request.nextUrl.clone();
-      url.pathname = `/status-public/${subdomain}${pathname === '/' ? '' : pathname}`;
-      return NextResponse.rewrite(url);
-    }
+    const url = request.nextUrl.clone();
+    url.pathname = `/status-public/${subdomain}${pathname === '/' ? '' : pathname}`;
+    return NextResponse.rewrite(url);
   }
   
-  // Note: Custom domain support is handled at the route level
-  // to avoid database calls in edge middleware (causes timeout)
+  // Custom domain support: unknown hosts are rewritten to status-public
+  // The page will look up the status page by custom_domain field
+  if (isCustomDomain(host)) {
+    const domain = host.split(':')[0].toLowerCase();
+    const url = request.nextUrl.clone();
+    url.pathname = `/status-public/${domain}${pathname === '/' ? '' : pathname}`;
+    return NextResponse.rewrite(url);
+  }
   
   return NextResponse.next();
 }
