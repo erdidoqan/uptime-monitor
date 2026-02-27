@@ -256,8 +256,8 @@ export function BrowserTestDetailContent({
           <BrowserTestFormCard
             url={bt.url}
             setUrl={bt.setUrl}
-            targetBrowsers={bt.targetBrowsers}
-            setTargetBrowsers={bt.setTargetBrowsers}
+            targetVisits={bt.targetVisits}
+            setTargetVisits={bt.setTargetVisits}
             useProxy={bt.useProxy}
             setUseProxy={bt.setUseProxy}
             trafficSource={bt.trafficSource}
@@ -273,6 +273,7 @@ export function BrowserTestDetailContent({
             isAuth={bt.isAuth}
             userTier={bt.userTier}
             guestTestDone={bt.guestTestDone}
+            guestTestCount={bt.guestTestCount}
             freeTestsUsed={bt.freeTestsUsed}
             runTest={bt.runTest}
             stopTest={bt.stopTest}

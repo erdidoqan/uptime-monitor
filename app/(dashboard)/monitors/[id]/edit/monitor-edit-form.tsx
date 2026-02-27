@@ -516,10 +516,10 @@ https://example.com/b"
               <h2 className="text-lg font-semibold mb-2">Gelişmiş ayarlar</h2>
               <p className="text-sm text-muted-foreground">
                 Burada yapılandıramadığınız ekstra bir şeye ihtiyacınız varsa, lütfen{' '}
-                <a href="mailto:destek@uptimetr.com" className="text-primary hover:underline cursor-pointer">destek@uptimetr.com</a> adresinden bize bildirin, gerçekleştirelim!
+                <a href="/contact" className="text-primary hover:underline cursor-pointer">iletişim sayfasından</a> bize bildirin, gerçekleştirelim!
               </p>
               <p className="text-sm text-muted-foreground mt-4">
-                Sorularınız mı var? <a href="#" className="text-primary hover:underline cursor-pointer">Bize bildirin</a> veya <a href="#" className="text-primary hover:underline cursor-pointer">sık sorulan sorulara</a> göz atın.
+                Sorularınız mı var? <a href="/contact" className="text-primary hover:underline cursor-pointer">Bize bildirin</a> veya <a href="/faq" className="text-primary hover:underline cursor-pointer">sık sorulan sorulara</a> göz atın.
               </p>
             </div>
 

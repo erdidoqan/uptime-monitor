@@ -10,8 +10,8 @@ import {
 } from "@/components/browser-test/browser-test-helpers";
 import { api, ApiError } from "@/lib/api-client";
 import {
-  getMaxBrowsersForTier,
-  getMaxTabsForTier,
+  computeBrowsersAndTabs,
+  SLIDER_MIN,
 } from "@/lib/browser-test-limits";
 import type { UserTier } from "@/lib/browser-test-limits";
 import type { SeoInfo } from "@/lib/load-test-analyze";
@@ -80,7 +80,7 @@ type StreamLine = StreamTabLine | StreamBrowserLine | StreamDoneLine | StreamErr
 
 export interface UseBrowserTestOptions {
   initialUrl?: string;
-  initialBrowsers?: number;
+  initialVisits?: number;
 }
 
 export function useBrowserTest(opts?: UseBrowserTestOptions) {
@@ -102,20 +102,24 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
     finalUrl: string;
     redirectCount: number;
   } | null>(null);
-  const [targetBrowsers, setTargetBrowsers] = useState<number>(opts?.initialBrowsers ?? 5);
+  const [targetVisits, setTargetVisits] = useState<number>(opts?.initialVisits ?? SLIDER_MIN);
   const [useProxy, setUseProxy] = useState(false);
   const [trafficSource, setTrafficSource] = useState<TrafficSource>("organic");
   const [sessionDuration, setSessionDuration] = useState<SessionDuration>("fast");
   const [savingPhase, setSavingPhase] = useState(false);
   const [userTier, setUserTier] = useState<UserTier>("guest");
   const [guestTestDone, setGuestTestDone] = useState(false);
+  const [guestTestCount, setGuestTestCount] = useState<number>(0);
 
   const isAuth = status === "authenticated" && !!session?.user;
 
   useEffect(() => {
     if (!isAuth) {
       const done = localStorage.getItem("guest_browser_test_done");
-      if (done === "true") setGuestTestDone(true);
+      if (done === "true") {
+        setGuestTestDone(true);
+        setGuestTestCount(1);
+      }
     }
   }, [isAuth]);
 
@@ -176,7 +180,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
     const startWall = Date.now();
 
     try {
-      const maxTabs = getMaxTabsForTier(userTier);
+      const { browsers: computedBrowsers, tabsPerBrowser: computedTabs } = computeBrowsersAndTabs(targetVisits);
 
       const startRes = await api.post<{
         token: string;
@@ -188,8 +192,9 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
         redirectInfo?: { originalUrl: string; finalUrl: string; redirectCount: number };
       }>("/browser-test/start", {
         url: url.trim(),
-        targetBrowsers,
-        tabsPerBrowser: maxTabs,
+        targetVisits,
+        targetBrowsers: computedBrowsers,
+        tabsPerBrowser: computedTabs,
         useProxy,
         trafficSource,
         sessionDuration,
@@ -203,7 +208,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
 
       setRampProgress({
         currentBrowser: 0,
-        totalBrowsers: targetBrowsers,
+        totalBrowsers: computedBrowsers,
         liveVisits: 0,
         liveOk: 0,
         liveErrors: 0,
@@ -218,7 +223,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
         },
         body: JSON.stringify({
           url: targetUrl,
-          browsers: targetBrowsers,
+          browsers: computedBrowsers,
           tabsPerBrowser,
           useProxy,
           trafficSource,
@@ -296,7 +301,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
 
             setRampProgress({
               currentBrowser,
-              totalBrowsers: targetBrowsers,
+              totalBrowsers: computedBrowsers,
               liveVisits: cumulativeVisits,
               liveOk: cumulativeOk,
               liveErrors: cumulativeErrors,
@@ -334,6 +339,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
       if (!isAuth) {
         try { localStorage.setItem("guest_browser_test_done", "true"); } catch {}
         setGuestTestDone(true);
+        setGuestTestCount(1);
       }
       if (isAuth && userTier === "free") {
         setFreeTestsUsed((prev) => prev + 1);
@@ -343,7 +349,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
       setSavingPhase(true);
 
       const rampSteps: BrowserTestStepResult[] = [{
-        browsers: targetBrowsers,
+        browsers: computedBrowsers,
         tabsPerBrowser,
         totalVisits,
         ok: totalOk,
@@ -412,7 +418,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
       api.post("/browser-test/analyze", {
         runId,
         url,
-        targetBrowsers,
+        targetBrowsers: computedBrowsers,
         totalVisits,
         totalOk,
         totalErrors,
@@ -461,6 +467,7 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
       if (e instanceof ApiError && e.data) {
         if (e.data.requiresAuth) {
           setGuestTestDone(true);
+          setGuestTestCount(1);
           try { localStorage.setItem("guest_browser_test_done", "true"); } catch {}
         }
         if (e.data.domainWarning) {
@@ -491,18 +498,18 @@ export function useBrowserTest(opts?: UseBrowserTestOptions) {
       setRampProgress(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, targetBrowsers, useProxy, trafficSource, sessionDuration, isAuth, userTier, router]);
+  }, [url, targetVisits, useProxy, trafficSource, sessionDuration, isAuth, userTier, router]);
 
   return {
     url, setUrl,
-    targetBrowsers, setTargetBrowsers,
+    targetVisits, setTargetVisits,
     useProxy, setUseProxy,
     trafficSource, setTrafficSource,
     sessionDuration, setSessionDuration,
     loading, rampProgress, error,
     domainWarning, redirectInfo,
     savingPhase,
-    isAuth, userTier, guestTestDone, freeTestsUsed,
+    isAuth, userTier, guestTestDone, guestTestCount, freeTestsUsed,
     runTest, stopTest,
   };
 }

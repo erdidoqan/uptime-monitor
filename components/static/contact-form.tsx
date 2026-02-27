@@ -23,14 +23,25 @@ export function ContactForm() {
     setSubmitting(true);
     setError(null);
 
-    // For now, just simulate a submission
-    // In production, this would send to an API endpoint
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Mesaj gönderilemedi.");
+      }
+
       setSuccess(true);
       setForm({ name: "", email: "", subject: "", message: "" });
-    } catch {
-      setError("Failed to send message. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Mesaj gönderilemedi. Lütfen tekrar deneyin."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -40,16 +51,17 @@ export function ContactForm() {
     return (
       <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-8 text-center">
         <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Message Sent!</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">Mesajınız Gönderildi!</h3>
         <p className="text-gray-400 mb-4">
-          Thank you for reaching out. We&apos;ll get back to you as soon as possible.
+          Bizimle iletişime geçtiğiniz için teşekkürler. En kısa sürede size dönüş yapacağız.
         </p>
         <Button
+          type="button"
           variant="outline"
           onClick={() => setSuccess(false)}
           className="border-white/10 text-white hover:bg-white/5"
         >
-          Send Another Message
+          Başka Bir Mesaj Gönder
         </Button>
       </div>
     );
@@ -60,27 +72,27 @@ export function ContactForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name" className="text-gray-300">
-            Name
+            Ad Soyad
           </Label>
           <Input
             id="name"
             value={form.name}
             onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="Your name"
+            placeholder="Adınız Soyadınız"
             required
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="email" className="text-gray-300">
-            Email
+            E-posta
           </Label>
           <Input
             id="email"
             type="email"
             value={form.email}
             onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-            placeholder="your@email.com"
+            placeholder="ornek@eposta.com"
             required
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
           />
@@ -89,13 +101,13 @@ export function ContactForm() {
 
       <div className="space-y-2">
         <Label htmlFor="subject" className="text-gray-300">
-          Subject
+          Konu
         </Label>
         <Input
           id="subject"
           value={form.subject}
           onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
-          placeholder="How can we help?"
+          placeholder="Size nasıl yardımcı olabiliriz?"
           required
           className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
         />
@@ -103,13 +115,13 @@ export function ContactForm() {
 
       <div className="space-y-2">
         <Label htmlFor="message" className="text-gray-300">
-          Message
+          Mesaj
         </Label>
         <Textarea
           id="message"
           value={form.message}
           onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
-          placeholder="Tell us more..."
+          placeholder="Mesajınızı buraya yazın..."
           rows={6}
           required
           className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
@@ -131,37 +143,12 @@ export function ContactForm() {
         {submitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending...
+            Gönderiliyor...
           </>
         ) : (
-          "Send Message"
+          "Mesaj Gönder"
         )}
       </Button>
     </form>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

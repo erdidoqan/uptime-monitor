@@ -44,6 +44,7 @@ interface JWTPayload {
   useProxy?: boolean;
   trafficSource?: TrafficSource;
   sessionDuration?: SessionDuration;
+  urlPool?: string[];
 }
 
 interface WebVitals {
@@ -665,6 +666,7 @@ interface StreamingOpts {
   trafficSource: TrafficSource;
   sessionDurationMs: number;
   region?: string;
+  urlPool: string[];
 }
 
 /**
@@ -705,9 +707,10 @@ async function runBrowserBatchStreaming(
 
     try {
       for (let t = 0; t < opts.tabsPerBrowser; t++) {
+        const tabUrl = opts.urlPool[Math.floor(Math.random() * opts.urlPool.length)];
         const proxy = opts.shouldProxy ? getProxyConfig(opts.env) : null;
         const result = await runTab(
-          browser, opts.targetUrl, proxy, opts.trafficSource, opts.sessionDurationMs, opts.region,
+          browser, tabUrl, proxy, opts.trafficSource, opts.sessionDurationMs, opts.region,
         );
 
         if (result.ok && result.vitals) {
@@ -731,6 +734,7 @@ async function runBrowserBatchStreaming(
         write({
           type: 'tab',
           ok: result.ok,
+          url: tabUrl,
           vitals: result.vitals,
           error: result.error ?? null,
           errorDetail: result.errorDetail ?? null,
@@ -930,6 +934,7 @@ export default {
       useProxy?: boolean;
       trafficSource?: string;
       sessionDuration?: string;
+      urlPool?: string[];
     };
     try {
       body = await request.json() as typeof body;
@@ -976,9 +981,16 @@ export default {
     const { readable, writable } = new TransformStream<Uint8Array>();
     const writer = writable.getWriter();
 
+    const resolvedUrlPool = (Array.isArray(body.urlPool) && body.urlPool.length > 0)
+      ? body.urlPool
+      : (Array.isArray(payload.urlPool) && payload.urlPool.length > 0)
+        ? payload.urlPool
+        : [targetUrl];
+
     const streamingOpts: StreamingOpts = {
       env, targetUrl, browserCount: browsers, tabsPerBrowser: tabs,
       shouldProxy, trafficSource, sessionDurationMs, region: env.REGION,
+      urlPool: resolvedUrlPool,
     };
 
     // Fire-and-forget: run in background, close writer when done

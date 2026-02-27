@@ -19,6 +19,10 @@ import {
   Clock,
   ShieldBan,
   ShieldCheck,
+  MousePointerClick,
+  Megaphone,
+  Play,
+  Pause,
 } from 'lucide-react';
 
 interface UserDetail {
@@ -71,6 +75,36 @@ interface UserDetail {
     p95: number | null;
     status: string;
     stopped_reason: string | null;
+    created_at: number;
+  }[];
+  browserTests: {
+    id: string;
+    url: string;
+    target_url: string;
+    target_browsers: number;
+    tabs_per_browser: number;
+    total_visits: number;
+    total_ok: number;
+    total_errors: number;
+    duration_sec: number;
+    status: string;
+    stopped_reason: string | null;
+    ip_address: string | null;
+    created_at: number;
+  }[];
+  trafficCampaigns: {
+    id: string;
+    name: string;
+    url: string;
+    daily_visitors: number;
+    traffic_source: string;
+    session_duration: string;
+    use_proxy: number;
+    is_active: number;
+    last_run_at: number | null;
+    last_status: string | null;
+    total_runs: number;
+    total_visits_sent: number;
     created_at: number;
   }[];
   subscription: {
@@ -442,6 +476,122 @@ export function AdminUserDetail({
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Browser Tests */}
+          <Card className="gap-0">
+            <div className="flex items-center gap-2 px-4 py-3 border-b text-sm font-medium">
+              <MousePointerClick className="h-4 w-4" />
+              Trafik Gönderimleri
+              <Badge variant="secondary" className="text-xs ml-auto">{data.browserTests.length}</Badge>
+            </div>
+            <div className="px-4 py-3">
+              {data.browserTests.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Trafik gönderimi yok</p>
+              ) : (
+                <div className="divide-y">
+                  {data.browserTests.map((bt) => {
+                    const totalVisits = bt.total_visits || bt.target_browsers * bt.tabs_per_browser;
+                    return (
+                      <div key={bt.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {bt.status === 'completed' ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                          ) : bt.status === 'running' ? (
+                            <Clock className="h-4 w-4 text-amber-500 shrink-0 animate-pulse" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                          )}
+                          <UrlLink url={bt.target_url || bt.url} />
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {bt.status}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1 ml-6">
+                          <span>{bt.target_browsers} browser × {bt.tabs_per_browser} tab</span>
+                          <span>{bt.total_ok}/{totalVisits} başarılı</span>
+                          {bt.total_errors > 0 && <span className="text-red-400">{bt.total_errors} hata</span>}
+                          {bt.stopped_reason && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              {bt.stopped_reason}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 ml-6">
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(bt.created_at)}
+                            {bt.duration_sec > 0 && ` · ${Math.round(bt.duration_sec)}s`}
+                            {bt.ip_address && ` · IP: ${bt.ip_address}`}
+                          </p>
+                          <a
+                            href={`/browser-test/${bt.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                          >
+                            Detay
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Traffic Campaigns */}
+          <Card className="gap-0">
+            <div className="flex items-center gap-2 px-4 py-3 border-b text-sm font-medium">
+              <Megaphone className="h-4 w-4" />
+              Trafik Kampanyaları
+              <Badge variant="secondary" className="text-xs ml-auto">{data.trafficCampaigns.length}</Badge>
+            </div>
+            <div className="px-4 py-3">
+              {data.trafficCampaigns.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Trafik kampanyası yok</p>
+              ) : (
+                <div className="divide-y">
+                  {data.trafficCampaigns.map((tc) => (
+                    <div key={tc.id} className="py-2.5 first:pt-0 last:pb-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {tc.is_active ? (
+                          <Play className="h-4 w-4 text-green-500 shrink-0" />
+                        ) : (
+                          <Pause className="h-4 w-4 text-gray-400 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium truncate">{tc.name}</span>
+                        {!tc.is_active && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">Pasif</Badge>
+                        )}
+                        {tc.last_status && (
+                          <Badge
+                            variant={tc.last_status.startsWith('error') ? 'destructive' : 'outline'}
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            {tc.last_status}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="ml-6 mt-0.5"><UrlLink url={tc.url} /></div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1 ml-6">
+                        <span>{tc.daily_visitors} günlük ziyaretçi</span>
+                        <span>{tc.traffic_source}</span>
+                        <span>{tc.session_duration}</span>
+                        {tc.use_proxy ? <span>🇹🇷 Proxy</span> : <span>🇺🇸 Direkt</span>}
+                        <span>{tc.total_runs} çalışma</span>
+                        <span>{tc.total_visits_sent} toplam ziyaret</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 ml-6">
+                        Oluşturulma: {formatDate(tc.created_at)}
+                        {tc.last_run_at && ` · Son çalışma: ${formatDate(tc.last_run_at)}`}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

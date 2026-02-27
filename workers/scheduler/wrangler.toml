@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 account_id = "0f6cb9b6c5fb3a6db6781f0dc9f36844" # Erdi.doqan@gmail.com's Account
 
 [triggers]
-crons = ["*/1 * * * *", "*/10 * * * *", "0 3 * * *"]
+crons = ["*/1 * * * *", "*/10 * * * *", "0 3 * * *", "0 8 * * *"]
 
 # Environment variables for D1 database access
 # These should be set as secrets in Cloudflare:
@@ -23,6 +23,11 @@ crons = ["*/1 * * * *", "*/10 * * * *", "0 3 * * *"]
 # CLOUDFLARE_D1_API_TOKEN = "your-api-token"
 # TR_PROXY_URL = "http://your-tr-server:3000/proxy"
 # TR_PROXY_SECRET = "your-secret"
+
+# Service binding for browser test worker
+[[services]]
+binding = "BROWSER_TEST_WORKER"
+service = "uptime-browser-test"
 
 # R2 Bucket binding for monitor checks storage
 [[r2_buckets]]

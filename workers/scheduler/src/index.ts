@@ -26,6 +26,7 @@ interface Env {
   // Browser test worker
   BROWSER_TEST_WORKER_URL?: string;
   BROWSER_TEST_JWT_SECRET?: string;
+  BROWSER_TEST_WORKER?: Fetcher;
 }
 
 function getD1Client(env: Env): D1Client {
@@ -1098,42 +1099,67 @@ async function cleanupStaleLocks(db: D1Client) {
 }
 
 /**
- * Gunluk kampanya emaili: load test yapmis free kullanicilara Pro upgrade maili gonder.
- * Next.js API'yi cagirir, API hedef kitleyi sorgular ve emailleri gonderir.
+ * Gunluk kampanya emaili: Her gun 08:00 UTC (11:00 TR) tum kayitli kullanicilara gonderilir.
+ * Tarih bazli kampanya adi kullanilir (orn: daily_2026-02-27) → her gun yeni kampanya.
+ * Birden fazla batch ile tum kullanicilar kapsanir.
  */
 async function sendDailyCampaignEmails(env: Env): Promise<void> {
   const apiUrl = env.NEXT_PUBLIC_APP_URL || 'https://www.uptimetr.com';
   const secret = env.CAMPAIGN_API_SECRET;
   if (!secret) return;
 
-  try {
-    const res = await fetch(`${apiUrl}/api/email/campaign`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Campaign-Secret': secret,
-      },
-      body: JSON.stringify({
-        campaign: 'pro_upgrade_loadtest_v1',
-        limit: 50,
-      }),
-    });
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  const campaign = `daily_${today}`;
+  const BATCH_SIZE = 5;
+  const MAX_BATCHES = 1000;
+  let totalSent = 0;
+  let totalErrors = 0;
+  let batch = 0;
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[campaign] API returned ${res.status}: ${text}`);
-      return;
+  try {
+    while (batch < MAX_BATCHES) {
+      batch++;
+      const res = await fetch(`${apiUrl}/api/email/campaign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Campaign-Secret': secret,
+        },
+        body: JSON.stringify({
+          campaign,
+          limit: BATCH_SIZE,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`[campaign] API returned ${res.status}: ${text}`);
+        break;
+      }
+
+      const data = await res.json() as { sent?: number; errors?: number; totalTargets?: number };
+      const sent = data.sent ?? 0;
+      const errors = data.errors ?? 0;
+      totalSent += sent;
+      totalErrors += errors;
+
+      console.log(`[campaign] Batch ${batch}: ${sent} sent, ${errors} errors (total so far: ${totalSent})`);
+
+      if ((data.totalTargets ?? 0) < BATCH_SIZE) break;
+      if (sent === 0 && errors === 0) break;
+
+      // Batch'ler arasi 1s bekleme (Vercel rate limit korumasi)
+      await new Promise((r) => setTimeout(r, 1000));
     }
 
-    const data = await res.json() as { sent?: number; errors?: number; totalTargets?: number };
-    console.log(`[campaign] Daily send complete: ${data.sent ?? 0} sent, ${data.errors ?? 0} errors, ${data.totalTargets ?? 0} targets`);
+    console.log(`[campaign] Daily send complete (${campaign}): ${totalSent} sent, ${totalErrors} errors in ${batch} batches`);
   } catch (err) {
     console.error('[campaign] Failed to call campaign API:', err);
   }
 }
 
 async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionContext) {
-  if (!env.BROWSER_TEST_WORKER_URL || !env.BROWSER_TEST_JWT_SECRET) {
+  if (!env.BROWSER_TEST_JWT_SECRET || (!env.BROWSER_TEST_WORKER && !env.BROWSER_TEST_WORKER_URL)) {
     return;
   }
 
@@ -1154,10 +1180,11 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
     end_hour: number;
     total_visits_sent: number;
     total_runs: number;
+    url_pool: string | null;
   }>(
     `SELECT id, user_id, url, daily_visitors, browsers_per_run, tabs_per_browser,
             traffic_source, session_duration, use_proxy, start_hour, end_hour,
-            total_visits_sent, total_runs
+            total_visits_sent, total_runs, url_pool
      FROM traffic_campaigns
      WHERE is_active = 1
        AND next_run_at <= ?
@@ -1195,6 +1222,11 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
       const browsers = campaign.browsers_per_run;
       const tabs = campaign.tabs_per_browser;
 
+      let urlPool: string[] | undefined;
+      if (campaign.url_pool) {
+        try { urlPool = JSON.parse(campaign.url_pool); } catch {}
+      }
+
       const token = await new SignJWT({
         url: campaign.url,
         maxBrowsers: browsers,
@@ -1204,26 +1236,46 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
         useProxy: !!campaign.use_proxy,
         trafficSource: campaign.traffic_source,
         sessionDuration: campaign.session_duration,
+        ...(urlPool && urlPool.length > 0 ? { urlPool } : {}),
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setExpirationTime('10m')
         .sign(jwtSecretBytes);
 
-      const response = await fetch(`${workerBaseUrl}/browser-test-batch`, {
+      const requestBody = JSON.stringify({
+        url: campaign.url,
+        browsers,
+        tabsPerBrowser: tabs,
+        useProxy: !!campaign.use_proxy,
+        trafficSource: campaign.traffic_source,
+        sessionDuration: campaign.session_duration,
+        ...(urlPool && urlPool.length > 0 ? { urlPool } : {}),
+      });
+
+      const requestInit: RequestInit = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          url: campaign.url,
-          browsers,
-          tabsPerBrowser: tabs,
-          useProxy: !!campaign.use_proxy,
-          trafficSource: campaign.traffic_source,
-          sessionDuration: campaign.session_duration,
-        }),
-      });
+        body: requestBody,
+      };
+
+      let response: Response;
+      const useServiceBinding = !!campaign.use_proxy && env.BROWSER_TEST_WORKER;
+
+      if (useServiceBinding) {
+        console.log(`[campaign] Using TR worker (service binding) for ${campaign.id}, browsers=${browsers}, tabs=${tabs}`);
+        response = await env.BROWSER_TEST_WORKER!.fetch(
+          new Request('https://browser-test/browser-test-batch', requestInit)
+        );
+      } else if (workerBaseUrl) {
+        console.log(`[campaign] Using US worker (${workerBaseUrl}) for ${campaign.id}, browsers=${browsers}, tabs=${tabs}`);
+        response = await fetch(`${workerBaseUrl}/browser-test-batch`, requestInit);
+      } else {
+        console.error(`[campaign] No worker available for campaign ${campaign.id}`);
+        continue;
+      }
 
       let visitsSent = 0;
       let lastStatus = 'error';
@@ -1287,13 +1339,20 @@ async function runScheduledTask(env: Env, cron?: string, ctx?: ExecutionContext)
   const db = getD1Client(env);
 
   if (cron === '0 3 * * *') {
-    // Daily prune at 3 AM
+    // Daily prune at 3 AM UTC
     await pruneLogs(db);
-    // Daily campaign emails — yeni load test yapmis free kullanicilara
+  } else if (cron === '0 8 * * *') {
+    // Daily campaign emails at 08:00 UTC (11:00 TR)
+    // ctx.waitUntil ile worker timeout'u asilir (30dk'ya kadar)
     if (env.CAMPAIGN_API_SECRET) {
-      await sendDailyCampaignEmails(env).catch((err) => {
+      const emailPromise = sendDailyCampaignEmails(env).catch((err) => {
         console.error('[scheduler] Campaign email error:', err);
       });
+      if (ctx) {
+        ctx.waitUntil(emailPromise);
+      } else {
+        await emailPromise;
+      }
     }
   } else if (cron === '*/10 * * * *') {
     // Every 10 minutes: flush all buffers (safety flush)

@@ -10,7 +10,7 @@ export { isValidTargetUrl };
 
 export type UserTier = 'guest' | 'free' | 'pro' | 'enterprise';
 
-/* ───────── Browser Limits ───────── */
+/* ───────── Browser Limits (legacy, used by worker) ───────── */
 
 export const GUEST_MAX_BROWSERS = 3;
 export const FREE_MAX_BROWSERS = 5;
@@ -20,10 +20,22 @@ export const GUEST_MAX_TABS = 3;
 export const FREE_MAX_TABS = 5;
 export const PRO_MAX_TABS = 10;
 
+/* ───────── Visit-based Limits ───────── */
+
+export const TABS_PER_BROWSER = 10;
+
+export const GUEST_MAX_VISITS = 10;
+export const FREE_MAX_VISITS = 30;
+export const PRO_MAX_VISITS = 300;
+
+export const SLIDER_MIN = 10;
+export const SLIDER_MAX = 300;
+export const SLIDER_STEP = 10;
+
 /** Misafir toplam test hakkı (hayat boyu) */
 export const GUEST_MAX_TESTS = 1;
 /** Giriş yapmış (free) kullanıcı toplam test hakkı */
-export const FREE_MAX_TESTS = 2;
+export const FREE_MAX_TESTS = 3;
 
 /** JWT expiration */
 export const JWT_EXPIRY_SEC = 10 * 60; // 10 minutes (browser tests are slower)
@@ -44,6 +56,25 @@ export function getMaxTabsForTier(tier: UserTier): number {
     case 'pro':
     case 'enterprise': return PRO_MAX_TABS;
   }
+}
+
+export function getMaxVisitsForTier(tier: UserTier): number {
+  switch (tier) {
+    case 'guest': return GUEST_MAX_VISITS;
+    case 'free': return FREE_MAX_VISITS;
+    case 'pro':
+    case 'enterprise': return PRO_MAX_VISITS;
+  }
+}
+
+/**
+ * Ziyaret sayısından browser ve tab hesapla.
+ * Her browser sabit 10 tab açar.
+ */
+export function computeBrowsersAndTabs(targetVisits: number): { browsers: number; tabsPerBrowser: number } {
+  const clamped = Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, targetVisits));
+  const browsers = Math.round(clamped / TABS_PER_BROWSER);
+  return { browsers: Math.max(1, browsers), tabsPerBrowser: TABS_PER_BROWSER };
 }
 
 /* ───────── Ramp Steps ───────── */
@@ -90,4 +121,9 @@ export function isValidBrowserCount(n: number, maxAllowed?: number): boolean {
 export function isValidTabCount(n: number, maxAllowed?: number): boolean {
   const max = maxAllowed ?? PRO_MAX_TABS;
   return typeof n === 'number' && n >= 1 && n <= max && Number.isInteger(n);
+}
+
+export function isValidVisitCount(n: number, maxAllowed?: number): boolean {
+  const max = maxAllowed ?? PRO_MAX_VISITS;
+  return typeof n === 'number' && n >= SLIDER_MIN && n <= max && n % SLIDER_STEP === 0;
 }

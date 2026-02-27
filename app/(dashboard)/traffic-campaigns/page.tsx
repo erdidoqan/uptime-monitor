@@ -1,12 +1,10 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { serverApi } from '@/lib/server-api-client';
 import { ApiError } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { CampaignList } from './campaign-list';
 
 interface TrafficCampaign {
@@ -33,16 +31,25 @@ interface TrafficCampaign {
   updated_at: number | null;
 }
 
-async function getCampaignsData(): Promise<TrafficCampaign[]> {
+interface CampaignsResponse {
+  campaigns: TrafficCampaign[];
+  isPro: boolean;
+  limits: {
+    maxCampaigns: number;
+    maxDailyVisitors: number;
+  };
+}
+
+async function getCampaignsData(): Promise<CampaignsResponse> {
   try {
-    const campaigns = await serverApi.get<TrafficCampaign[]>('/traffic-campaigns');
-    return campaigns;
+    const data = await serverApi.get<CampaignsResponse>('/traffic-campaigns');
+    return data;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       redirect('/login');
     }
     console.error('Failed to load campaigns:', error);
-    return [];
+    return { campaigns: [], isPro: false, limits: { maxCampaigns: 1, maxDailyVisitors: 50 } };
   }
 }
 
@@ -88,8 +95,8 @@ function CampaignListSkeleton() {
 }
 
 async function CampaignsListWrapper() {
-  const campaigns = await getCampaignsData();
-  return <CampaignList initialCampaigns={campaigns} />;
+  const { campaigns, isPro, limits } = await getCampaignsData();
+  return <CampaignList initialCampaigns={campaigns} isPro={isPro} limits={limits} />;
 }
 
 export default function TrafficCampaignsPage() {
@@ -97,12 +104,6 @@ export default function TrafficCampaignsPage() {
     <div className="flex flex-col mx-auto px-5 py-8 lg:pt-20 max-w-[1040px] h-[calc(100%-52px)]">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Trafik Kampanyaları</h1>
-        <Button size="sm" asChild>
-          <Link href="/traffic-campaigns/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Kampanya Oluştur
-          </Link>
-        </Button>
       </div>
 
       <Suspense fallback={<CampaignListSkeleton />}>

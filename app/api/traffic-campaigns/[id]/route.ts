@@ -27,7 +27,12 @@ export async function GET(
       return errorResponse('Kampanya bulunamadı', 404);
     }
 
-    return successResponse(campaign);
+    const parsed = { ...campaign as Record<string, any> };
+    if (parsed.url_pool && typeof parsed.url_pool === 'string') {
+      try { parsed.url_pool = JSON.parse(parsed.url_pool); } catch { parsed.url_pool = null; }
+    }
+
+    return successResponse(parsed);
   } catch (error: any) {
     console.error('Get traffic campaign error:', error);
     return errorResponse(error.message || 'Failed to fetch campaign', 500);
@@ -89,6 +94,12 @@ export async function PUT(
     if (body.end_hour !== undefined) {
       updates.push('end_hour = ?');
       values.push(body.end_hour);
+    }
+    if (body.url_pool !== undefined) {
+      updates.push('url_pool = ?');
+      values.push(Array.isArray(body.url_pool) && body.url_pool.length > 0
+        ? JSON.stringify(body.url_pool)
+        : null);
     }
 
     if (body.is_active !== undefined) {

@@ -83,7 +83,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="hidden lg:flex">
+    <Sidebar>
       <SidebarHeader className="border-b">
         <Link href="/" className="flex items-center gap-2 px-4 py-3 hover:opacity-80 transition-opacity">
           <Image 

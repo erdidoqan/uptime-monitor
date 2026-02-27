@@ -214,12 +214,8 @@ export function BrowserTestReport({
           <dd className="text-white">{formatDuration(report.durationSec)}</dd>
         </div>
         <div>
-          <dt className="text-gray-400">Hedef kullanıcı</dt>
-          <dd className="text-white">{report.targetBrowsers}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-400">Sayfa/kullanıcı</dt>
-          <dd className="text-white">{report.tabsPerBrowser}</dd>
+          <dt className="text-gray-400">Hedef ziyaret</dt>
+          <dd className="text-white">{report.targetBrowsers * report.tabsPerBrowser}</dd>
         </div>
       </dl>
 

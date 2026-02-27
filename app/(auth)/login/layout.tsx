@@ -1,14 +1,14 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Login",
-  description: "Sign in to UptimeTR to manage your cron jobs and uptime monitors.",
+  title: "Giriş Yap - UptimeTR",
+  description: "UptimeTR hesabınıza giriş yaparak uptime izleme, cron job yönetimi ve trafik gönderimi özelliklerini kullanın.",
   alternates: {
     canonical: "https://www.uptimetr.com/login",
   },
   openGraph: {
-    title: "Login - UptimeTR",
-    description: "Sign in to UptimeTR to manage your cron jobs and uptime monitors.",
+    title: "Giriş Yap - UptimeTR",
+    description: "UptimeTR hesabınıza giriş yaparak uptime izleme, cron job yönetimi ve trafik gönderimi özelliklerini kullanın.",
   },
 };
 

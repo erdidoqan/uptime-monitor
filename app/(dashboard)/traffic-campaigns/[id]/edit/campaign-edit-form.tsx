@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Globe, Search, Share2, Zap, Timer, Hourglass, Users, Calculator, Trash2 } from 'lucide-react';
+import { Globe, Search, Share2, Zap, Timer, Hourglass, Users, Calculator, Trash2, Rss, Loader2, X, ExternalLink, Crown } from 'lucide-react';
 
 type TrafficSource = 'direct' | 'organic' | 'social';
 type SessionDuration = 'fast' | 'realistic' | 'long';
@@ -35,6 +35,19 @@ interface TrafficCampaign {
   start_hour: number;
   end_hour: number;
   is_active: number;
+  url_pool: string[] | null;
+}
+
+const POLAR_CHECKOUT_URL =
+  'https://buy.polar.sh/polar_cl_pbGzjD0Vi4y7yngJdFz03qka4EnPzE5JalPGR0mqJ8o';
+
+async function openPolarCheckout() {
+  try {
+    const { PolarEmbedCheckout } = await import('@polar-sh/checkout/embed');
+    await PolarEmbedCheckout.create(POLAR_CHECKOUT_URL, { theme: 'dark' });
+  } catch {
+    window.open(POLAR_CHECKOUT_URL, '_blank');
+  }
 }
 
 interface CampaignEditFormProps {
@@ -47,6 +60,17 @@ export function CampaignEditForm({ campaign }: CampaignEditFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+  const [urlPool, setUrlPool] = useState<string[]>(campaign.url_pool ?? []);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoverSource, setDiscoverSource] = useState<'rss' | 'sitemap' | 'none' | null>(null);
+  const [discoverError, setDiscoverError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<{ hasActiveSubscription: boolean }>('/subscription')
+      .then((res) => setIsPro(res.hasActiveSubscription))
+      .catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({
     name: campaign.name,
@@ -69,6 +93,37 @@ export function CampaignEditForm({ campaign }: CampaignEditFormProps) {
     const runsPerDay = Math.ceil(form.daily_visitors / visitsPerRun);
     return { visitsPerRun, workingHours, runsPerDay };
   }, [form.daily_visitors, form.browsers_per_run, form.tabs_per_browser, form.start_hour, form.end_hour]);
+
+  async function handleDiscover() {
+    if (!form.url.trim() || !form.url.startsWith('http')) {
+      setDiscoverError('Önce geçerli bir URL girin');
+      return;
+    }
+    setDiscovering(true);
+    setDiscoverError(null);
+    setDiscoverSource(null);
+    try {
+      const res = await api.post<{ urls: string[]; source: 'rss' | 'sitemap' | 'none' }>(
+        '/traffic-campaigns/discover',
+        { url: form.url }
+      );
+      setDiscoverSource(res.source);
+      if (res.urls.length > 0) {
+        setUrlPool(res.urls);
+      } else {
+        setUrlPool([]);
+        setDiscoverError('RSS veya Sitemap bulunamadı. Tüm trafik ana URL\'e gönderilecek.');
+      }
+    } catch (err) {
+      if (err instanceof ApiError && (err as any).requiresPro) {
+        setDiscoverError('Bu özellik Pro plana özeldir.');
+      } else {
+        setDiscoverError('URL keşfi sırasında hata oluştu');
+      }
+    } finally {
+      setDiscovering(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,6 +151,7 @@ export function CampaignEditForm({ campaign }: CampaignEditFormProps) {
         start_hour: form.start_hour,
         end_hour: form.end_hour,
         use_proxy: form.use_proxy ? 1 : 0,
+        url_pool: urlPool.length > 0 ? urlPool : null,
       });
       router.push(`/traffic-campaigns/${campaign.id}`);
     } catch (err) {
@@ -156,6 +212,84 @@ export function CampaignEditForm({ campaign }: CampaignEditFormProps) {
                       placeholder="https://example.com"
                       required
                     />
+
+                    {isPro ? (
+                      <div className="space-y-3 pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={discovering || !form.url.trim()}
+                          onClick={(e) => { e.preventDefault(); handleDiscover(); }}
+                          className="gap-2"
+                        >
+                          {discovering ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Rss className="h-4 w-4" />
+                          )}
+                          {discovering ? 'Keşfediliyor...' : urlPool.length > 0 ? 'Yeniden Yükle' : 'Sayfa Linklerini Yükle'}
+                        </Button>
+
+                        {urlPool.length > 0 && (
+                          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                {discoverSource ? (discoverSource === 'rss' ? 'RSS' : 'Sitemap') + ' — ' : ''}{urlPool.length} sayfa
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setUrlPool([]); setDiscoverSource(null); }}
+                                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                              >
+                                Temizle
+                              </button>
+                            </div>
+                            <div className="max-h-48 overflow-y-auto space-y-1">
+                              {urlPool.map((u, i) => {
+                                let pathname = u;
+                                try { pathname = new URL(u).pathname; } catch {}
+                                return (
+                                  <div key={i} className="flex items-center gap-2 text-xs group">
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="truncate flex-1">{pathname}</span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setUrlPool(prev => prev.filter((_, idx) => idx !== i));
+                                      }}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    >
+                                      <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Trafik bu sayfalar arasında dağıtılacak.
+                            </p>
+                          </div>
+                        )}
+
+                        {discoverError && (
+                          <p className="text-xs text-amber-500">{discoverError}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        <Crown className="h-3 w-3 inline mr-1" />
+                        Pro ile site sayfalarınızı otomatik keşfedebilirsiniz.{' '}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+                          className="text-purple-400 hover:text-purple-300 font-medium cursor-pointer"
+                        >
+                          Pro&apos;ya geç →
+                        </button>
+                      </p>
+                    )}
                   </div>
 
                   <div className="border-t -mx-6" />

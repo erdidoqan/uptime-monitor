@@ -19,7 +19,7 @@ interface TargetUser {
 
 const CAMPAIGN_SECRET = process.env.CAMPAIGN_API_SECRET;
 const FROM_EMAIL = process.env.UNOSEND_FROM_EMAIL || '[email protected]';
-const BATCH_DELAY_MS = 500; // Rate limiting: her email arasinda 500ms bekleme
+const BATCH_DELAY_MS = 150;
 
 /**
  * POST /api/email/campaign
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const campaign: string = body.campaign;
     const dryRun: boolean = body.dryRun === true;
-    const limit: number = Math.min(body.limit || 50, 200); // Max 200 per batch
+    const limit: number = Math.min(body.limit || 100, 500);
     const testEmail: string | undefined = body.testEmail;
     const testLoadTestId: string | undefined = body.testLoadTestId;
 
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
         return errorResponse(`Kullanici bulunamadi: ${testEmail}`, 404);
       }
 
-      // Test icin load test bul
       let loadTest: { id: string; url: string; target_concurrent_users: number } | null = null;
       if (testLoadTestId) {
         loadTest = await db.queryFirst(
@@ -83,27 +82,21 @@ export async function POST(request: NextRequest) {
           [user.id],
         );
       }
-      if (!loadTest) {
-        // Fallback: herhangi bir load test (demo amacli)
-        loadTest = await db.queryFirst(
-          `SELECT id, url, target_concurrent_users FROM load_tests 
-           WHERE status IN ('completed', 'stopped', 'smart_stopped')
-           ORDER BY created_at DESC LIMIT 1`,
-        );
-      }
 
       targets = [{
         id: user.id,
         email: user.email,
         name: user.name,
-        load_test_id: loadTest?.id || 'demo',
-        test_url: loadTest?.url || 'https://example.com',
-        target_concurrent_users: loadTest?.target_concurrent_users || 100,
+        load_test_id: loadTest?.id || null,
+        test_url: loadTest?.url || null,
+        target_concurrent_users: loadTest?.target_concurrent_users || null,
       }];
     } else {
       // ─── Normal mod: Hedef kitle sorgusu ───
-      // Tum free kullanicilar (aktif aboneligi olmayanlar) + 
-      // abonelikten cikmamis + bu kampanyayla daha once mail almamis
+      // Tum kayitli kullanicilar:
+      //   - Abonelikten cikmamis (email_unsubscribes)
+      //   - Bu kampanyayla daha once mail almamis (email_sends)
+      //   - Banlanmamis
       // Load test yapmis olanlar icin en son test sonucu da dahil edilir
       targets = await db.queryAll<TargetUser>(
         `SELECT u.id, u.email, u.name,
@@ -114,14 +107,12 @@ export async function POST(request: NextRequest) {
                   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn
            FROM load_tests
          ) lt ON lt.user_id = u.id AND lt.rn = 1
-         LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
          LEFT JOIN email_unsubscribes eu ON eu.user_id = u.id
          LEFT JOIN email_sends es ON es.user_id = u.id AND es.campaign = ?
-         WHERE s.id IS NULL
-           AND eu.id IS NULL
+         WHERE eu.id IS NULL
            AND es.id IS NULL
            AND (u.is_banned IS NULL OR u.is_banned = 0)
-         ORDER BY lt.created_at DESC NULLS LAST
+         ORDER BY u.created_at ASC
          LIMIT ?`,
         [campaign, limit],
       );
@@ -180,10 +171,17 @@ export async function POST(request: NextRequest) {
           unsubscribeUrl,
         });
 
-        // Subject: load test yapanlara vs yapmayanlara farkli
-        const subject = hasLoadTest
-          ? 'Yük testi sonuçlarınız hazır! + %25 indirim kodu'
-          : 'Siteniz kaç kişiyi kaldırıyor? Ücretsiz test edin + %25 indirim';
+        const subjects = [
+          'Sitenize gerçek trafik gönderin — UptimeTR',
+          'Siteniz kaç kişiyi kaldırıyor? Hemen test edin',
+          'Ücretsiz yük testi + %25 Pro indirim kodu',
+          'Web sitenizi 7/24 izleyin — UptimeTR',
+          'Sitenize organik ziyaretçi gönderin, Analytics\'te görün',
+          'Gerçek tarayıcı trafiği ile sitenizi canlandırın',
+          'UptimeTR ile sitenizin performansını ölçün',
+        ];
+        const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+        const subject = subjects[dayOfYear % subjects.length];
 
         // Unosend ile gonder
         const { error: sendError } = await unosend.emails.send({

@@ -36,7 +36,7 @@ export async function GET(
       return notFoundResponse('Kullanıcı bulunamadı');
     }
 
-    const [monitors, cronJobs, statusPages, loadTests, subscription] = await Promise.all([
+    const [monitors, cronJobs, statusPages, loadTests, browserTests, trafficCampaigns, subscription] = await Promise.all([
       db.queryAll<{
         id: string;
         name: string | null;
@@ -97,6 +97,46 @@ export async function GET(
          FROM load_tests WHERE user_id = ? ORDER BY created_at DESC`,
         [userId]
       ),
+      db.queryAll<{
+        id: string;
+        url: string;
+        target_url: string;
+        target_browsers: number;
+        tabs_per_browser: number;
+        total_visits: number;
+        total_ok: number;
+        total_errors: number;
+        duration_sec: number;
+        status: string;
+        stopped_reason: string | null;
+        ip_address: string | null;
+        created_at: number;
+      }>(
+        `SELECT id, url, target_url, target_browsers, tabs_per_browser, total_visits,
+                total_ok, total_errors, duration_sec, status, stopped_reason, ip_address, created_at
+         FROM browser_tests WHERE user_id = ? ORDER BY created_at DESC`,
+        [userId]
+      ),
+      db.queryAll<{
+        id: string;
+        name: string;
+        url: string;
+        daily_visitors: number;
+        traffic_source: string;
+        session_duration: string;
+        use_proxy: number;
+        is_active: number;
+        last_run_at: number | null;
+        last_status: string | null;
+        total_runs: number;
+        total_visits_sent: number;
+        created_at: number;
+      }>(
+        `SELECT id, name, url, daily_visitors, traffic_source, session_duration, use_proxy,
+                is_active, last_run_at, last_status, total_runs, total_visits_sent, created_at
+         FROM traffic_campaigns WHERE user_id = ? ORDER BY created_at DESC`,
+        [userId]
+      ),
       db.queryFirst<{
         status: string;
         plan: string | null;
@@ -113,6 +153,8 @@ export async function GET(
       cronJobs,
       statusPages,
       loadTests,
+      browserTests,
+      trafficCampaigns,
       subscription,
     });
   } catch (error: any) {

@@ -8,15 +8,13 @@ import {
 } from '@/lib/api-helpers';
 import {
   isValidTargetUrl,
-  getMaxBrowsersForTier,
-  getMaxTabsForTier,
-  isValidBrowserCount,
-  isValidTabCount,
+  getMaxVisitsForTier,
+  computeBrowsersAndTabs,
   getMaxBatches,
   JWT_EXPIRY_SEC,
   GUEST_MAX_TESTS,
   FREE_MAX_TESTS,
-  FREE_MAX_BROWSERS,
+  SLIDER_MIN,
 } from '@/lib/browser-test-limits';
 import type { UserTier } from '@/lib/browser-test-limits';
 import { analyzeUrl } from '@/lib/load-test-analyze';
@@ -66,7 +64,7 @@ export async function POST(request: NextRequest) {
     const ip = getClientIP(request);
 
     const body = await request.json();
-    const { url, targetBrowsers, tabsPerBrowser, useProxy, confirmDomain } = body;
+    const { url, useProxy, confirmDomain } = body;
 
     if (!url || typeof url !== 'string') {
       return errorResponse('URL gerekli', 400);
@@ -111,25 +109,29 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    /* ── Browser/tab validasyon ── */
-    const maxBrowsers = getMaxBrowsersForTier(tier);
-    const maxTabs = getMaxTabsForTier(tier);
-    const browsers = typeof targetBrowsers === 'number' ? targetBrowsers : 1;
-    const tabs = typeof tabsPerBrowser === 'number' ? tabsPerBrowser : maxTabs;
+    /* ── Visit-based validation ── */
+    const maxVisits = getMaxVisitsForTier(tier);
+    const targetVisits = typeof body.targetVisits === 'number' ? body.targetVisits : SLIDER_MIN;
 
-    if (!isValidBrowserCount(browsers, maxBrowsers)) {
-      if (browsers > FREE_MAX_BROWSERS && tier === 'free') {
+    if (targetVisits < SLIDER_MIN || targetVisits > maxVisits) {
+      if (targetVisits > maxVisits && tier === 'guest') {
         return errorResponse(
-          '5+ browser için Pro abonelik ($5/ay) gereklidir.',
+          'Daha fazla ziyaret için giriş yapın.',
+          403,
+          { requiresAuth: true }
+        );
+      }
+      if (targetVisits > maxVisits && tier === 'free') {
+        return errorResponse(
+          `${maxVisits}+ ziyaret için Pro abonelik ($5/ay) gereklidir.`,
           403,
           { requiresPlan: 'pro' }
         );
       }
-      return errorResponse(`Browser sayısı 1-${maxBrowsers} arası olmalı`, 400);
+      return errorResponse(`Ziyaret sayısı ${SLIDER_MIN}-${maxVisits} arası olmalı`, 400);
     }
-    if (!isValidTabCount(tabs, maxTabs)) {
-      return errorResponse(`Tab sayısı 1-${maxTabs} arası olmalı`, 400);
-    }
+
+    const { browsers, tabsPerBrowser: tabs } = computeBrowsersAndTabs(targetVisits);
 
     /* ── Traffic source & session duration ── */
     const trafficSource: TrafficSource =

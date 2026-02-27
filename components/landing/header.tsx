@@ -29,6 +29,9 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
+            <Link href="/browser-test" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+              Trafik Gönderimi
+            </Link>
             <Link href="/load-test" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
               Yük Testi
             </Link>
@@ -91,6 +94,9 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-white/10">
             <div className="flex flex-col gap-1">
+              <Link href="/browser-test" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
+                Trafik Gönderimi
+              </Link>
               <Link href="/load-test" className="px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg">
                 Yük Testi
               </Link>

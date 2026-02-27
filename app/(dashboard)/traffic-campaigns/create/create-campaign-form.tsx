@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -9,15 +9,46 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Globe, Search, Share2, Zap, Timer, Hourglass, Users, Calculator } from 'lucide-react';
+import { Globe, Search, Share2, Zap, Timer, Hourglass, Users, Calculator, Crown, Rss, Loader2, X, ExternalLink } from 'lucide-react';
 
 type TrafficSource = 'direct' | 'organic' | 'social';
 type SessionDuration = 'fast' | 'realistic' | 'long';
+
+const FREE_MAX_DAILY = 50;
+const PRO_MAX_DAILY = 2000;
+
+const POLAR_CHECKOUT_URL =
+  'https://buy.polar.sh/polar_cl_pbGzjD0Vi4y7yngJdFz03qka4EnPzE5JalPGR0mqJ8o';
+
+async function openPolarCheckout() {
+  try {
+    const { PolarEmbedCheckout } = await import('@polar-sh/checkout/embed');
+    await PolarEmbedCheckout.create(POLAR_CHECKOUT_URL, { theme: 'dark' });
+  } catch {
+    window.open(POLAR_CHECKOUT_URL, '_blank');
+  }
+}
 
 export function CreateCampaignForm() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  const [limitLoaded, setLimitLoaded] = useState(false);
+
+  useEffect(() => {
+    api.get<{ hasActiveSubscription: boolean }>('/subscription')
+      .then((res) => setIsPro(res.hasActiveSubscription))
+      .catch(() => {})
+      .finally(() => setLimitLoaded(true));
+  }, []);
+
+  const [urlPool, setUrlPool] = useState<string[]>([]);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoverSource, setDiscoverSource] = useState<'rss' | 'sitemap' | 'none' | null>(null);
+  const [discoverError, setDiscoverError] = useState<string | null>(null);
+
+  const maxDaily = isPro ? PRO_MAX_DAILY : FREE_MAX_DAILY;
 
   const [form, setForm] = useState({
     name: '',
@@ -40,6 +71,37 @@ export function CreateCampaignForm() {
     const runsPerDay = Math.ceil(form.daily_visitors / visitsPerRun);
     return { visitsPerRun, workingHours, runsPerDay };
   }, [form.daily_visitors, form.browsers_per_run, form.tabs_per_browser, form.start_hour, form.end_hour]);
+
+  async function handleDiscover() {
+    if (!form.url.trim() || !form.url.startsWith('http')) {
+      setDiscoverError('Önce geçerli bir URL girin');
+      return;
+    }
+    setDiscovering(true);
+    setDiscoverError(null);
+    setDiscoverSource(null);
+    try {
+      const res = await api.post<{ urls: string[]; source: 'rss' | 'sitemap' | 'none' }>(
+        '/traffic-campaigns/discover',
+        { url: form.url }
+      );
+      setDiscoverSource(res.source);
+      if (res.urls.length > 0) {
+        setUrlPool(res.urls);
+      } else {
+        setUrlPool([]);
+        setDiscoverError('RSS veya Sitemap bulunamadı. Tüm trafik ana URL\'e gönderilecek.');
+      }
+    } catch (err) {
+      if (err instanceof ApiError && (err as any).requiresPro) {
+        setDiscoverError('Bu özellik Pro plana özeldir.');
+      } else {
+        setDiscoverError('URL keşfi sırasında hata oluştu');
+      }
+    } finally {
+      setDiscovering(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,6 +129,7 @@ export function CreateCampaignForm() {
         start_hour: form.start_hour,
         end_hour: form.end_hour,
         use_proxy: form.use_proxy ? 1 : 0,
+        url_pool: urlPool.length > 0 ? urlPool : null,
       });
       router.push('/traffic-campaigns');
     } catch (err) {
@@ -118,6 +181,80 @@ export function CreateCampaignForm() {
                   <p className="text-xs text-muted-foreground">
                     Trafik gönderilecek web sayfasının tam adresi.
                   </p>
+
+                  {isPro ? (
+                    <div className="space-y-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={discovering || !form.url.trim()}
+                        onClick={(e) => { e.preventDefault(); handleDiscover(); }}
+                        className="gap-2"
+                      >
+                        {discovering ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Rss className="h-4 w-4" />
+                        )}
+                        {discovering ? 'Keşfediliyor...' : 'Sayfa Linklerini Yükle'}
+                      </Button>
+
+                      {discoverSource && discoverSource !== 'none' && urlPool.length > 0 && (
+                        <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              {discoverSource === 'rss' ? 'RSS' : 'Sitemap'} — {urlPool.length} sayfa bulundu
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); setUrlPool([]); setDiscoverSource(null); }}
+                              className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                            >
+                              Temizle
+                            </button>
+                          </div>
+                          <div className="max-h-48 overflow-y-auto space-y-1">
+                            {urlPool.map((u, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs group">
+                                <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <span className="truncate flex-1">{new URL(u).pathname}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setUrlPool(prev => prev.filter((_, idx) => idx !== i));
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                >
+                                  <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Trafik bu sayfalar arasında dağıtılacak.
+                          </p>
+                        </div>
+                      )}
+
+                      {discoverError && (
+                        <p className="text-xs text-amber-500">{discoverError}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      <Crown className="h-3 w-3 inline mr-1" />
+                      Pro ile site sayfalarınızı otomatik keşfedebilirsiniz.{' '}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+                        className="text-purple-400 hover:text-purple-300 font-medium cursor-pointer"
+                      >
+                        Pro&apos;ya geç →
+                      </button>
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t -mx-6" />
@@ -130,18 +267,39 @@ export function CreateCampaignForm() {
                   <input
                     type="range"
                     min={10}
-                    max={2000}
+                    max={maxDaily}
                     step={10}
-                    value={form.daily_visitors}
+                    value={Math.min(form.daily_visitors, maxDaily)}
                     onChange={(e) => setForm((prev) => ({ ...prev, daily_visitors: parseInt(e.target.value) }))}
                     className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>10</span>
-                    <span>500</span>
-                    <span>1000</span>
-                    <span>2000</span>
+                    {isPro ? (
+                      <>
+                        <span>500</span>
+                        <span>1000</span>
+                        <span>2000</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>30</span>
+                        <span>50</span>
+                      </>
+                    )}
                   </div>
+                  {!isPro && (
+                    <p className="text-xs text-muted-foreground">
+                      Ücretsiz planda günlük en fazla {FREE_MAX_DAILY} ziyaretçi.{' '}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+                        className="text-purple-400 hover:text-purple-300 font-medium cursor-pointer"
+                      >
+                        Pro ile 2000&apos;e kadar →
+                      </button>
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -378,8 +536,18 @@ export function CreateCampaignForm() {
       </div>
 
       {error && (
-        <div className="mt-6 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-          {error}
+        <div className="mt-6 p-4 rounded-md bg-destructive/10 border border-destructive/20">
+          <p className="text-sm text-destructive">{error}</p>
+          {!isPro && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+              className="mt-3 w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm cursor-pointer hover:from-purple-600 hover:to-pink-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <Crown className="h-4 w-4" />
+              Pro Planına Geç — $5/ay
+            </button>
+          )}
         </div>
       )}
 
@@ -391,7 +559,7 @@ export function CreateCampaignForm() {
         >
           İptal
         </Button>
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting || !limitLoaded}>
           {submitting ? 'Oluşturuluyor...' : 'Kampanya Oluştur'}
         </Button>
       </div>

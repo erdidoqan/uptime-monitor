@@ -6,6 +6,7 @@ const footerLinks = {
   product: {
     title: "Ürün",
     links: [
+      { name: "Trafik Gönderimi", href: "/browser-test" },
       { name: "Özellikler", href: "#features" },
       { name: "Nasıl Çalışır", href: "#how-it-works" },
       { name: "Fiyatlandırma", href: "/pricing" },

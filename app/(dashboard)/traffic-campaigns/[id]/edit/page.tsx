@@ -29,6 +29,7 @@ interface TrafficCampaign {
   total_visits_sent: number;
   created_at: number;
   updated_at: number | null;
+  url_pool: string[] | null;
 }
 
 interface PageProps {

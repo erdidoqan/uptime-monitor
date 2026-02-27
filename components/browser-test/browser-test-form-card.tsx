@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { GoogleSignInButton } from "@/components/landing/google-sign-in-button";
 import {
-  getMaxBrowsersForTier,
-  getMaxTabsForTier,
-  FREE_MAX_BROWSERS,
   FREE_MAX_TESTS,
+  GUEST_MAX_TESTS,
+  GUEST_MAX_VISITS,
+  FREE_MAX_VISITS,
+  SLIDER_MIN,
+  SLIDER_MAX,
+  SLIDER_STEP,
 } from "@/lib/browser-test-limits";
 import type { BrowserRampProgress, TrafficSource, SessionDuration } from "@/hooks/use-browser-test";
 import type { UserTier } from "@/lib/browser-test-limits";
@@ -301,8 +304,8 @@ function getGaInfoText(source: TrafficSource): string {
 interface BrowserTestFormCardProps {
   url: string;
   setUrl: (url: string) => void;
-  targetBrowsers: number;
-  setTargetBrowsers: (n: number) => void;
+  targetVisits: number;
+  setTargetVisits: (n: number) => void;
   useProxy: boolean;
   setUseProxy: (v: boolean) => void;
   trafficSource: TrafficSource;
@@ -318,6 +321,7 @@ interface BrowserTestFormCardProps {
   isAuth: boolean;
   userTier: UserTier;
   guestTestDone: boolean;
+  guestTestCount: number;
   freeTestsUsed: number;
   runTest: (opts?: { confirmDomain?: boolean }) => void;
   stopTest: () => void;
@@ -326,8 +330,8 @@ interface BrowserTestFormCardProps {
 export function BrowserTestFormCard({
   url,
   setUrl,
-  targetBrowsers,
-  setTargetBrowsers,
+  targetVisits,
+  setTargetVisits,
   useProxy,
   setUseProxy,
   trafficSource,
@@ -342,26 +346,24 @@ export function BrowserTestFormCard({
   isAuth,
   userTier,
   guestTestDone,
+  guestTestCount,
   freeTestsUsed,
   runTest,
   stopTest,
 }: BrowserTestFormCardProps) {
-  const maxBrowsers = getMaxBrowsersForTier(userTier);
-  const maxTabs = getMaxTabsForTier(userTier);
-
-  const totalVisitsEstimate = useMemo(
-    () => targetBrowsers * maxTabs,
-    [targetBrowsers, maxTabs],
-  );
+  const isPro = userTier === "pro" || userTier === "enterprise";
 
   const isGuestBlocked = !isAuth && guestTestDone;
   const isFreeBlocked = isAuth && userTier === "free" && freeTestsUsed >= FREE_MAX_TESTS;
-  const isBlocked = isGuestBlocked || isFreeBlocked;
-  const isPro = userTier === "pro" || userTier === "enterprise";
+  const isTestLimitReached = isGuestBlocked || isFreeBlocked;
+
+  const needsAuth = !isAuth && targetVisits > GUEST_MAX_VISITS;
+  const needsPro = isAuth && !isPro && targetVisits > FREE_MAX_VISITS;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loading && !isBlocked) runTest();
+    if (needsAuth || needsPro || isTestLimitReached) return;
+    if (!loading) runTest();
   };
 
   if (rampProgress) {
@@ -396,31 +398,31 @@ export function BrowserTestFormCard({
           />
         </div>
 
-        {/* Browser Slider */}
+        {/* Visit Slider */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="bt-browsers" className="text-sm font-medium text-gray-300">
-              Eşzamanlı kullanıcı
+            <label htmlFor="bt-visits" className="text-sm font-medium text-gray-300">
+              Tahmini ziyaret
             </label>
-            <span className="text-sm font-bold text-white tabular-nums">{targetBrowsers}</span>
+            <span className="text-sm font-bold text-white tabular-nums">{targetVisits}</span>
           </div>
           <input
-            id="bt-browsers"
+            id="bt-visits"
             type="range"
-            min={1}
-            max={maxBrowsers}
-            step={1}
-            value={targetBrowsers}
-            onChange={(e) => setTargetBrowsers(Number(e.target.value))}
+            min={SLIDER_MIN}
+            max={SLIDER_MAX}
+            step={SLIDER_STEP}
+            value={targetVisits}
+            onChange={(e) => setTargetVisits(Number(e.target.value))}
             disabled={loading}
             className="w-full accent-cyan-500"
           />
           <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-            <span>1</span>
-            {userTier !== "guest" && (
-              <span className="text-cyan-500/60">{FREE_MAX_BROWSERS} (Free)</span>
+            <span>{SLIDER_MIN}</span>
+            {!isPro && (
+              <span className="text-cyan-500/60">{FREE_MAX_VISITS} (Free)</span>
             )}
-            <span>{maxBrowsers} {isPro ? "(Pro)" : ""}</span>
+            <span>{SLIDER_MAX} (Pro)</span>
           </div>
         </div>
 
@@ -516,14 +518,6 @@ export function BrowserTestFormCard({
           </button>
         </div>
 
-        {/* Test bilgisi */}
-        <div className="text-xs text-gray-400 space-y-1">
-          <div className="flex justify-between">
-            <span>Tahmini ziyaret:</span>
-            <span className="text-white">~{totalVisitsEstimate}</span>
-          </div>
-        </div>
-
         {/* GA Uyarısı */}
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
           {getGaInfoText(trafficSource)}
@@ -550,7 +544,7 @@ export function BrowserTestFormCard({
           </div>
         )}
 
-        {/* Guest blocked */}
+        {/* Guest test limit reached */}
         {isGuestBlocked && (
           <div className="space-y-3">
             <p className="text-sm text-gray-400">
@@ -560,7 +554,7 @@ export function BrowserTestFormCard({
           </div>
         )}
 
-        {/* Free blocked */}
+        {/* Free test limit reached */}
         {isFreeBlocked && (
           <div className="space-y-3">
             <p className="text-sm text-gray-400">
@@ -576,8 +570,27 @@ export function BrowserTestFormCard({
           </div>
         )}
 
-        {/* Submit */}
-        {!isBlocked && (
+        {/* Dynamic submit button */}
+        {!isTestLimitReached && needsAuth && (
+          <div className="space-y-2">
+            <p className="text-center text-xs text-gray-500">
+              {targetVisits} ziyaret için giriş yapmanız gerekiyor
+            </p>
+            <GoogleSignInButton className="w-full" />
+          </div>
+        )}
+
+        {!isTestLimitReached && needsPro && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm cursor-pointer hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/20"
+          >
+            {targetVisits} ziyaret için Pro Planına Geç — $5/ay
+          </button>
+        )}
+
+        {!isTestLimitReached && !needsAuth && !needsPro && (
           <button
             type="submit"
             disabled={loading || !url.trim()}
@@ -591,10 +604,15 @@ export function BrowserTestFormCard({
           </button>
         )}
 
-        {/* Free tests info */}
+        {/* Remaining tests info */}
         {isAuth && userTier === "free" && !isFreeBlocked && (
           <p className="text-center text-xs text-gray-500">
             {FREE_MAX_TESTS - freeTestsUsed} / {FREE_MAX_TESTS} kullanım hakkı kaldı
+          </p>
+        )}
+        {!isAuth && !isGuestBlocked && !needsAuth && (
+          <p className="text-center text-xs text-gray-500">
+            {GUEST_MAX_TESTS - guestTestCount} / {GUEST_MAX_TESTS} kullanım hakkı kaldı · Giriş yaparak daha fazla test hakkı kazanın
           </p>
         )}
       </form>

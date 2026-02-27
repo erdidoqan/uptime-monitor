@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       cron_count: number;
       status_page_count: number;
       load_test_count: number;
+      browser_test_count: number;
+      traffic_campaign_count: number;
       subscription_status: string | null;
       subscription_plan: string | null;
       is_banned: number;
@@ -37,6 +39,8 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(*) FROM cron_jobs WHERE user_id = u.id) as cron_count,
         (SELECT COUNT(*) FROM status_pages WHERE user_id = u.id) as status_page_count,
         (SELECT COUNT(*) FROM load_tests WHERE user_id = u.id) as load_test_count,
+        (SELECT COUNT(*) FROM browser_tests WHERE user_id = u.id) as browser_test_count,
+        (SELECT COUNT(*) FROM traffic_campaigns WHERE user_id = u.id) as traffic_campaign_count,
         s.status as subscription_status, s.plan as subscription_plan
       FROM users u
       LEFT JOIN subscriptions s ON s.user_id = u.id

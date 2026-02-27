@@ -1,5 +1,6 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './app-sidebar';
+import { MobileHeader } from './mobile-header';
 
 interface DashboardWrapperProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function DashboardWrapper({ children, user }: DashboardWrapperProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar user={user} />
         <div className="flex-1 flex flex-col">
+          <MobileHeader />
           <main className="flex-1">{children}</main>
         </div>
       </div>

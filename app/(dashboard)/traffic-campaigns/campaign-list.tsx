@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, MoreVertical, ExternalLink, Clock, Globe, Megaphone, Pause, Play, Trash2, Users, Timer } from 'lucide-react';
+import { Plus, Search, MoreVertical, ExternalLink, Clock, Globe, Megaphone, Pause, Play, Trash2, Users, Timer, Crown } from 'lucide-react';
 
 interface TrafficCampaign {
   id: string;
@@ -101,11 +101,28 @@ const trafficSourceColors: Record<string, string> = {
   social: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
 };
 
-interface CampaignListProps {
-  initialCampaigns: TrafficCampaign[];
+const POLAR_CHECKOUT_URL =
+  'https://buy.polar.sh/polar_cl_pbGzjD0Vi4y7yngJdFz03qka4EnPzE5JalPGR0mqJ8o';
+
+async function openPolarCheckout() {
+  try {
+    const { PolarEmbedCheckout } = await import('@polar-sh/checkout/embed');
+    await PolarEmbedCheckout.create(POLAR_CHECKOUT_URL, { theme: 'dark' });
+  } catch {
+    window.open(POLAR_CHECKOUT_URL, '_blank');
+  }
 }
 
-export function CampaignList({ initialCampaigns }: CampaignListProps) {
+interface CampaignListProps {
+  initialCampaigns: TrafficCampaign[];
+  isPro?: boolean;
+  limits?: {
+    maxCampaigns: number;
+    maxDailyVisitors: number;
+  };
+}
+
+export function CampaignList({ initialCampaigns, isPro = false, limits }: CampaignListProps) {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,9 +207,12 @@ export function CampaignList({ initialCampaigns }: CampaignListProps) {
     return <span className="text-muted-foreground font-medium">Hiç çalışmadı</span>;
   };
 
+  const maxCampaigns = limits?.maxCampaigns ?? (isPro ? 999 : 1);
+  const canCreate = campaigns.length < maxCampaigns;
+
   return (
     <>
-      <div className="mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -203,6 +223,24 @@ export function CampaignList({ initialCampaigns }: CampaignListProps) {
           />
           <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground">/</span>
         </div>
+        {canCreate ? (
+          <Button size="sm" asChild>
+            <Link href="/traffic-campaigns/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Kampanya Oluştur
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            type="button"
+            onClick={(e) => { e.preventDefault(); openPolarCheckout(); }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 cursor-pointer"
+          >
+            <Crown className="mr-2 h-4 w-4" />
+            Pro&apos;ya Geç — Sınırsız Kampanya
+          </Button>
+        )}
       </div>
 
       {filteredCampaigns.length === 0 ? (

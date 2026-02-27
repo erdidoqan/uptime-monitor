@@ -7,7 +7,7 @@ import {
   successResponse,
 } from '@/lib/api-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import { canCreateResource } from '@/lib/subscription';
+import { getUserSubscription } from '@/lib/subscription';
 
 function calculateNextRunAt(startHour: number, endHour: number, dailyVisitors: number, visitorsPerRun: number): number {
   const now = new Date();
@@ -35,26 +35,53 @@ export async function GET(request: NextRequest) {
     if (!auth) return unauthorizedResponse();
 
     const db = getD1Client();
-    const campaigns = await db.queryAll(
-      `SELECT * FROM traffic_campaigns WHERE user_id = ? ORDER BY created_at DESC`,
-      [auth.userId]
-    );
+    const [campaigns, subscription] = await Promise.all([
+      db.queryAll(
+        `SELECT * FROM traffic_campaigns WHERE user_id = ? ORDER BY created_at DESC`,
+        [auth.userId]
+      ),
+      getUserSubscription(auth.userId),
+    ]);
+    const isPro = subscription?.status === 'active';
 
-    return successResponse(campaigns);
+    return successResponse({
+      campaigns,
+      isPro,
+      limits: {
+        maxCampaigns: isPro ? 999 : FREE_MAX_CAMPAIGNS,
+        maxDailyVisitors: isPro ? PRO_MAX_DAILY_VISITORS : FREE_MAX_DAILY_VISITORS,
+      },
+    });
   } catch (error: any) {
     console.error('Get traffic campaigns error:', error);
     return errorResponse(error.message || 'Failed to fetch campaigns', 500);
   }
 }
 
+const FREE_MAX_DAILY_VISITORS = 50;
+const FREE_MAX_CAMPAIGNS = 1;
+const PRO_MAX_DAILY_VISITORS = 2000;
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateRequestOrToken(request);
     if (!auth) return unauthorizedResponse();
 
-    const resourceCheck = await canCreateResource(auth.userId);
-    if (!resourceCheck.allowed) {
-      return errorResponse(resourceCheck.reason || 'Kaynak limiti aşıldı', 402);
+    const db = getD1Client();
+    const subscription = await getUserSubscription(auth.userId);
+    const isPro = subscription?.status === 'active';
+
+    const existingCount = await db.queryFirst<{ count: number }>(
+      'SELECT COUNT(*) as count FROM traffic_campaigns WHERE user_id = ?',
+      [auth.userId]
+    );
+
+    if (!isPro && (existingCount?.count || 0) >= FREE_MAX_CAMPAIGNS) {
+      return errorResponse(
+        'Ücretsiz planda en fazla 1 kampanya oluşturabilirsiniz. Daha fazlası için Pro planına geçin.',
+        402,
+        { requiresPro: true }
+      );
     }
 
     const body = await request.json();
@@ -67,6 +94,7 @@ export async function POST(request: NextRequest) {
       use_proxy = false,
       start_hour = 9,
       end_hour = 22,
+      url_pool,
     } = body;
 
     if (!name || !url) {
@@ -77,8 +105,9 @@ export async function POST(request: NextRequest) {
       return errorResponse('URL http:// veya https:// ile başlamalıdır');
     }
 
-    if (daily_visitors < 10 || daily_visitors > 2000) {
-      return errorResponse('Günlük ziyaretçi 10-2000 arası olmalıdır');
+    const maxDaily = isPro ? PRO_MAX_DAILY_VISITORS : FREE_MAX_DAILY_VISITORS;
+    if (daily_visitors < 10 || daily_visitors > maxDaily) {
+      return errorResponse(`Günlük ziyaretçi 10-${maxDaily} arası olmalıdır`, 400, { requiresPro: !isPro && daily_visitors > FREE_MAX_DAILY_VISITORS });
     }
 
     if (start_hour < 0 || start_hour > 23 || end_hour < 1 || end_hour > 24 || start_hour >= end_hour) {
@@ -97,21 +126,24 @@ export async function POST(request: NextRequest) {
     const tabsPerBrowser = 10;
     const visitorsPerRun = browsersPerRun * tabsPerBrowser;
 
-    const db = getD1Client();
     const id = uuidv4();
     const now = Date.now();
     const nextRunAt = calculateNextRunAt(start_hour, end_hour, daily_visitors, visitorsPerRun);
+
+    const urlPoolJson = isPro && Array.isArray(url_pool) && url_pool.length > 0
+      ? JSON.stringify(url_pool)
+      : null;
 
     await db.execute(
       `INSERT INTO traffic_campaigns (
         id, user_id, name, url, daily_visitors, browsers_per_run, tabs_per_browser,
         traffic_source, session_duration, use_proxy, start_hour, end_hour,
-        is_active, next_run_at, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+        is_active, next_run_at, created_at, url_pool
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
       [
         id, auth.userId, name, url, daily_visitors, browsersPerRun, tabsPerBrowser,
         traffic_source, session_duration, use_proxy ? 1 : 0, start_hour, end_hour,
-        nextRunAt, now,
+        nextRunAt, now, urlPoolJson,
       ]
     );
 

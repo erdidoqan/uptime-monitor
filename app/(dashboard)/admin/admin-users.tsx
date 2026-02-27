@@ -15,6 +15,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Crown,
+  MousePointerClick,
+  Megaphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminUserDetail } from './admin-user-detail';
@@ -29,6 +31,8 @@ interface AdminUser {
   cron_count: number;
   status_page_count: number;
   load_test_count: number;
+  browser_test_count: number;
+  traffic_campaign_count: number;
   subscription_status: string | null;
   subscription_plan: string | null;
   is_banned: number;
@@ -240,6 +244,18 @@ export function AdminUsers() {
                         {user.load_test_count}
                       </span>
                     )}
+                    {user.browser_test_count > 0 && (
+                      <span className="flex items-center gap-1" title="Browser Test">
+                        <MousePointerClick className="h-3.5 w-3.5" />
+                        {user.browser_test_count}
+                      </span>
+                    )}
+                    {user.traffic_campaign_count > 0 && (
+                      <span className="flex items-center gap-1" title="Trafik Kampanyası">
+                        <Megaphone className="h-3.5 w-3.5" />
+                        {user.traffic_campaign_count}
+                      </span>
+                    )}
                   </div>
 
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -271,7 +287,19 @@ export function AdminUsers() {
                       {user.load_test_count}
                     </span>
                   )}
-                  {user.monitor_count + user.cron_count + user.status_page_count + user.load_test_count === 0 && (
+                  {user.browser_test_count > 0 && (
+                    <span className="flex items-center gap-1">
+                      <MousePointerClick className="h-3.5 w-3.5" />
+                      {user.browser_test_count}
+                    </span>
+                  )}
+                  {user.traffic_campaign_count > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Megaphone className="h-3.5 w-3.5" />
+                      {user.traffic_campaign_count}
+                    </span>
+                  )}
+                  {user.monitor_count + user.cron_count + user.status_page_count + user.load_test_count + user.browser_test_count + user.traffic_campaign_count === 0 && (
                     <span className="text-muted-foreground/60">Kaynak yok</span>
                   )}
                 </div>

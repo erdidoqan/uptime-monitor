@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CampaignHeader } from './campaign-header';
 import { CampaignStats } from './campaign-stats';
 import { CampaignActions } from './campaign-actions';
+import { CampaignUrls } from './campaign-urls';
 
 interface TrafficCampaign {
   id: string;
@@ -33,6 +34,7 @@ interface TrafficCampaign {
   total_visits_sent: number;
   created_at: number;
   updated_at: number | null;
+  url_pool: string[] | null;
 }
 
 interface PageProps {
@@ -115,6 +117,12 @@ async function CampaignStatsData({ campaignId }: { campaignId: string }) {
   return <CampaignStats campaign={campaign} />;
 }
 
+async function CampaignUrlsData({ campaignId }: { campaignId: string }) {
+  const campaign = await getCampaignData(campaignId);
+  if (!campaign) return null;
+  return <CampaignUrls urlPool={campaign.url_pool} mainUrl={campaign.url} />;
+}
+
 async function CampaignActionsData({ campaignId }: { campaignId: string }) {
   const campaign = await getCampaignData(campaignId);
   if (!campaign) return null;
@@ -161,6 +169,10 @@ export default async function CampaignDetailPage({ params }: PageProps) {
 
       <Suspense fallback={<StatsSkeleton />}>
         <CampaignStatsData campaignId={campaignId} />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <CampaignUrlsData campaignId={campaignId} />
       </Suspense>
     </div>
   );
