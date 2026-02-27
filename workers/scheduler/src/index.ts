@@ -1158,6 +1158,146 @@ async function sendDailyCampaignEmails(env: Env): Promise<void> {
   }
 }
 
+// ─── RSS / Sitemap URL Discovery ───
+
+const FEED_PATHS = ['/rss', '/feed', '/rss.xml', '/feed.xml', '/sitemap.xml', '/sitemap_index.xml'];
+const MAX_POOL_URLS = 50;
+const FEED_FETCH_TIMEOUT = 5000;
+const URL_POOL_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function extractUrlsFromRss(xml: string, hostname: string): string[] {
+  const urls: string[] = [];
+  const linkRegex = /<link[^>]*>([^<]+)<\/link>/gi;
+  let m;
+  while ((m = linkRegex.exec(xml)) !== null) {
+    const u = m[1].trim();
+    if (u.startsWith('http') && u.includes(hostname)) urls.push(u);
+  }
+  if (urls.length === 0) {
+    const atomRegex = /<link[^>]*href=["']([^"']+)["'][^>]*\/?\s*>/gi;
+    while ((m = atomRegex.exec(xml)) !== null) {
+      const u = m[1].trim();
+      if (u.startsWith('http') && u.includes(hostname)) urls.push(u);
+    }
+  }
+  return [...new Set(urls)];
+}
+
+function extractUrlsFromSitemap(xml: string, hostname: string): string[] {
+  const urls: string[] = [];
+  const locRegex = /<loc>([^<]+)<\/loc>/gi;
+  let m;
+  while ((m = locRegex.exec(xml)) !== null) {
+    const u = m[1].trim();
+    if (u.startsWith('http') && u.includes(hostname) && !u.endsWith('.xml') && !u.includes('sitemap')) {
+      urls.push(u);
+    }
+  }
+  return [...new Set(urls)];
+}
+
+function extractSitemapIndexUrls(xml: string): string[] {
+  const urls: string[] = [];
+  const locRegex = /<loc>([^<]+)<\/loc>/gi;
+  let m;
+  while ((m = locRegex.exec(xml)) !== null) {
+    const u = m[1].trim();
+    if (u.endsWith('.xml') || u.includes('sitemap')) urls.push(u);
+  }
+  return urls;
+}
+
+async function fetchFeed(url: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FEED_FETCH_TIMEOUT);
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'UptimeTR Bot/1.0' },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+async function discoverUrlsFromSite(siteUrl: string): Promise<{ urls: string[]; source: string }> {
+  let origin: string;
+  let hostname: string;
+  try {
+    const parsed = new URL(siteUrl);
+    origin = parsed.origin;
+    hostname = parsed.hostname;
+  } catch {
+    return { urls: [], source: 'none' };
+  }
+
+  for (const feedPath of FEED_PATHS) {
+    const xml = await fetchFeed(origin + feedPath);
+    if (!xml) continue;
+
+    const isSitemap = feedPath.includes('sitemap');
+
+    if (isSitemap) {
+      const indexUrls = extractSitemapIndexUrls(xml);
+      if (indexUrls.length > 0) {
+        let all: string[] = [];
+        for (const su of indexUrls.slice(0, 3)) {
+          const subXml = await fetchFeed(su);
+          if (subXml) all.push(...extractUrlsFromSitemap(subXml, hostname));
+          if (all.length >= MAX_POOL_URLS) break;
+        }
+        if (all.length > 0) return { urls: all.slice(0, MAX_POOL_URLS), source: 'sitemap' };
+      }
+      const smUrls = extractUrlsFromSitemap(xml, hostname);
+      if (smUrls.length > 0) return { urls: smUrls.slice(0, MAX_POOL_URLS), source: 'sitemap' };
+    } else {
+      const rssUrls = extractUrlsFromRss(xml, hostname);
+      if (rssUrls.length > 0) return { urls: rssUrls.slice(0, MAX_POOL_URLS), source: 'rss' };
+    }
+  }
+
+  return { urls: [], source: 'none' };
+}
+
+async function maybeRefreshUrlPool(
+  db: D1Client,
+  campaignId: string,
+  siteUrl: string,
+  currentPool: string | null,
+  lastUpdated: number | null,
+  now: number
+): Promise<string[] | undefined> {
+  if (!currentPool) return undefined;
+
+  if (lastUpdated && (now - lastUpdated) < URL_POOL_REFRESH_INTERVAL_MS) {
+    try { return JSON.parse(currentPool); } catch { return undefined; }
+  }
+
+  console.log(`[campaign] Refreshing URL pool for ${campaignId} (last update: ${lastUpdated ? new Date(lastUpdated).toISOString() : 'never'})`);
+
+  try {
+    const { urls, source } = await discoverUrlsFromSite(siteUrl);
+    if (urls.length > 0) {
+      const poolJson = JSON.stringify(urls);
+      await db.execute(
+        `UPDATE traffic_campaigns SET url_pool = ?, url_pool_updated_at = ? WHERE id = ?`,
+        [poolJson, now, campaignId]
+      );
+      console.log(`[campaign] URL pool refreshed for ${campaignId}: ${urls.length} URLs from ${source}`);
+      return urls;
+    }
+  } catch (err) {
+    console.error(`[campaign] Failed to refresh URL pool for ${campaignId}:`, err);
+  }
+
+  try { return JSON.parse(currentPool); } catch { return undefined; }
+}
+
+// ─── Traffic Campaign Processing ───
+
 async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionContext) {
   if (!env.BROWSER_TEST_JWT_SECRET || (!env.BROWSER_TEST_WORKER && !env.BROWSER_TEST_WORKER_URL)) {
     return;
@@ -1181,10 +1321,11 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
     total_visits_sent: number;
     total_runs: number;
     url_pool: string | null;
+    url_pool_updated_at: number | null;
   }>(
     `SELECT id, user_id, url, daily_visitors, browsers_per_run, tabs_per_browser,
             traffic_source, session_duration, use_proxy, start_hour, end_hour,
-            total_visits_sent, total_runs, url_pool
+            total_visits_sent, total_runs, url_pool, url_pool_updated_at
      FROM traffic_campaigns
      WHERE is_active = 1
        AND next_run_at <= ?
@@ -1222,10 +1363,9 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
       const browsers = campaign.browsers_per_run;
       const tabs = campaign.tabs_per_browser;
 
-      let urlPool: string[] | undefined;
-      if (campaign.url_pool) {
-        try { urlPool = JSON.parse(campaign.url_pool); } catch {}
-      }
+      let urlPool: string[] | undefined = await maybeRefreshUrlPool(
+        db, campaign.id, campaign.url, campaign.url_pool, campaign.url_pool_updated_at, now
+      );
 
       const token = await new SignJWT({
         url: campaign.url,

@@ -100,6 +100,8 @@ export async function PUT(
       values.push(Array.isArray(body.url_pool) && body.url_pool.length > 0
         ? JSON.stringify(body.url_pool)
         : null);
+      updates.push('url_pool_updated_at = ?');
+      values.push(Array.isArray(body.url_pool) && body.url_pool.length > 0 ? Date.now() : null);
     }
 
     if (body.is_active !== undefined) {

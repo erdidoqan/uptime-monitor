@@ -35,6 +35,7 @@ interface TrafficCampaign {
   created_at: number;
   updated_at: number | null;
   url_pool: string[] | null;
+  url_pool_updated_at: number | null;
 }
 
 interface PageProps {
@@ -120,7 +121,7 @@ async function CampaignStatsData({ campaignId }: { campaignId: string }) {
 async function CampaignUrlsData({ campaignId }: { campaignId: string }) {
   const campaign = await getCampaignData(campaignId);
   if (!campaign) return null;
-  return <CampaignUrls urlPool={campaign.url_pool} mainUrl={campaign.url} />;
+  return <CampaignUrls urlPool={campaign.url_pool} mainUrl={campaign.url} updatedAt={campaign.url_pool_updated_at} />;
 }
 
 async function CampaignActionsData({ campaignId }: { campaignId: string }) {

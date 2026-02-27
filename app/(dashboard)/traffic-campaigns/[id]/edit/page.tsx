@@ -30,6 +30,7 @@ interface TrafficCampaign {
   created_at: number;
   updated_at: number | null;
   url_pool: string[] | null;
+  url_pool_updated_at: number | null;
 }
 
 interface PageProps {

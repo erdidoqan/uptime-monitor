@@ -133,17 +133,18 @@ export async function POST(request: NextRequest) {
     const urlPoolJson = isPro && Array.isArray(url_pool) && url_pool.length > 0
       ? JSON.stringify(url_pool)
       : null;
+    const urlPoolUpdatedAt = urlPoolJson ? now : null;
 
     await db.execute(
       `INSERT INTO traffic_campaigns (
         id, user_id, name, url, daily_visitors, browsers_per_run, tabs_per_browser,
         traffic_source, session_duration, use_proxy, start_hour, end_hour,
-        is_active, next_run_at, created_at, url_pool
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+        is_active, next_run_at, created_at, url_pool, url_pool_updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
       [
         id, auth.userId, name, url, daily_visitors, browsersPerRun, tabsPerBrowser,
         traffic_source, session_duration, use_proxy ? 1 : 0, start_hour, end_hour,
-        nextRunAt, now, urlPoolJson,
+        nextRunAt, now, urlPoolJson, urlPoolUpdatedAt,
       ]
     );
 
