@@ -92,8 +92,6 @@ export async function POST(request: NextRequest) {
       traffic_source = 'organic',
       session_duration = 'realistic',
       use_proxy = false,
-      start_hour = 9,
-      end_hour = 22,
       url_pool,
     } = body;
 
@@ -110,9 +108,8 @@ export async function POST(request: NextRequest) {
       return errorResponse(`Günlük ziyaretçi 10-${maxDaily} arası olmalıdır`, 400, { requiresPro: !isPro && daily_visitors > FREE_MAX_DAILY_VISITORS });
     }
 
-    if (start_hour < 0 || start_hour > 23 || end_hour < 1 || end_hour > 24 || start_hour >= end_hour) {
-      return errorResponse('Çalışma saatleri geçersiz');
-    }
+    const start_hour = 0;
+    const end_hour = 24;
 
     if (!['direct', 'organic', 'social'].includes(traffic_source)) {
       return errorResponse('Geçersiz trafik kaynağı');

@@ -87,14 +87,6 @@ export async function PUT(
       updates.push('use_proxy = ?');
       values.push(body.use_proxy ? 1 : 0);
     }
-    if (body.start_hour !== undefined) {
-      updates.push('start_hour = ?');
-      values.push(body.start_hour);
-    }
-    if (body.end_hour !== undefined) {
-      updates.push('end_hour = ?');
-      values.push(body.end_hour);
-    }
     if (body.url_pool !== undefined) {
       updates.push('url_pool = ?');
       values.push(Array.isArray(body.url_pool) && body.url_pool.length > 0

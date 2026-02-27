@@ -13,8 +13,6 @@ interface TrafficCampaign {
   tabs_per_browser: number;
   traffic_source: 'direct' | 'organic' | 'social';
   session_duration: 'fast' | 'realistic' | 'long';
-  start_hour: number;
-  end_hour: number;
   is_active: number;
   next_run_at: number | null;
   last_run_at: number | null;
@@ -104,8 +102,8 @@ export function CampaignStats({ campaign }: CampaignStatsProps) {
     },
     {
       title: 'Çalışma Saatleri',
-      value: `${String(campaign.start_hour).padStart(2, '0')}:00 - ${String(campaign.end_hour).padStart(2, '0')}:00`,
-      subtitle: '',
+      value: '7/24',
+      subtitle: 'Kesintisiz',
       icon: Clock,
     },
     {

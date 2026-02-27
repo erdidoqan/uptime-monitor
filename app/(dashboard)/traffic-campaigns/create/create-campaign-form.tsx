@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Globe, Search, Share2, Zap, Timer, Hourglass, Users, Calculator, Crown, Rss, Loader2, X, ExternalLink } from 'lucide-react';
 
@@ -56,8 +55,6 @@ export function CreateCampaignForm() {
     daily_visitors: 50,
     traffic_source: 'organic' as TrafficSource,
     session_duration: 'realistic' as SessionDuration,
-    start_hour: 9,
-    end_hour: 22,
     use_proxy: false,
     browsers_per_run: 3,
     tabs_per_browser: 10,
@@ -65,12 +62,9 @@ export function CreateCampaignForm() {
 
   const estimates = useMemo(() => {
     const visitsPerRun = form.browsers_per_run * form.tabs_per_browser;
-    const workingHours = form.end_hour > form.start_hour
-      ? form.end_hour - form.start_hour
-      : 24 - form.start_hour + form.end_hour;
     const runsPerDay = Math.ceil(form.daily_visitors / visitsPerRun);
-    return { visitsPerRun, workingHours, runsPerDay };
-  }, [form.daily_visitors, form.browsers_per_run, form.tabs_per_browser, form.start_hour, form.end_hour]);
+    return { visitsPerRun, runsPerDay };
+  }, [form.daily_visitors, form.browsers_per_run, form.tabs_per_browser]);
 
   async function handleDiscover() {
     if (!form.url.trim() || !form.url.startsWith('http')) {
@@ -126,8 +120,6 @@ export function CreateCampaignForm() {
         tabs_per_browser: form.tabs_per_browser,
         traffic_source: form.traffic_source,
         session_duration: form.session_duration,
-        start_hour: form.start_hour,
-        end_hour: form.end_hour,
         use_proxy: form.use_proxy ? 1 : 0,
         url_pool: urlPool.length > 0 ? urlPool : null,
       });
@@ -426,62 +418,18 @@ export function CreateCampaignForm() {
           </div>
         </div>
 
-        {/* Working hours & proxy */}
+        {/* Proxy settings */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-2">Zamanlama ve ayarlar</h2>
+            <h2 className="text-lg font-semibold mb-2">Ek ayarlar</h2>
             <p className="text-sm text-muted-foreground">
-              Kampanyanın çalışma saatlerini ve ek ayarları yapılandırın.
+              Kampanya 7/24 çalışır ve ziyaretçileri güne eşit dağıtır.
             </p>
           </div>
 
           <div className="lg:col-span-2">
             <Card className="border gap-0">
-              <CardContent className="px-6 py-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Başlangıç saati</Label>
-                    <Select
-                      value={form.start_hour.toString()}
-                      onValueChange={(value) => setForm((prev) => ({ ...prev, start_hour: parseInt(value) }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString()}>
-                            {String(i).padStart(2, '0')}:00
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Bitiş saati</Label>
-                    <Select
-                      value={form.end_hour.toString()}
-                      onValueChange={(value) => setForm((prev) => ({ ...prev, end_hour: parseInt(value) }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString()}>
-                            {String(i).padStart(2, '0')}:00
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Kampanya yalnızca bu saatler arasında trafik gönderir.
-                </p>
-
-                <div className="border-t -mx-6" />
-
+              <CardContent className="px-6 py-6 space-y-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="use_proxy"
@@ -492,7 +440,7 @@ export function CreateCampaignForm() {
                     🇹🇷 Türk kullanıcılar
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground -mt-4">
+                <p className="text-xs text-muted-foreground">
                   Trafik Türkiye IP adreslerinden gönderilir. Türkiye hedefli siteler için önerilir.
                 </p>
               </CardContent>
