@@ -479,30 +479,72 @@ async function setupRealUserPage(page: puppeteer.Page, attr: TrafficAttribution)
  * Simulate real user behavior for the configured duration.
  * Periodically scrolls and moves mouse to keep GA4 engagement alive.
  */
-async function simulateUserBehavior(page: puppeteer.Page, durationMs: number): Promise<void> {
-  try {
-    const vp = page.viewport();
-    const elapsed = () => Date.now() - start;
-    const start = Date.now();
-    let scrollPos = 0;
+function randomizeDuration(baseMs: number): number {
+  const variance = 0.4;
+  const factor = 1 - variance + Math.random() * variance * 2;
+  return Math.round(baseMs * factor);
+}
 
-    while (elapsed() < durationMs) {
-      const scrollAmount = 100 + Math.floor(Math.random() * 300);
-      scrollPos += scrollAmount;
+async function simulateUserBehavior(page: puppeteer.Page, baseDurationMs: number): Promise<void> {
+  try {
+    const durationMs = randomizeDuration(baseDurationMs);
+    const vp = page.viewport();
+    const start = Date.now();
+    const elapsed = () => Date.now() - start;
+
+    const pageHeight = await page.evaluate(() => document.body.scrollHeight);
+    const viewportHeight = vp?.height ?? 800;
+    const maxScroll = Math.max(0, pageHeight - viewportHeight);
+    let scrollPos = 0;
+    let reachedBottom = false;
+
+    // Phase 1: Scroll down to 90%+ to trigger GA4 scroll event
+    const target90 = Math.floor(maxScroll * 0.92);
+    while (elapsed() < durationMs * 0.6 && scrollPos < target90) {
+      const scrollAmount = 150 + Math.floor(Math.random() * 350);
+      scrollPos = Math.min(scrollPos + scrollAmount, target90);
+
       await page.evaluate((pos: number) => {
-        window.scrollTo({ top: pos % document.body.scrollHeight, behavior: 'smooth' });
+        window.scrollTo({ top: pos, behavior: 'smooth' });
       }, scrollPos);
 
       if (vp) {
-        const x = 100 + Math.floor(Math.random() * (vp.width - 200));
-        const y = 100 + Math.floor(Math.random() * (vp.height - 200));
-        await page.mouse.move(x, y);
+        const x = 50 + Math.floor(Math.random() * (vp.width - 100));
+        const y = 50 + Math.floor(Math.random() * (vp.height - 100));
+        await page.mouse.move(x, y, { steps: 3 + Math.floor(Math.random() * 5) });
       }
 
       const remaining = durationMs - elapsed();
       if (remaining <= 0) break;
-      const waitChunk = Math.min(remaining, 2000 + Math.floor(Math.random() * 2000));
-      await delay(waitChunk);
+      await delay(Math.min(remaining, 800 + Math.floor(Math.random() * 1500)));
+    }
+
+    if (scrollPos >= target90) reachedBottom = true;
+
+    // Phase 2: Natural browsing - scroll up/down randomly
+    let direction: 'down' | 'up' = 'up';
+    while (elapsed() < durationMs) {
+      if (direction === 'down') {
+        scrollPos = Math.min(maxScroll, scrollPos + 80 + Math.floor(Math.random() * 400));
+      } else {
+        scrollPos = Math.max(0, scrollPos - 100 - Math.floor(Math.random() * 300));
+      }
+
+      await page.evaluate((pos: number) => {
+        window.scrollTo({ top: pos, behavior: 'smooth' });
+      }, scrollPos);
+
+      if (vp) {
+        const x = 50 + Math.floor(Math.random() * (vp.width - 100));
+        const y = 50 + Math.floor(Math.random() * (vp.height - 100));
+        await page.mouse.move(x, y, { steps: 3 + Math.floor(Math.random() * 5) });
+      }
+
+      if (Math.random() < 0.2) direction = direction === 'down' ? 'up' : 'down';
+
+      const remaining = durationMs - elapsed();
+      if (remaining <= 0) break;
+      await delay(Math.min(remaining, 1000 + Math.floor(Math.random() * 3000)));
     }
   } catch {}
 }
