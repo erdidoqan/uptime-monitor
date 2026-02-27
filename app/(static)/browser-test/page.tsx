@@ -7,15 +7,17 @@ import { useBrowserTest } from "@/hooks/use-browser-test";
 export default function BrowserTestPage() {
   const bt = useBrowserTest();
 
+  const isRunning = !!bt.rampProgress;
+
   return (
     <>
       {/* ── Hero Section ── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid gap-12 lg:grid-cols-2 items-start">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-24">
+          <div className="grid gap-8 sm:gap-12 lg:grid-cols-2 items-start">
             {/* Sol: Başlık ve açıklama */}
-            <div className="space-y-6 lg:pt-8">
+            <div className={`space-y-6 lg:pt-8 ${isRunning ? "hidden lg:block" : ""}`}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                 <span className="text-xs font-medium text-cyan-300">Gerçek Trafik</span>
@@ -28,7 +30,7 @@ export default function BrowserTestPage() {
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-400 leading-relaxed max-w-lg">
+              <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-lg">
                 Gerçek kullanıcılar sitenizi ziyaret eder —
                 sayfalarınızı açar, gezinir ve etkileşime girer. Google Analytics&apos;te
                 <strong className="text-gray-300"> organik ziyaretçi</strong> olarak görünürler.
@@ -55,7 +57,7 @@ export default function BrowserTestPage() {
             </div>
 
             {/* Sağ: Form */}
-            <div>
+            <div className="min-w-0">
               <BrowserTestFormCard
                 url={bt.url}
                 setUrl={bt.setUrl}

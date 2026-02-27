@@ -107,7 +107,7 @@ function LiveProgressPanel({
   return (
     <div className="mt-4 rounded-xl bg-gradient-to-b from-white/[0.07] to-white/[0.03] border border-white/10 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -129,7 +129,7 @@ function LiveProgressPanel({
       </div>
 
       {/* Browser progress bar */}
-      <div className="px-4 pb-2">
+      <div className="px-3 sm:px-4 pb-2">
         <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
@@ -140,7 +140,7 @@ function LiveProgressPanel({
 
       {/* Waiting State */}
       {isWaiting && (
-        <div className="px-4 pb-3">
+        <div className="px-3 sm:px-4 pb-3">
           <div className="flex items-center gap-1.5 mb-3">
             {Array.from({ length: Math.min(rampProgress.totalBrowsers, 10) }).map((_, i) => (
               <div
@@ -171,18 +171,18 @@ function LiveProgressPanel({
 
       {/* Visitor Dots */}
       {visitorDots.length > 0 && (
-        <div className="px-4 pb-2">
+        <div className="px-3 sm:px-4 pb-2">
           <div className="flex flex-wrap gap-1">
             {visitorDots.map((dot) => (
               <div
                 key={dot.id}
-                className={`w-5 h-5 rounded-full bg-gradient-to-br ${dot.color} flex items-center justify-center shadow-lg`}
+                className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br ${dot.color} flex items-center justify-center shadow-lg`}
                 style={{
                   animation: "btPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
                   opacity: 0,
                 }}
               >
-                <svg className="w-3 h-3 text-white/90" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/90" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
                 </svg>
               </div>
@@ -192,7 +192,7 @@ function LiveProgressPanel({
       )}
 
       {/* Stats */}
-      <div className="px-4 py-2 border-t border-white/5">
+      <div className="px-3 sm:px-4 py-2 border-t border-white/5">
         <dl className="grid grid-cols-3 gap-2 text-center">
           <div>
             <dt className="text-[10px] text-gray-500 uppercase tracking-wider">Ziyaret</dt>
@@ -221,7 +221,7 @@ function LiveProgressPanel({
 
       {/* Live Feed */}
       {feedMessages.length > 0 && (
-        <div className="px-4 py-2 border-t border-white/5 space-y-1.5">
+        <div className="px-3 sm:px-4 py-2 border-t border-white/5 space-y-1.5">
           {feedMessages.map((msg) => (
             <div
               key={msg.id}
@@ -241,7 +241,7 @@ function LiveProgressPanel({
 
       {/* GA delay hint */}
       {rampProgress.liveVisits > 0 && (
-        <div className="px-4 py-2 border-t border-white/5">
+        <div className="px-3 sm:px-4 py-2 border-t border-white/5">
           <p className="text-[10px] text-gray-500 flex items-center gap-1.5">
             <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -367,9 +367,9 @@ export function BrowserTestFormCard({
   if (rampProgress) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-2xl overflow-hidden">
-        <div className="px-6 pt-5 pb-3">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
           <p className="text-xs text-gray-500 mb-1">Hedef</p>
-          <p className="text-sm text-white truncate">{url}</p>
+          <p className="text-sm text-white truncate break-all">{url}</p>
         </div>
         <LiveProgressPanel rampProgress={rampProgress} stopTest={stopTest} />
       </div>
@@ -377,7 +377,7 @@ export function BrowserTestFormCard({
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg p-6 shadow-2xl">
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg p-4 sm:p-6 shadow-2xl">
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* URL Input */}
         <div>
