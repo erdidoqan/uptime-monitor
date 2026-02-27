@@ -22,6 +22,7 @@ interface Env {
   PROXY_PORT?: string;
   PROXY_USER?: string;
   PROXY_PASS?: string;
+  REGION?: string;
 }
 
 type TrafficSource = 'direct' | 'organic' | 'social';
@@ -284,7 +285,8 @@ const DEVICE_PROFILES: DeviceProfile[] = [
   },
 ];
 
-const LANGUAGES = ['tr-TR,tr;q=0.9,en-US;q=0.8', 'en-US,en;q=0.9', 'tr-TR,tr;q=0.9'];
+const LANGUAGES_TR = ['tr-TR,tr;q=0.9,en-US;q=0.8', 'en-US,en;q=0.9', 'tr-TR,tr;q=0.9'];
+const LANGUAGES_US = ['en-US,en;q=0.9', 'en-US,en;q=0.9,es;q=0.8', 'en-GB,en;q=0.9,en-US;q=0.8'];
 
 const SEARCH_REFERRERS = [
   { name: 'google',     url: 'https://www.google.com/search?q=' },
@@ -357,9 +359,10 @@ function appendUtmParams(targetUrl: string, attr: TrafficAttribution): string {
   }
 }
 
-async function setupRealUserPage(page: puppeteer.Page, attr: TrafficAttribution): Promise<void> {
+async function setupRealUserPage(page: puppeteer.Page, attr: TrafficAttribution, region?: string): Promise<void> {
   const device = randomItem(DEVICE_PROFILES);
-  const lang = randomItem(LANGUAGES);
+  const langs = region === 'us' ? LANGUAGES_US : LANGUAGES_TR;
+  const lang = randomItem(langs);
 
   await page.setUserAgent(device.ua, {
     architecture: device.platform === 'Android' ? 'arm' : '',
@@ -577,6 +580,7 @@ async function runTab(
   proxy: ProxyConfig | null,
   trafficSource: TrafficSource,
   sessionDurationMs: number,
+  region?: string,
 ): Promise<TabResult> {
   const start = Date.now();
   let context: puppeteer.BrowserContext | null = null;
@@ -594,7 +598,7 @@ async function runTab(
     }
 
     const attr = buildAttribution(targetUrl, trafficSource);
-    await setupRealUserPage(page, attr);
+    await setupRealUserPage(page, attr, region);
 
     page.on('pageerror', () => { jsErrorCount++; });
 
@@ -660,6 +664,7 @@ interface StreamingOpts {
   shouldProxy: boolean;
   trafficSource: TrafficSource;
   sessionDurationMs: number;
+  region?: string;
 }
 
 /**
@@ -702,7 +707,7 @@ async function runBrowserBatchStreaming(
       for (let t = 0; t < opts.tabsPerBrowser; t++) {
         const proxy = opts.shouldProxy ? getProxyConfig(opts.env) : null;
         const result = await runTab(
-          browser, opts.targetUrl, proxy, opts.trafficSource, opts.sessionDurationMs,
+          browser, opts.targetUrl, proxy, opts.trafficSource, opts.sessionDurationMs, opts.region,
         );
 
         if (result.ok && result.vitals) {
@@ -826,7 +831,7 @@ export default {
         if (proxyConfig) {
           await page.authenticate({ username: proxyConfig.username, password: proxyConfig.password });
         }
-        await setupRealUserPage(page, attr);
+        await setupRealUserPage(page, attr, env.REGION);
 
         const gaRequests: string[] = [];
         const collectParams: Record<string, string>[] = [];
@@ -973,7 +978,7 @@ export default {
 
     const streamingOpts: StreamingOpts = {
       env, targetUrl, browserCount: browsers, tabsPerBrowser: tabs,
-      shouldProxy, trafficSource, sessionDurationMs,
+      shouldProxy, trafficSource, sessionDurationMs, region: env.REGION,
     };
 
     // Fire-and-forget: run in background, close writer when done

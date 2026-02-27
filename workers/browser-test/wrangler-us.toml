@@ -1,0 +1,15 @@
+name = "browser-test-us"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "c175082e9a554e6b70b80bf958006a08"
+
+[vars]
+REGION = "us"
+
+[browser]
+binding = "BROWSER"
+
+[observability]
+enabled = true
