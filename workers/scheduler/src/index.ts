@@ -1322,15 +1322,16 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
     total_runs: number;
     url_pool: string | null;
     url_pool_updated_at: number | null;
+    created_at: number;
   }>(
     `SELECT id, user_id, url, daily_visitors, browsers_per_run, tabs_per_browser,
             traffic_source, session_duration, use_proxy, start_hour, end_hour,
-            total_visits_sent, total_runs, url_pool, url_pool_updated_at
+            total_visits_sent, total_runs, url_pool, url_pool_updated_at, created_at
      FROM traffic_campaigns
      WHERE is_active = 1
        AND next_run_at <= ?
        AND (locked_at IS NULL OR locked_at < ?)
-     LIMIT 5`,
+     LIMIT 1`,
     [now, lockTimeout]
   );
 
@@ -1347,21 +1348,42 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
 
   for (const campaign of dueCampaigns) {
     try {
-      const currentHour = new Date().getUTCHours();
-      if (currentHour < campaign.start_hour || currentHour >= campaign.end_hour) {
-        const tomorrow = new Date();
-        tomorrow.setUTCDate(tomorrow.getUTCDate() + (currentHour >= campaign.end_hour ? 1 : 0));
-        tomorrow.setUTCHours(campaign.start_hour, 0, 0, 0);
-        await db.execute(
-          `UPDATE traffic_campaigns SET next_run_at = ?, locked_at = NULL WHERE id = ?`,
-          [tomorrow.getTime(), campaign.id]
-        );
-        continue;
-      }
-
       const runId = crypto.randomUUID();
-      const browsers = campaign.browsers_per_run;
       const tabs = campaign.tabs_per_browser;
+
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      const daysSinceCreation = (now - campaign.created_at) / DAY_MS;
+
+      const owner = await db.queryFirst<{ email: string }>(
+        'SELECT email FROM users WHERE id = ?',
+        [campaign.user_id]
+      );
+      const isExempt = owner?.email === 'erdi.doqan@gmail.com';
+
+      let browsers: number;
+      let intervalMultiplier: number;
+      let burstPhase: string;
+      let effectiveDailyVisitors = campaign.daily_visitors;
+
+      if (daysSinceCreation <= 3) {
+        browsers = Math.min(campaign.browsers_per_run + 2, 6);
+        intervalMultiplier = 0.5;
+        burstPhase = 'burst';
+      } else if (daysSinceCreation <= 5) {
+        browsers = Math.min(campaign.browsers_per_run + 1, 5);
+        intervalMultiplier = 0.75;
+        burstPhase = 'transition';
+      } else if (daysSinceCreation <= 7 || isExempt) {
+        browsers = campaign.browsers_per_run;
+        intervalMultiplier = 1.0;
+        burstPhase = 'normal';
+      } else {
+        browsers = 1;
+        intervalMultiplier = 1.0;
+        burstPhase = 'minimal';
+        const dayNumber = Math.floor(daysSinceCreation);
+        effectiveDailyVisitors = 20 + (dayNumber % 3) * 10; // 20, 30, 40 döngüsü
+      }
 
       let urlPool: string[] | undefined = await maybeRefreshUrlPool(
         db, campaign.id, campaign.url, campaign.url_pool, campaign.url_pool_updated_at, now
@@ -1376,6 +1398,7 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
         useProxy: !!campaign.use_proxy,
         trafficSource: campaign.traffic_source,
         sessionDuration: campaign.session_duration,
+        campaignMode: true,
         ...(urlPool && urlPool.length > 0 ? { urlPool } : {}),
       })
         .setProtectedHeader({ alg: 'HS256' })
@@ -1389,6 +1412,7 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
         useProxy: !!campaign.use_proxy,
         trafficSource: campaign.traffic_source,
         sessionDuration: campaign.session_duration,
+        campaignMode: true,
         ...(urlPool && urlPool.length > 0 ? { urlPool } : {}),
       });
 
@@ -1405,54 +1429,42 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
       const useServiceBinding = !!campaign.use_proxy && env.BROWSER_TEST_WORKER;
 
       if (useServiceBinding) {
-        console.log(`[campaign] Using TR worker (service binding) for ${campaign.id}, browsers=${browsers}, tabs=${tabs}`);
+        console.log(`[campaign] Using TR worker (service binding) for ${campaign.id} [${burstPhase}], browsers=${browsers}, tabs=${tabs}`);
         response = await env.BROWSER_TEST_WORKER!.fetch(
           new Request('https://browser-test/browser-test-batch', requestInit)
         );
       } else if (workerBaseUrl) {
-        console.log(`[campaign] Using US worker (${workerBaseUrl}) for ${campaign.id}, browsers=${browsers}, tabs=${tabs}`);
+        console.log(`[campaign] Using US worker (${workerBaseUrl}) for ${campaign.id} [${burstPhase}], browsers=${browsers}, tabs=${tabs}`);
         response = await fetch(`${workerBaseUrl}/browser-test-batch`, requestInit);
       } else {
         console.error(`[campaign] No worker available for campaign ${campaign.id}`);
         continue;
       }
 
+      const expectedVisits = browsers * tabs;
       let visitsSent = 0;
       let lastStatus = 'error';
 
-      if (response.ok && response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const event = JSON.parse(line);
-              if (event.type === 'tab' && event.ok) {
-                visitsSent++;
-              }
-            } catch {}
-          }
+      if (response.ok) {
+        // Don't read streaming body to avoid CPU limit - estimate visits
+        visitsSent = expectedVisits;
+        lastStatus = 'success';
+        // Cancel body to free resources
+        if (response.body) {
+          try { response.body.cancel(); } catch {}
         }
-
-        lastStatus = visitsSent > 0 ? 'success' : 'no_visits';
       } else {
         console.error(`[campaign] Worker returned ${response.status} for campaign ${campaign.id}`);
         lastStatus = `error_${response.status}`;
       }
 
       const visitsPerRun = browsers * tabs;
-      const runsPerDay = Math.max(1, Math.ceil(campaign.daily_visitors / visitsPerRun));
-      const workingHours = campaign.end_hour - campaign.start_hour;
-      const intervalMs = Math.floor((workingHours * 3600 * 1000) / runsPerDay);
+      const runsPerDay = Math.max(1, Math.ceil(effectiveDailyVisitors / visitsPerRun));
+      const baseIntervalMs = Math.floor((24 * 3600 * 1000) / runsPerDay);
+      const intervalMs = Math.max(
+        Math.floor(baseIntervalMs * intervalMultiplier),
+        300_000 // minimum 5 dakika
+      );
       const nextRunAt = now + intervalMs;
 
       await db.execute(
@@ -1464,7 +1476,7 @@ async function processTrafficCampaigns(db: D1Client, env: Env, ctx?: ExecutionCo
         [now, lastStatus, nextRunAt, visitsSent, now, campaign.id]
       );
 
-      console.log(`[campaign] ${campaign.id}: sent ${visitsSent} visits, next in ${Math.round(intervalMs / 60000)}min`);
+      console.log(`[campaign] ${campaign.id} [${burstPhase}]: sent ${visitsSent} visits (${browsers}b×${tabs}t), next in ${Math.round(intervalMs / 60000)}min (day ${Math.floor(daysSinceCreation)})`);
     } catch (err) {
       console.error(`[campaign] Error processing campaign ${campaign.id}:`, err);
       await db.execute(

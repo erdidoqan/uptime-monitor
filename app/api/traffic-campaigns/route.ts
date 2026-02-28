@@ -9,24 +9,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { getUserSubscription } from '@/lib/subscription';
 
-function calculateNextRunAt(startHour: number, endHour: number, dailyVisitors: number, visitorsPerRun: number): number {
-  const now = new Date();
-  const currentHour = now.getUTCHours();
-
-  const runsPerDay = Math.max(1, Math.ceil(dailyVisitors / visitorsPerRun));
-  const workingHours = endHour - startHour;
-  const intervalMs = Math.floor((workingHours * 3600 * 1000) / runsPerDay);
-
-  if (currentHour >= startHour && currentHour < endHour) {
-    return Date.now() + Math.min(intervalMs, 60_000);
-  }
-
-  const tomorrow = new Date(now);
-  if (currentHour >= endHour) {
-    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  }
-  tomorrow.setUTCHours(startHour, 0, 0, 0);
-  return tomorrow.getTime();
+function calculateNextRunAt(): number {
+  return Date.now();
 }
 
 export async function GET(request: NextRequest) {
@@ -121,11 +105,10 @@ export async function POST(request: NextRequest) {
 
     const browsersPerRun = 3;
     const tabsPerBrowser = 10;
-    const visitorsPerRun = browsersPerRun * tabsPerBrowser;
 
     const id = uuidv4();
     const now = Date.now();
-    const nextRunAt = calculateNextRunAt(start_hour, end_hour, daily_visitors, visitorsPerRun);
+    const nextRunAt = calculateNextRunAt();
 
     const urlPoolJson = isPro && Array.isArray(url_pool) && url_pool.length > 0
       ? JSON.stringify(url_pool)

@@ -1,0 +1,26 @@
+---
+description: Browser test worker deploy kuralı - her iki config ile deploy edilmeli
+globs: workers/browser-test/**
+alwaysApply: false
+---
+
+# Browser Test Worker Deploy Kuralı
+
+`workers/browser-test/` altında herhangi bir dosya değiştiğinde, worker **her iki config** ile deploy edilmelidir. Deploy komutları `required_permissions: ["all"]` ile onay beklemeden çalıştırılmalıdır:
+
+```bash
+cd workers/browser-test && npx wrangler deploy --config wrangler.toml && npx wrangler deploy --config wrangler-us.toml
+```
+
+## Yapı
+
+| Config | Hesap | Worker Adı | Domain |
+|--------|-------|------------|--------|
+| `wrangler.toml` | erdi.doqan@gmail.com | `uptime-browser-test` | uptime-browser-test.digitexa.workers.dev |
+| `wrangler-us.toml` | greetingbirdscom@gmail.com | `browser-test-us` | browser.wishesbirds.com |
+
+## Notlar
+
+- US worker `[placement] region = "aws:us-east-1"` kullanır — ABD IP'si için
+- Ana worker'da Webshare proxy (TR) tanımlıdır, US worker'da proxy yoktur
+- İki worker aynı `src/index.ts` kodunu paylaşır, sadece config farklıdır

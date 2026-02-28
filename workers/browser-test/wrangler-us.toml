@@ -5,6 +5,9 @@ compatibility_flags = ["nodejs_compat"]
 
 account_id = "c175082e9a554e6b70b80bf958006a08"
 
+[placement]
+region = "aws:us-east-1"
+
 [vars]
 REGION = "us"
 

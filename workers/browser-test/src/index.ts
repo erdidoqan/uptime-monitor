@@ -34,6 +34,12 @@ const SESSION_DURATIONS: Record<SessionDuration, number> = {
   long: 30000,
 };
 
+const CAMPAIGN_SESSION_DURATIONS: Record<SessionDuration, number> = {
+  fast: 1500,
+  realistic: 5000,
+  long: 10000,
+};
+
 interface JWTPayload {
   url: string;
   maxBrowsers: number;
@@ -44,6 +50,7 @@ interface JWTPayload {
   useProxy?: boolean;
   trafficSource?: TrafficSource;
   sessionDuration?: SessionDuration;
+  campaignMode?: boolean;
   urlPool?: string[];
 }
 
@@ -881,6 +888,26 @@ export default {
       }
     }
 
+    /* ── Debug: IP check — browser'ın gerçek çıkış IP'sini gösterir ── */
+    if (url.pathname === '/debug-ip' && request.method === 'POST') {
+      let browser: Browser | null = null;
+      try {
+        const colo = (request.cf as any)?.colo ?? 'unknown';
+        browser = await puppeteer.launch(env.BROWSER);
+        const context = await browser.createBrowserContext();
+        const page = await context.newPage();
+        await page.goto('https://httpbin.org/ip', { waitUntil: 'networkidle2', timeout: 30000 });
+        const text = await page.evaluate(() => document.body.innerText);
+        await context.close();
+        return jsonResponse({ ok: true, workerColo: colo, region: env.REGION ?? 'default', browserIP: text.trim() });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return jsonResponse({ ok: false, error: msg });
+      } finally {
+        if (browser) try { await browser.close(); } catch {}
+      }
+    }
+
     /* ── Debug: proxy test endpoint (no auth required) ── */
     if (url.pathname === '/debug-proxy' && request.method === 'POST') {
       const proxyConfig = getProxyConfig(env);
@@ -934,6 +961,7 @@ export default {
       useProxy?: boolean;
       trafficSource?: string;
       sessionDuration?: string;
+      campaignMode?: boolean;
       urlPool?: string[];
     };
     try {
@@ -946,6 +974,7 @@ export default {
     const browsers = typeof body.browsers === 'number' ? body.browsers : 0;
     const tabs = typeof body.tabsPerBrowser === 'number' ? body.tabsPerBrowser : 5;
     const shouldProxy = !!(body.useProxy && payload.useProxy);
+    const isCampaign = !!(body.campaignMode || payload.campaignMode);
 
     const trafficSource: TrafficSource =
       (body.trafficSource === 'direct' || body.trafficSource === 'organic' || body.trafficSource === 'social')
@@ -956,7 +985,9 @@ export default {
       (body.sessionDuration === 'fast' || body.sessionDuration === 'realistic' || body.sessionDuration === 'long')
         ? body.sessionDuration
         : (payload.sessionDuration ?? 'fast');
-    const sessionDurationMs = SESSION_DURATIONS[sessionDurationKey];
+    const canOptimize = isCampaign && env.REGION === 'us';
+    const durationTable = canOptimize ? CAMPAIGN_SESSION_DURATIONS : SESSION_DURATIONS;
+    const sessionDurationMs = durationTable[sessionDurationKey];
 
     if (!targetUrl || targetUrl !== payload.url) {
       return jsonResponse({ error: 'URL mismatch' }, 400);
